@@ -70,40 +70,33 @@ export async function GET() {
     })
 
     // Convert to arrays for frontend
-    const monthlyData = Object.entries(monthlyStats).map(([month, data]) => ({
-      month,
-      total: data.total,
-      clients: data.clients.size
-    }))
+    const monthlyData = Object.entries(monthlyStats)
+      .sort(([a], [b]) => new Date(a.split(' ')[0] + ' 1, ' + a.split(' ')[1]) - new Date(b.split(' ')[0] + ' 1, ' + b.split(' ')[1]))
+      .map(([month, data]) => ({
+        month,
+        total: data.total,
+        clients: data.clients.size
+      }))
 
     const avgPerMonth = monthlyData.length > 0 ? totalCount / monthlyData.length : 0
+    const uniqueClientsTotal = new Set(rows.slice(1).filter(row => row[clientIndex] && parseInt(row[countIndex]) > 0).map(row => row[clientIndex])).size
 
-    // Top clients breakdown
+    // All clients breakdown - no "Others" category
     const sortedClients = Object.entries(clientStats)
       .sort(([,a], [,b]) => b - a)
-      .slice(0, 5)
 
     const clientBreakdown = sortedClients.map(([client, count]) => ({
       client,
       count,
-      percentage: ((count / totalCount) * 100).toFixed(1)
+      percentage: parseFloat(((count / totalCount) * 100).toFixed(1))
     }))
-
-    // Add "Others" if there are more than 5 clients
-    const topClientsCount = sortedClients.reduce((sum, [, count]) => sum + count, 0)
-    if (topClientsCount < totalCount) {
-      clientBreakdown.push({
-        client: 'Others',
-        count: totalCount - topClientsCount,
-        percentage: (((totalCount - topClientsCount) / totalCount) * 100).toFixed(1)
-      })
-    }
 
     return NextResponse.json({
       monthlyData,
       clientBreakdown,
       totalCount,
-      avgPerMonth: parseFloat(avgPerMonth.toFixed(1))
+      avgPerMonth: parseFloat(avgPerMonth.toFixed(1)),
+      uniqueClients: uniqueClientsTotal
     })
 
   } catch (error) {
