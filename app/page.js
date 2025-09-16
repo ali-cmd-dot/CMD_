@@ -156,11 +156,7 @@ export default function Dashboard() {
         { month: 'Sep 2025', raised: 76, resolved: 82, avgTime: 3.8 }
       ],
       clientBreakdown: [
-        { client: 'Client A', raised: 25, resolved: 23, avgTime: 3.5, minTime: 0.5, maxTime: 12.3, medianTime: 2.8 },
-        { client: 'Client B', raised: 19, resolved: 18, avgTime: 4.1, minTime: 0.8, maxTime: 15.2, medianTime: 3.2 },
-        { client: 'Client C', raised: 22, resolved: 20, avgTime: 5.2, minTime: 1.2, maxTime: 18.7, medianTime: 4.1 },
-        { client: 'Client D', raised: 18, resolved: 16, avgTime: 6.1, minTime: 2.1, maxTime: 22.4, medianTime: 5.3 },
-        { client: 'Client E', raised: 21, resolved: 19, avgTime: 4.8, minTime: 1.5, maxTime: 16.9, medianTime: 3.9 }
+        
       ],
       totalRaised: 165,
       totalResolved: 158,
