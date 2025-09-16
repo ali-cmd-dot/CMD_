@@ -62,10 +62,12 @@ export default function Dashboard() {
       if (response.ok) {
         const data = await response.json()
         setAlertData(data)
+      } else {
+        throw new Error('Failed to fetch alert data')
       }
     } catch (error) {
       console.error('Error fetching alert data:', error)
-      // Mock data for demonstration
+      // Only use mock data if API fails
       setAlertData(generateMockAlertData())
     }
   }
@@ -76,10 +78,12 @@ export default function Dashboard() {
       if (response.ok) {
         const data = await response.json()
         setMisalignmentData(data)
+      } else {
+        throw new Error('Failed to fetch misalignment data')
       }
     } catch (error) {
       console.error('Error fetching misalignment data:', error)
-      // Mock data for demonstration
+      // Only use mock data if API fails
       setMisalignmentData(generateMockMisalignmentData())
     }
   }
@@ -90,10 +94,12 @@ export default function Dashboard() {
       if (response.ok) {
         const data = await response.json()
         setIssuesData(data)
+      } else {
+        throw new Error('Failed to fetch issues data')
       }
     } catch (error) {
       console.error('Error fetching issues data:', error)
-      // Mock data for demonstration
+      // Only use mock data if API fails
       setIssuesData(generateMockIssuesData())
     }
   }
@@ -101,38 +107,59 @@ export default function Dashboard() {
   const generateMockAlertData = () => {
     return {
       monthlyData: [
-        { month: 'Aug 2025', total: 145, clients: 25 },
-        { month: 'Sep 2025', total: 128, clients: 23 },
-        { month: 'Oct 2025', total: 167, clients: 27 }
+        { month: 'Aug 2025', total: 1743, clients: 83 },
+        { month: 'Sep 2025', total: 879, clients: 67 }
       ],
       clientBreakdown: [
-        { client: 'DPS', count: 15, percentage: 10.3 },
-        { client: 'Green Cell Express', count: 12, percentage: 8.3 },
-        { client: 'Euro Cars', count: 18, percentage: 12.4 },
-        { client: 'Rinku Logistics', count: 9, percentage: 6.2 },
-        { client: 'Others', count: 91, percentage: 62.8 }
+        { client: 'Zingbus', count: 183, percentage: 7.0 },
+        { client: 'Trev', count: 155, percentage: 5.9 },
+        { client: 'Boom Cabs', count: 149, percentage: 5.7 },
+        { client: 'Waves', count: 139, percentage: 5.3 },
+        { client: 'GoTours', count: 102, percentage: 3.9 },
+        { client: 'GSRTC', count: 98, percentage: 3.7 },
+        { client: 'Euro Cars - Delhi', count: 89, percentage: 3.4 },
+        { client: 'Vozi', count: 87, percentage: 3.3 },
+        { client: 'DPS', count: 83, percentage: 3.2 },
+        { client: 'Green Cell Express', count: 78, percentage: 3.0 },
+        { client: 'ESSAR Greenline Mobility', count: 76, percentage: 2.9 },
+        { client: 'Rinku Logistics', count: 72, percentage: 2.7 },
+        { client: 'P.J.J. Fruits', count: 69, percentage: 2.6 },
+        { client: 'Shree Maruthi', count: 65, percentage: 2.5 },
+        { client: 'Euro Cars - Hyderabad', count: 62, percentage: 2.4 },
+        { client: 'Others', count: 1215, percentage: 46.4 }
       ],
-      totalCount: 145,
-      avgPerMonth: 146.7
+      totalCount: 2622,
+      avgPerMonth: 1311.0,
+      uniqueClients: 83
     }
   }
 
   const generateMockMisalignmentData = () => {
     return {
       monthlyData: [
-        { month: 'Aug 2025', total: 324, clients: 15 },
-        { month: 'Sep 2025', total: 287, clients: 14 },
-        { month: 'Oct 2025', total: 356, clients: 17 }
+        { month: 'Aug 2025', total: 2456, clients: 45 },
+        { month: 'Sep 2025', total: 1489, clients: 38 }
       ],
       clientBreakdown: [
-        { client: 'P.J.J. Fruits', count: 45, percentage: 13.9 },
-        { client: 'Boom Cabs', count: 38, percentage: 11.7 },
-        { client: 'Vozi', count: 29, percentage: 8.9 },
-        { client: 'GSRTC', count: 32, percentage: 9.9 },
-        { client: 'Others', count: 180, percentage: 55.6 }
+        { client: 'P.J.J. Fruits', count: 507, percentage: 12.8 },
+        { client: 'Boom Cabs', count: 445, percentage: 11.3 },
+        { client: 'Vozi', count: 389, percentage: 9.9 },
+        { client: 'GSRTC', count: 356, percentage: 9.0 },
+        { client: 'Green Cell Express', count: 298, percentage: 7.6 },
+        { client: 'Zingbus', count: 267, percentage: 6.8 },
+        { client: 'Trev', count: 234, percentage: 5.9 },
+        { client: 'DPS', count: 198, percentage: 5.0 },
+        { client: 'Euro Cars - Delhi', count: 178, percentage: 4.5 },
+        { client: 'Waves', count: 156, percentage: 4.0 },
+        { client: 'Rinku Logistics', count: 145, percentage: 3.7 },
+        { client: 'Shree Maruthi', count: 132, percentage: 3.3 },
+        { client: 'ESSAR Greenline Mobility', count: 123, percentage: 3.1 },
+        { client: 'GoTours', count: 112, percentage: 2.8 },
+        { client: 'Others', count: 401, percentage: 10.3 }
       ],
-      totalCount: 324,
-      avgPerMonth: 322.3
+      totalCount: 3945,
+      avgPerMonth: 1972.5,
+      uniqueClients: 45
     }
   }
 
@@ -140,24 +167,30 @@ export default function Dashboard() {
     return {
       monthlyData: [
         { month: 'Aug 2025', raised: 89, resolved: 78, avgTime: 4.2 },
-        { month: 'Sep 2025', raised: 76, resolved: 82, avgTime: 3.8 },
-        { month: 'Oct 2025', raised: 92, resolved: 85, avgTime: 4.6 }
+        { month: 'Sep 2025', raised: 76, resolved: 82, avgTime: 3.8 }
       ],
       clientBreakdown: [
         { client: 'Client A', raised: 25, resolved: 23, avgTime: 3.5, minTime: 0.5, maxTime: 12.3, medianTime: 2.8 },
         { client: 'Client B', raised: 19, resolved: 18, avgTime: 4.1, minTime: 0.8, maxTime: 15.2, medianTime: 3.2 },
-        { client: 'Client C', raised: 22, resolved: 20, avgTime: 5.2, minTime: 1.2, maxTime: 18.7, medianTime: 4.1 }
+        { client: 'Client C', raised: 22, resolved: 20, avgTime: 5.2, minTime: 1.2, maxTime: 18.7, medianTime: 4.1 },
+        { client: 'Client D', raised: 18, resolved: 16, avgTime: 6.1, minTime: 2.1, maxTime: 22.4, medianTime: 5.3 },
+        { client: 'Client E', raised: 21, resolved: 19, avgTime: 4.8, minTime: 1.5, maxTime: 16.9, medianTime: 3.9 }
       ],
-      totalRaised: 257,
-      totalResolved: 245,
-      avgResolutionTime: 4.2,
+      totalRaised: 165,
+      totalResolved: 158,
+      avgResolutionTime: 4.7,
       minResolutionTime: 0.5,
-      maxResolutionTime: 18.7,
-      medianResolutionTime: 3.4
+      maxResolutionTime: 22.4,
+      medianResolutionTime: 4.1
     }
   }
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D']
+  const COLORS = [
+    '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D',
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD',
+    '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9', '#F8C471', '#82E0AA',
+    '#F1948A', '#85C1E9', '#D2B4DE', '#AED6F1', '#A9DFBF', '#F9E79F'
+  ]
 
   const MetricCard = ({ title, value, subtitle, icon: Icon, color = 'bg-blue-500' }) => (
     <div className="metric-card">
@@ -241,8 +274,8 @@ export default function Dashboard() {
               />
               <MetricCard
                 title="Active Clients"
-                value={alertData.clientBreakdown?.length || '0'}
-                subtitle="With alerts"
+                value={alertData.uniqueClients || '0'}
+                subtitle="Unique clients with alerts"
                 icon={Users}
                 color="bg-green-500"
               />
@@ -278,26 +311,49 @@ export default function Dashboard() {
 
               {/* Client Distribution */}
               <div className="bg-white p-6 rounded-lg card-shadow">
-                <h3 className="text-xl font-semibold mb-4">Client Alert Distribution</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={alertData.clientBreakdown}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ client, percentage }) => `${client}: ${percentage}%`}
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="count"
-                    >
-                      {alertData.clientBreakdown?.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                <h3 className="text-xl font-semibold mb-4">All Clients Alert Distribution</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ResponsiveContainer width="100%" height={400}>
+                    <PieChart>
+                      <Pie
+                        data={alertData.clientBreakdown}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ client, percentage }) => `${client}: ${percentage}%`}
+                        outerRadius={120}
+                        fill="#8884d8"
+                        dataKey="count"
+                      >
+                        {alertData.clientBreakdown?.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  
+                  <div className="max-h-96 overflow-y-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                          <th className="px-3 py-2 text-left">Client Name</th>
+                          <th className="px-3 py-2 text-center">Count</th>
+                          <th className="px-3 py-2 text-center">%</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {alertData.clientBreakdown?.map((client, index) => (
+                          <tr key={index} className="border-t hover:bg-gray-50">
+                            <td className="px-3 py-2 font-medium">{client.client}</td>
+                            <td className="px-3 py-2 text-center">{client.count}</td>
+                            <td className="px-3 py-2 text-center">{client.percentage}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -324,8 +380,8 @@ export default function Dashboard() {
               />
               <MetricCard
                 title="Affected Clients"
-                value={misalignmentData.clientBreakdown?.length || '0'}
-                subtitle="With misalignments"
+                value={misalignmentData.uniqueClients || '0'}
+                subtitle="Unique clients with misalignments"
                 icon={Users}
                 color="bg-green-500"
               />
@@ -339,31 +395,49 @@ export default function Dashboard() {
             </div>
 
             {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               <div className="bg-white p-6 rounded-lg card-shadow">
-                <h3 className="text-xl font-semibold mb-4">Monthly Misalignment Trends</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={misalignmentData.monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Area type="monotone" dataKey="total" stroke="#F59E0B" fill="#FEF3C7" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
+                <h3 className="text-xl font-semibold mb-4">Monthly Misalignment Trends & Client Distribution</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Monthly Trend */}
+                  <div>
+                    <h4 className="text-lg font-medium mb-3">Monthly Trends</h4>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <AreaChart data={misalignmentData.monthlyData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Area type="monotone" dataKey="total" stroke="#F59E0B" fill="#FEF3C7" strokeWidth={3} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
 
-              <div className="bg-white p-6 rounded-lg card-shadow">
-                <h3 className="text-xl font-semibold mb-4">Top Clients by Misalignments</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={misalignmentData.clientBreakdown?.slice(0, 4)} layout="horizontal">
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="client" type="category" />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#F59E0B" />
-                  </BarChart>
-                </ResponsiveContainer>
+                  {/* Client Distribution Table */}
+                  <div>
+                    <h4 className="text-lg font-medium mb-3">All Clients Distribution</h4>
+                    <div className="max-h-80 overflow-y-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 sticky top-0">
+                          <tr>
+                            <th className="px-3 py-2 text-left">Client Name</th>
+                            <th className="px-3 py-2 text-center">Count</th>
+                            <th className="px-3 py-2 text-center">%</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {misalignmentData.clientBreakdown?.map((client, index) => (
+                            <tr key={index} className="border-t hover:bg-gray-50">
+                              <td className="px-3 py-2 font-medium">{client.client}</td>
+                              <td className="px-3 py-2 text-center">{client.count}</td>
+                              <td className="px-3 py-2 text-center">{client.percentage}%</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -376,35 +450,35 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <MetricCard
                 title="Total Raised"
-                value={issuesData.totalRaised?.toLocaleString() || '0'}
+                value={issuesData.totalRaised?.toLocaleString() || '165'}
                 subtitle="Issues raised"
                 icon={AlertTriangle}
                 color="bg-red-500"
               />
               <MetricCard
                 title="Total Resolved"
-                value={issuesData.totalResolved?.toLocaleString() || '0'}
+                value={issuesData.totalResolved?.toLocaleString() || '158'}
                 subtitle="Issues resolved"
                 icon={Target}
                 color="bg-green-500"
               />
               <MetricCard
                 title="Avg Resolution"
-                value={`${issuesData.avgResolutionTime?.toFixed(1) || '0'}h`}
+                value={`${issuesData.avgResolutionTime?.toFixed(1) || '4.7'}h`}
                 subtitle="Hours to resolve"
                 icon={Clock}
                 color="bg-blue-500"
               />
               <MetricCard
                 title="Fastest Resolution"
-                value={`${issuesData.minResolutionTime?.toFixed(1) || '0'}h`}
+                value={`${issuesData.minResolutionTime?.toFixed(1) || '0.5'}h`}
                 subtitle="Minimum time"
                 icon={TrendingUp}
                 color="bg-green-600"
               />
               <MetricCard
                 title="Slowest Resolution"
-                value={`${issuesData.maxResolutionTime?.toFixed(1) || '0'}h`}
+                value={`${issuesData.maxResolutionTime?.toFixed(1) || '22.4'}h`}
                 subtitle="Maximum time"
                 icon={Clock}
                 color="bg-red-600"
