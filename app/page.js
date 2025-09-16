@@ -105,32 +105,18 @@ export default function Dashboard() {
   }
 
   const generateMockAlertData = () => {
+    // Fallback mock data - only used if API fails
     return {
       monthlyData: [
-        { month: 'Aug 2025', total: 1743, clients: 83 },
-        { month: 'Sep 2025', total: 879, clients: 67 }
+        { month: 'Aug 2025', total: 0, clients: 0 },
+        { month: 'Sep 2025', total: 0, clients: 0 }
       ],
       clientBreakdown: [
-        { client: 'Zingbus', count: 183, percentage: 7.0 },
-        { client: 'Trev', count: 155, percentage: 5.9 },
-        { client: 'Boom Cabs', count: 149, percentage: 5.7 },
-        { client: 'Waves', count: 139, percentage: 5.3 },
-        { client: 'GoTours', count: 102, percentage: 3.9 },
-        { client: 'GSRTC', count: 98, percentage: 3.7 },
-        { client: 'Euro Cars - Delhi', count: 89, percentage: 3.4 },
-        { client: 'Vozi', count: 87, percentage: 3.3 },
-        { client: 'DPS', count: 83, percentage: 3.2 },
-        { client: 'Green Cell Express', count: 78, percentage: 3.0 },
-        { client: 'ESSAR Greenline Mobility', count: 76, percentage: 2.9 },
-        { client: 'Rinku Logistics', count: 72, percentage: 2.7 },
-        { client: 'P.J.J. Fruits', count: 69, percentage: 2.6 },
-        { client: 'Shree Maruthi', count: 65, percentage: 2.5 },
-        { client: 'Euro Cars - Hyderabad', count: 62, percentage: 2.4 },
-        { client: 'Others', count: 1215, percentage: 46.4 }
+        { client: 'No Data Available', count: 0, percentage: 0 }
       ],
-      totalCount: 2622,
-      avgPerMonth: 1311.0,
-      uniqueClients: 83
+      totalCount: 0,
+      avgPerMonth: 0,
+      uniqueClients: 0
     }
   }
 
