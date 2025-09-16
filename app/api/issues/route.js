@@ -104,30 +104,32 @@ export async function GET() {
       ? calculateMedian(resolutionTimes) 
       : 0
 
-    // Convert to arrays for frontend
-    const monthlyData = Object.entries(monthlyStats).map(([month, data]) => ({
-      month,
-      raised: data.raised,
-      resolved: data.resolved,
-      avgTime: data.resolutionTimes.length > 0 
-        ? data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length
-        : 0
-    }))
+    // Convert to arrays for frontend  
+    const monthlyData = Object.entries(monthlyStats)
+      .sort(([a], [b]) => new Date(a.split(' ')[0] + ' 1, ' + a.split(' ')[1]) - new Date(b.split(' ')[0] + ' 1, ' + b.split(' ')[1]))
+      .map(([month, data]) => ({
+        month,
+        raised: data.raised,
+        resolved: data.resolved,
+        avgTime: data.resolutionTimes.length > 0 
+          ? parseFloat((data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length).toFixed(2))
+          : 0
+      }))
 
     const clientBreakdown = Object.entries(clientStats)
       .filter(([, data]) => data.raised > 0)
+      .sort((a, b) => b[1].raised - a[1].raised)
       .map(([client, data]) => ({
         client,
         raised: data.raised,
         resolved: data.resolved,
         avgTime: data.resolutionTimes.length > 0 
-          ? data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length
+          ? parseFloat((data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length).toFixed(2))
           : 0,
-        minTime: data.resolutionTimes.length > 0 ? Math.min(...data.resolutionTimes) : 0,
-        maxTime: data.resolutionTimes.length > 0 ? Math.max(...data.resolutionTimes) : 0,
-        medianTime: data.resolutionTimes.length > 0 ? calculateMedian(data.resolutionTimes) : 0
+        minTime: data.resolutionTimes.length > 0 ? parseFloat(Math.min(...data.resolutionTimes).toFixed(2)) : 0,
+        maxTime: data.resolutionTimes.length > 0 ? parseFloat(Math.max(...data.resolutionTimes).toFixed(2)) : 0,
+        medianTime: data.resolutionTimes.length > 0 ? parseFloat(calculateMedian(data.resolutionTimes).toFixed(2)) : 0
       }))
-      .sort((a, b) => b.raised - a.raised)
 
     return NextResponse.json({
       monthlyData,
