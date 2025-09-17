@@ -12,6 +12,8 @@ export async function GET() {
     // Fixed: Tab name with space "Issues- Realtime"
     const issuesUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Issues-%20Realtime!A:Z?key=${API_KEY}`
     
+    console.log('Fetching from URL:', issuesUrl)
+    
     const issuesResponse = await fetch(issuesUrl)
     
     if (!issuesResponse.ok) {
@@ -21,44 +23,118 @@ export async function GET() {
     const issuesData = await issuesResponse.json()
     const rows = issuesData.values || []
     
+    console.log('Total rows received:', rows.length)
+    
     if (rows.length < 2) {
-      return NextResponse.json({ error: 'No data found' }, { status: 404 })
+      return NextResponse.json({ 
+        error: 'No data found',
+        totalRows: rows.length,
+        sampleData: rows.slice(0, 3)
+      }, { status: 404 })
     }
 
-    // Find column indices - more flexible search
+    // Find column indices - VERY flexible search
     const headers = rows[0]
-    console.log('Headers found:', headers) // Debug log
+    console.log('All headers:', headers)
     
-    const timestampRaisedIndex = headers.findIndex(h => 
-      h && h.toLowerCase().includes('timestamp') && h.toLowerCase().includes('raised')
-    )
-    const timestampResolvedIndex = headers.findIndex(h => 
-      h && h.toLowerCase().includes('timestamp') && h.toLowerCase().includes('resolved')
-    )
-    const clientIndex = headers.findIndex(h => 
-      h && h.toLowerCase().includes('client')
-    )
-    const issueIndex = headers.findIndex(h => 
-      h && (h.toLowerCase().includes('issue') || h.toLowerCase().includes('sub-request') || h.toLowerCase().includes('sub request'))
-    )
+    let timestampRaisedIndex = -1
+    let timestampResolvedIndex = -1
+    let clientIndex = -1
+    let issueIndex = -1
 
-    console.log('Column indices:', { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex })
+    // Search for columns with multiple possible names
+    headers.forEach((header, index) => {
+      if (!header) return
+      const h = header.toLowerCase().trim()
+      
+      // Timestamp Raised
+      if ((h.includes('timestamp') && h.includes('raised')) ||
+          (h.includes('time') && h.includes('raised')) ||
+          h.includes('raised timestamp') ||
+          h.includes('issue raised') ||
+          h.includes('created')) {
+        timestampRaisedIndex = index
+      }
+      
+      // Timestamp Resolved
+      if ((h.includes('timestamp') && h.includes('resolved')) ||
+          (h.includes('time') && h.includes('resolved')) ||
+          h.includes('resolved timestamp') ||
+          h.includes('issue resolved') ||
+          h.includes('completed')) {
+        timestampResolvedIndex = index
+      }
+      
+      // Client
+      if (h.includes('client') || h.includes('customer') || h.includes('company')) {
+        clientIndex = index
+      }
+      
+      // Issue/Sub-request
+      if (h.includes('issue') || h.includes('sub-request') || h.includes('sub request') || 
+          h.includes('type') || h.includes('request') || h.includes('description')) {
+        issueIndex = index
+      }
+    })
 
-    if (timestampRaisedIndex === -1 || clientIndex === -1) {
+    console.log('Column indices found:', {
+      timestampRaisedIndex,
+      timestampResolvedIndex, 
+      clientIndex,
+      issueIndex,
+      headers: headers
+    })
+
+    if (timestampRaisedIndex === -1 || clientIndex === -1 || issueIndex === -1) {
       return NextResponse.json({ 
         error: 'Required columns not found',
         headers: headers,
-        indices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex }
+        indices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex },
+        message: 'Could not find timestamp raised, client, or issue columns'
       }, { status: 400 })
     }
 
-    // Filter for "Historical Video Request" only - more flexible filtering
+    // Show sample data for debugging
+    const sampleRows = rows.slice(1, 6)
+    console.log('Sample data rows:', sampleRows.map((row, idx) => ({
+      row: idx + 1,
+      timestampRaised: row[timestampRaisedIndex],
+      timestampResolved: row[timestampResolvedIndex],
+      client: row[clientIndex],
+      issue: row[issueIndex]
+    })))
+
+    // Filter for "Historical Video Request" with multiple search patterns
     const filteredRows = rows.slice(1).filter(row => {
-      const issueType = row[issueIndex] || ''
-      return issueType.toLowerCase().includes('historical') && issueType.toLowerCase().includes('video')
+      const issueType = (row[issueIndex] || '').toString().toLowerCase()
+      
+      // Multiple patterns to match historical video requests
+      return issueType.includes('historical') && issueType.includes('video') ||
+             issueType.includes('history') && issueType.includes('video') ||
+             issueType.includes('past') && issueType.includes('video') ||
+             issueType.includes('archive') && issueType.includes('video') ||
+             issueType.includes('video') && issueType.includes('request') && issueType.includes('historical')
     })
 
-    console.log('Filtered rows count:', filteredRows.length)
+    console.log('Historical video rows found:', filteredRows.length)
+    console.log('Sample filtered rows:', filteredRows.slice(0, 3).map(row => ({
+      timestampRaised: row[timestampRaisedIndex],
+      client: row[clientIndex],
+      issue: row[issueIndex]
+    })))
+
+    // If no historical video requests found, show all issue types for debugging
+    if (filteredRows.length === 0) {
+      const allIssueTypes = rows.slice(1, 20).map(row => row[issueIndex]).filter(Boolean)
+      return NextResponse.json({
+        error: 'No historical video requests found',
+        totalRows: rows.length - 1,
+        sampleIssueTypes: allIssueTypes,
+        searchPatterns: ['historical + video', 'history + video', 'past + video', 'archive + video'],
+        headers: headers,
+        indices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex }
+      }, { status: 404 })
+    }
 
     // Process data
     const monthlyStats = {}
@@ -67,18 +143,21 @@ export async function GET() {
     let totalRequests = 0
     let totalDelivered = 0
 
-    filteredRows.forEach(row => {
+    filteredRows.forEach((row, rowIndex) => {
       const timestampRaised = row[timestampRaisedIndex]
       const timestampResolved = row[timestampResolvedIndex]
-      const clientName = row[clientIndex] || 'Unknown'
+      const clientName = (row[clientIndex] || 'Unknown').toString()
       
-      if (!timestampRaised) return
+      if (!timestampRaised || !timestampRaised.toString().trim()) return
 
       totalRequests += 1
 
       // Parse raised timestamp
       const raisedDate = parseTimestamp(timestampRaised)
-      if (!raisedDate) return
+      if (!raisedDate) {
+        console.log(`Row ${rowIndex + 1}: Could not parse timestamp: "${timestampRaised}"`)
+        return
+      }
 
       const month = getMonthYear(raisedDate)
       
@@ -103,12 +182,14 @@ export async function GET() {
       clientStats[clientName].requests += 1
 
       // Calculate delivery time if video was delivered
-      if (timestampResolved && timestampResolved.trim() && timestampResolved.toLowerCase() !== 'pending') {
+      if (timestampResolved && timestampResolved.toString().trim() && 
+          !['pending', 'open', 'in progress', '-', ''].includes(timestampResolved.toString().toLowerCase().trim())) {
+        
         const resolvedDate = parseTimestamp(timestampResolved)
-        if (resolvedDate && resolvedDate > raisedDate) {
+        if (resolvedDate && resolvedDate >= raisedDate) {
           const deliveryTime = (resolvedDate - raisedDate) / (1000 * 60 * 60) // hours
           
-          if (deliveryTime >= 0) {
+          if (deliveryTime >= 0 && deliveryTime < 8760) { // Less than 1 year
             totalDelivered += 1
             monthlyStats[month].delivered += 1
             monthlyStats[month].resolutionTimes.push(deliveryTime)
@@ -118,6 +199,13 @@ export async function GET() {
           }
         }
       }
+    })
+
+    console.log('Processing complete:', {
+      totalRequests,
+      totalDelivered,
+      monthlyStatsCount: Object.keys(monthlyStats).length,
+      clientStatsCount: Object.keys(clientStats).length
     })
 
     // Calculate delivery time statistics
@@ -175,54 +263,55 @@ export async function GET() {
       debug: {
         totalRowsProcessed: filteredRows.length,
         headers: headers,
-        columnIndices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex }
+        columnIndices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex },
+        sampleProcessedRows: Math.min(3, filteredRows.length)
       }
     })
 
   } catch (error) {
     console.error('Error fetching historical video data:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch data', details: error.message },
+      { error: 'Failed to fetch data', details: error.message, stack: error.stack },
       { status: 500 }
     )
   }
 }
 
 function parseTimestamp(timestampStr) {
-  if (!timestampStr || !timestampStr.trim()) return null
+  if (!timestampStr) return null
+  
+  const str = timestampStr.toString().trim()
+  if (!str) return null
   
   try {
     // Handle multiple timestamp formats
     
     // Format: DD/MM/YYYY HH:mm:ss
-    const parts = timestampStr.split(' ')
-    if (parts.length >= 2) {
-      const datePart = parts[0]
-      const timePart = parts[1]
-      
+    if (str.includes('/') && str.includes(' ')) {
+      const [datePart, timePart] = str.split(' ')
       const dateParts = datePart.split('/')
       if (dateParts.length === 3) {
         const day = parseInt(dateParts[0])
-        const month = parseInt(dateParts[1]) - 1 // JavaScript months are 0-indexed
+        const month = parseInt(dateParts[1]) - 1
         let year = parseInt(dateParts[2])
         
-        // Handle 2-digit years
-        if (year < 100) {
-          year += 2000
+        if (year < 100) year += 2000
+        
+        if (timePart) {
+          const timeParts = timePart.split(':')
+          const hour = parseInt(timeParts[0]) || 0
+          const minute = parseInt(timeParts[1]) || 0
+          const second = parseInt(timeParts[2]) || 0
+          return new Date(year, month, day, hour, minute, second)
+        } else {
+          return new Date(year, month, day)
         }
-        
-        const timeParts = timePart.split(':')
-        const hour = parseInt(timeParts[0]) || 0
-        const minute = parseInt(timeParts[1]) || 0
-        const second = parseInt(timeParts[2]) || 0
-        
-        return new Date(year, month, day, hour, minute, second)
       }
     }
     
     // Format: DD-MM-YYYY HH:mm:ss
-    if (timestampStr.includes('-') && timestampStr.includes(' ')) {
-      const [datePart, timePart] = timestampStr.split(' ')
+    if (str.includes('-') && str.includes(' ')) {
+      const [datePart, timePart] = str.split(' ')
       const dateParts = datePart.split('-')
       if (dateParts.length === 3) {
         const day = parseInt(dateParts[0])
@@ -240,10 +329,24 @@ function parseTimestamp(timestampStr) {
       }
     }
     
-    // Fallback to standard Date parsing
-    return new Date(timestampStr)
+    // Format: Just date DD/MM/YYYY or DD-MM-YYYY
+    if (!str.includes(' ')) {
+      const dateParts = str.includes('/') ? str.split('/') : str.split('-')
+      if (dateParts.length === 3) {
+        const day = parseInt(dateParts[0])
+        const month = parseInt(dateParts[1]) - 1
+        let year = parseInt(dateParts[2])
+        
+        if (year < 100) year += 2000
+        
+        return new Date(year, month, day)
+      }
+    }
+    
+    // Fallback
+    return new Date(str)
   } catch (e) {
-    console.error('Error parsing timestamp:', timestampStr, e)
+    console.error('Error parsing timestamp:', str, e)
     return null
   }
 }
