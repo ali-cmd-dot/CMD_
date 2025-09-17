@@ -25,7 +25,7 @@ export async function GET() {
       return NextResponse.json({ error: 'No data found' }, { status: 404 })
     }
 
-    // Find column indices with better search
+    // Find EXACT column names
     const headers = rows[0]
     console.log('General Issues - Headers found:', headers)
     
@@ -33,70 +33,62 @@ export async function GET() {
     let timestampResolvedIndex = -1
     let clientIndex = -1
     let issueIndex = -1
-    let statusIndex = -1
 
-    // More flexible column detection
+    // Search for EXACT column names
     headers.forEach((header, index) => {
       if (!header) return
-      const h = header.toLowerCase().trim()
+      const h = header.toString().trim()
       
-      // Timestamp Raised
-      if ((h.includes('timestamp') && h.includes('raised')) ||
-          (h.includes('time') && h.includes('raised')) ||
-          h.includes('raised timestamp') ||
-          h.includes('issue raised') ||
-          h.includes('created')) {
+      // Exact match for "Timestamp Issues Raised"
+      if (h === 'Timestamp Issues Raised') {
         timestampRaisedIndex = index
       }
       
-      // Timestamp Resolved
-      if ((h.includes('timestamp') && h.includes('resolved')) ||
-          (h.includes('time') && h.includes('resolved')) ||
-          h.includes('resolved timestamp') ||
-          h.includes('issue resolved') ||
-          h.includes('completed')) {
+      // Exact match for "Timestamp Issues Resolved"
+      if (h === 'Timestamp Issues Resolved') {
         timestampResolvedIndex = index
       }
       
-      // Client
-      if (h.includes('client') || h.includes('customer') || h.includes('company')) {
+      // Exact match for "Client"
+      if (h === 'Client' || h === 'client') {
         clientIndex = index
       }
       
-      // Issue/Sub-request
-      if (h.includes('issue') || h.includes('sub-request') || h.includes('sub request') || 
-          h.includes('type') || h.includes('request') || h.includes('description')) {
+      // Exact match for "Issue"
+      if (h === 'Issue' || h === 'issue') {
         issueIndex = index
       }
-      
-      // Status
-      if (h.includes('status') || h.includes('state') || h.includes('condition')) {
-        statusIndex = index
-      }
     })
 
-    console.log('General Issues - Column indices:', { 
-      timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex, statusIndex 
+    console.log('General Issues - Exact column indices:', { 
+      timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex 
     })
 
-    if (timestampRaisedIndex === -1 || clientIndex === -1) {
+    if (timestampRaisedIndex === -1 || timestampResolvedIndex === -1 || clientIndex === -1 || issueIndex === -1) {
       return NextResponse.json({ 
         error: 'Required columns not found',
-        headers: headers,
-        indices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex, statusIndex }
+        missingColumns: {
+          timestampRaised: timestampRaisedIndex === -1 ? 'Missing "Timestamp Issues Raised"' : 'Found',
+          timestampResolved: timestampResolvedIndex === -1 ? 'Missing "Timestamp Issues Resolved"' : 'Found',
+          client: clientIndex === -1 ? 'Missing "Client"' : 'Found',
+          issue: issueIndex === -1 ? 'Missing "Issue"' : 'Found'
+        },
+        headers: headers
       }, { status: 400 })
     }
 
-    // Process ALL issues EXCEPT Historical Video Requests (to avoid duplication)
+    // Process ALL issues EXCEPT "Historical Video Request" (to avoid duplication)
     const filteredRows = rows.slice(1).filter(row => {
-      const issueType = (row[issueIndex] || '').toString().toLowerCase()
-      // Exclude Historical Video Requests as they have separate endpoint
-      return !(issueType.includes('historical') && issueType.includes('video'))
+      const issueType = (row[issueIndex] || '').toString().trim()
+      // Exclude Historical Video Request as it has separate endpoint
+      return issueType !== 'Historical Video Request'
     })
 
-    console.log('General Issues - Filtered rows count:', filteredRows.length)
+    console.log('General Issues - Filtered rows count (excluding Historical Video):', filteredRows.length)
 
-    // ROW-BY-ROW processing for perfect matching
+    // EXACT LOGIC as per user requirement:
+    // Raised = Row has data in "Timestamp Issues Raised" column
+    // Resolved = Row has data in BOTH "Timestamp Issues Raised" AND "Timestamp Issues Resolved" columns
     const monthlyStats = {}
     const clientStats = {}
     const resolutionTimes = []
@@ -106,12 +98,12 @@ export async function GET() {
     filteredRows.forEach((row, rowIndex) => {
       const timestampRaised = row[timestampRaisedIndex]
       const timestampResolved = row[timestampResolvedIndex]
-      const clientName = (row[clientIndex] || 'Unknown').toString()
-      const issueType = (row[issueIndex] || 'Unknown Issue').toString()
-      const status = row[statusIndex] ? row[statusIndex].toString() : ''
+      const clientName = (row[clientIndex] || 'Unknown').toString().trim()
       
-      // STEP 1: Check if this row has a RAISED issue
-      if (!timestampRaised || !timestampRaised.toString().trim()) {
+      // STEP 1: Check if this row has RAISED issue (data in "Timestamp Issues Raised")
+      const hasRaisedData = timestampRaised && timestampRaised.toString().trim()
+      
+      if (!hasRaisedData) {
         return // Skip rows without raised timestamp
       }
 
@@ -147,49 +139,18 @@ export async function GET() {
       }
       clientStats[clientName].raised += 1
 
-      // STEP 2: Check if THIS SAME ROW has a RESOLVED issue
-      let isResolvedInThisRow = false
-      let resolvedDate = null
-
-      // Method 1: Check if resolved timestamp exists and is valid in THIS ROW
-      if (timestampResolved && timestampResolved.toString().trim()) {
-        const resolvedStr = timestampResolved.toString().toLowerCase().trim()
-        
-        // Skip common "not resolved" indicators
-        if (!['pending', 'open', 'in progress', 'not resolved', 'ongoing', '-', '', 'n/a', 'na'].includes(resolvedStr)) {
-          resolvedDate = parseTimestamp(timestampResolved)
-          if (resolvedDate && resolvedDate >= raisedDate) {
-            isResolvedInThisRow = true
-          }
-        }
-      }
-
-      // Method 2: Check status column in THIS ROW if resolved timestamp not conclusive
-      if (!isResolvedInThisRow && status) {
-        const statusLower = status.toLowerCase().trim()
-        if (statusLower.includes('resolved') || 
-            statusLower.includes('closed') || 
-            statusLower.includes('completed') || 
-            statusLower.includes('done') ||
-            statusLower === 'complete' ||
-            statusLower === 'finished') {
-          isResolvedInThisRow = true
-          
-          // If no resolved date but marked as resolved, use raised date + some time
-          if (!resolvedDate) {
-            resolvedDate = new Date(raisedDate.getTime() + (24 * 60 * 60 * 1000)) // +1 day
-          }
-        }
-      }
-
-      // STEP 3: If resolved in this row, count it and calculate time
-      if (isResolvedInThisRow) {
+      // STEP 2: Check if this SAME ROW has RESOLVED issue (data in "Timestamp Issues Resolved")
+      const hasResolvedData = timestampResolved && timestampResolved.toString().trim()
+      
+      if (hasResolvedData) {
+        // Count as RESOLVED
         totalResolved += 1
         monthlyStats[month].resolved += 1
         clientStats[clientName].resolved += 1
 
-        // Calculate resolution time if we have both dates
-        if (resolvedDate && raisedDate) {
+        // Calculate resolution time
+        const resolvedDate = parseTimestamp(timestampResolved)
+        if (resolvedDate && resolvedDate >= raisedDate) {
           const resolutionTime = (resolvedDate - raisedDate) / (1000 * 60 * 60) // hours
           
           if (resolutionTime >= 0 && resolutionTime < 8760) { // Less than 1 year (filter outliers)
@@ -201,7 +162,7 @@ export async function GET() {
       }
     })
 
-    console.log('Processing complete:', {
+    console.log('General Issues Processing complete:', {
       totalRaised,
       totalResolved,
       resolutionRate: totalRaised > 0 ? ((totalResolved / totalRaised) * 100).toFixed(1) : 0
@@ -261,7 +222,8 @@ export async function GET() {
         totalRowsProcessed: filteredRows.length,
         resolutionTimesCount: resolutionTimes.length,
         headers: headers,
-        columnIndices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex, statusIndex }
+        columnIndices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex },
+        logic: 'Raised = data in "Timestamp Issues Raised", Resolved = data in both raised & resolved columns'
       }
     })
 
