@@ -33,7 +33,7 @@ export async function GET() {
       }, { status: 404 })
     }
 
-    // Find column indices - VERY flexible search
+    // Find EXACT column names
     const headers = rows[0]
     console.log('All headers:', headers)
     
@@ -42,42 +42,33 @@ export async function GET() {
     let clientIndex = -1
     let issueIndex = -1
 
-    // Search for columns with multiple possible names
+    // Search for EXACT column names
     headers.forEach((header, index) => {
       if (!header) return
-      const h = header.toLowerCase().trim()
+      const h = header.toString().trim()
       
-      // Timestamp Raised
-      if ((h.includes('timestamp') && h.includes('raised')) ||
-          (h.includes('time') && h.includes('raised')) ||
-          h.includes('raised timestamp') ||
-          h.includes('issue raised') ||
-          h.includes('created')) {
+      // Exact match for "Timestamp Issues Raised"
+      if (h === 'Timestamp Issues Raised') {
         timestampRaisedIndex = index
       }
       
-      // Timestamp Resolved
-      if ((h.includes('timestamp') && h.includes('resolved')) ||
-          (h.includes('time') && h.includes('resolved')) ||
-          h.includes('resolved timestamp') ||
-          h.includes('issue resolved') ||
-          h.includes('completed')) {
+      // Exact match for "Timestamp Issues Resolved"  
+      if (h === 'Timestamp Issues Resolved') {
         timestampResolvedIndex = index
       }
       
-      // Client
-      if (h.includes('client') || h.includes('customer') || h.includes('company')) {
+      // Exact match for "Client"
+      if (h === 'Client' || h === 'client') {
         clientIndex = index
       }
       
-      // Issue/Sub-request
-      if (h.includes('issue') || h.includes('sub-request') || h.includes('sub request') || 
-          h.includes('type') || h.includes('request') || h.includes('description')) {
+      // Exact match for "Issue" (not "Sub-request")
+      if (h === 'Issue' || h === 'issue') {
         issueIndex = index
       }
     })
 
-    console.log('Column indices found:', {
+    console.log('Exact column indices found:', {
       timestampRaisedIndex,
       timestampResolvedIndex, 
       clientIndex,
@@ -88,15 +79,26 @@ export async function GET() {
     if (timestampRaisedIndex === -1 || clientIndex === -1 || issueIndex === -1) {
       return NextResponse.json({ 
         error: 'Required columns not found',
+        missingColumns: {
+          timestampRaised: timestampRaisedIndex === -1 ? 'Missing "Timestamp Issues Raised"' : 'Found',
+          client: clientIndex === -1 ? 'Missing "Client"' : 'Found',
+          issue: issueIndex === -1 ? 'Missing "Issue"' : 'Found'
+        },
         headers: headers,
-        indices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex },
-        message: 'Could not find timestamp raised, client, or issue columns'
+        indices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex }
       }, { status: 400 })
     }
 
-    // Show sample data for debugging
-    const sampleRows = rows.slice(1, 6)
-    console.log('Sample data rows:', sampleRows.map((row, idx) => ({
+    // Filter for EXACT "Historical Video Request" in "Issue" column
+    const filteredRows = rows.slice(1).filter(row => {
+      const issueType = (row[issueIndex] || '').toString().trim()
+      
+      // Exact match for "Historical Video Request"
+      return issueType === 'Historical Video Request'
+    })
+
+    console.log('Historical Video Request rows found:', filteredRows.length)
+    console.log('Sample filtered rows:', filteredRows.slice(0, 3).map((row, idx) => ({
       row: idx + 1,
       timestampRaised: row[timestampRaisedIndex],
       timestampResolved: row[timestampResolvedIndex],
@@ -104,39 +106,26 @@ export async function GET() {
       issue: row[issueIndex]
     })))
 
-    // Filter for "Historical Video Request" with multiple search patterns
-    const filteredRows = rows.slice(1).filter(row => {
-      const issueType = (row[issueIndex] || '').toString().toLowerCase()
-      
-      // Multiple patterns to match historical video requests
-      return issueType.includes('historical') && issueType.includes('video') ||
-             issueType.includes('history') && issueType.includes('video') ||
-             issueType.includes('past') && issueType.includes('video') ||
-             issueType.includes('archive') && issueType.includes('video') ||
-             issueType.includes('video') && issueType.includes('request') && issueType.includes('historical')
-    })
-
-    console.log('Historical video rows found:', filteredRows.length)
-    console.log('Sample filtered rows:', filteredRows.slice(0, 3).map(row => ({
-      timestampRaised: row[timestampRaisedIndex],
-      client: row[clientIndex],
-      issue: row[issueIndex]
-    })))
-
-    // If no historical video requests found, show all issue types for debugging
+    // If no Historical Video Requests found, show all Issue types for debugging
     if (filteredRows.length === 0) {
-      const allIssueTypes = rows.slice(1, 20).map(row => row[issueIndex]).filter(Boolean)
+      const allIssueTypes = rows.slice(1, 20)
+        .map(row => row[issueIndex])
+        .filter(Boolean)
+        .map(issue => issue.toString().trim())
+      
+      const uniqueIssueTypes = [...new Set(allIssueTypes)]
+      
       return NextResponse.json({
-        error: 'No historical video requests found',
-        totalRows: rows.length - 1,
-        sampleIssueTypes: allIssueTypes,
-        searchPatterns: ['historical + video', 'history + video', 'past + video', 'archive + video'],
-        headers: headers,
-        indices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex }
+        error: 'No "Historical Video Request" found in Issue column',
+        totalDataRows: rows.length - 1,
+        issueColumnIndex: issueIndex,
+        sampleIssueTypes: uniqueIssueTypes.slice(0, 10),
+        exactSearchTerm: 'Historical Video Request',
+        headers: headers
       }, { status: 404 })
     }
 
-    // Process data
+    // Process Historical Video Request data
     const monthlyStats = {}
     const clientStats = {}
     const resolutionTimes = []
@@ -146,9 +135,13 @@ export async function GET() {
     filteredRows.forEach((row, rowIndex) => {
       const timestampRaised = row[timestampRaisedIndex]
       const timestampResolved = row[timestampResolvedIndex]
-      const clientName = (row[clientIndex] || 'Unknown').toString()
+      const clientName = (row[clientIndex] || 'Unknown').toString().trim()
       
-      if (!timestampRaised || !timestampRaised.toString().trim()) return
+      // Must have raised timestamp
+      if (!timestampRaised || !timestampRaised.toString().trim()) {
+        console.log(`Row ${rowIndex + 1}: No raised timestamp`)
+        return
+      }
 
       totalRequests += 1
 
@@ -181,10 +174,8 @@ export async function GET() {
       }
       clientStats[clientName].requests += 1
 
-      // Calculate delivery time if video was delivered
-      if (timestampResolved && timestampResolved.toString().trim() && 
-          !['pending', 'open', 'in progress', '-', ''].includes(timestampResolved.toString().toLowerCase().trim())) {
-        
+      // Check if delivered - ONLY if "Timestamp Issues Resolved" has data
+      if (timestampResolved && timestampResolved.toString().trim()) {
         const resolvedDate = parseTimestamp(timestampResolved)
         if (resolvedDate && resolvedDate >= raisedDate) {
           const deliveryTime = (resolvedDate - raisedDate) / (1000 * 60 * 60) // hours
@@ -201,11 +192,10 @@ export async function GET() {
       }
     })
 
-    console.log('Processing complete:', {
+    console.log('Historical Video Processing complete:', {
       totalRequests,
       totalDelivered,
-      monthlyStatsCount: Object.keys(monthlyStats).length,
-      clientStatsCount: Object.keys(clientStats).length
+      deliveryRate: totalRequests > 0 ? ((totalDelivered / totalRequests) * 100).toFixed(1) : 0
     })
 
     // Calculate delivery time statistics
@@ -263,8 +253,7 @@ export async function GET() {
       debug: {
         totalRowsProcessed: filteredRows.length,
         headers: headers,
-        columnIndices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex },
-        sampleProcessedRows: Math.min(3, filteredRows.length)
+        columnIndices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex }
       }
     })
 
@@ -343,7 +332,6 @@ function parseTimestamp(timestampStr) {
       }
     }
     
-    // Fallback
     return new Date(str)
   } catch (e) {
     console.error('Error parsing timestamp:', str, e)
