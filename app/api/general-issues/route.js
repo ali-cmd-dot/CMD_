@@ -9,7 +9,7 @@ export async function GET() {
       throw new Error('Missing API key or Sheet ID')
     }
 
-    // Fetch Issues-Realtime sheet data for all issues
+    // Fixed: Tab name with space "Issues- Realtime"
     const issuesUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Issues-%20Realtime!A:Z?key=${API_KEY}`
     
     const issuesResponse = await fetch(issuesUrl)
@@ -25,35 +25,60 @@ export async function GET() {
       return NextResponse.json({ error: 'No data found' }, { status: 404 })
     }
 
-    // Find column indices
+    // Find column indices with better search
     const headers = rows[0]
+    console.log('General Issues - Headers found:', headers)
+    
     const timestampRaisedIndex = headers.findIndex(h => 
-      h.toLowerCase().includes('timestamp') && h.toLowerCase().includes('raised')
+      h && h.toLowerCase().includes('timestamp') && h.toLowerCase().includes('raised')
     )
     const timestampResolvedIndex = headers.findIndex(h => 
-      h.toLowerCase().includes('timestamp') && h.toLowerCase().includes('resolved')
+      h && h.toLowerCase().includes('timestamp') && h.toLowerCase().includes('resolved')
     )
-    const clientIndex = headers.findIndex(h => h.toLowerCase().includes('client'))
-    const issueIndex = headers.findIndex(h => h.toLowerCase().includes('issue'))
+    const clientIndex = headers.findIndex(h => 
+      h && h.toLowerCase().includes('client')
+    )
+    const issueIndex = headers.findIndex(h => 
+      h && (h.toLowerCase().includes('issue') || h.toLowerCase().includes('sub-request') || h.toLowerCase().includes('sub request'))
+    )
+    const statusIndex = headers.findIndex(h => 
+      h && h.toLowerCase().includes('status')
+    )
+
+    console.log('General Issues - Column indices:', { 
+      timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex, statusIndex 
+    })
 
     if (timestampRaisedIndex === -1 || clientIndex === -1) {
-      return NextResponse.json({ error: 'Required columns not found' }, { status: 400 })
+      return NextResponse.json({ 
+        error: 'Required columns not found',
+        headers: headers 
+      }, { status: 400 })
     }
 
-    // Process ALL issues (no filtering by issue type)
+    // Process ALL issues (exclude Historical Video Requests to avoid duplication)
+    const filteredRows = rows.slice(1).filter(row => {
+      const issueType = row[issueIndex] || ''
+      // Exclude Historical Video Requests as they have separate endpoint
+      return !issueType.toLowerCase().includes('historical video request')
+    })
+
+    console.log('General Issues - Filtered rows count:', filteredRows.length)
+
     const monthlyStats = {}
     const clientStats = {}
     const resolutionTimes = []
     let totalRaised = 0
     let totalResolved = 0
 
-    rows.slice(1).forEach(row => {
+    filteredRows.forEach(row => {
       const timestampRaised = row[timestampRaisedIndex]
       const timestampResolved = row[timestampResolvedIndex]
       const clientName = row[clientIndex] || 'Unknown'
       const issueType = row[issueIndex] || 'Unknown Issue'
+      const status = row[statusIndex] || ''
       
-      if (!timestampRaised) return
+      if (!timestampRaised || !timestampRaised.trim()) return
 
       totalRaised += 1
 
@@ -97,17 +122,57 @@ export async function GET() {
       }
       clientStats[clientName].issueTypes[issueType] += 1
 
+      // Better resolution detection logic
+      let isResolved = false
+      let resolvedDate = null
+
+      // Method 1: Check if resolved timestamp exists and is valid
+      if (timestampResolved && timestampResolved.trim() && 
+          timestampResolved.toLowerCase() !== 'pending' && 
+          timestampResolved.toLowerCase() !== 'open' &&
+          timestampResolved.toLowerCase() !== 'in progress' &&
+          timestampResolved !== '-' &&
+          timestampResolved !== '') {
+        
+        resolvedDate = parseTimestamp(timestampResolved)
+        if (resolvedDate && resolvedDate > raisedDate) {
+          isResolved = true
+        }
+      }
+
+      // Method 2: Check status column if available
+      if (!isResolved && status) {
+        const statusLower = status.toLowerCase()
+        if (statusLower.includes('resolved') || 
+            statusLower.includes('closed') || 
+            statusLower.includes('completed') || 
+            statusLower.includes('done')) {
+          isResolved = true
+        }
+      }
+
+      // Method 3: If resolved timestamp exists but no time diff, still consider resolved
+      if (!isResolved && timestampResolved && timestampResolved.trim() &&
+          timestampResolved.toLowerCase() !== 'pending' &&
+          timestampResolved !== '-') {
+        resolvedDate = parseTimestamp(timestampResolved)
+        if (resolvedDate) {
+          isResolved = true
+        }
+      }
+
       // Calculate resolution time if resolved
-      if (timestampResolved && timestampResolved.trim()) {
-        const resolvedDate = parseTimestamp(timestampResolved)
+      if (isResolved) {
+        totalResolved += 1
+        monthlyStats[month].resolved += 1
+        clientStats[clientName].resolved += 1
+
+        // Only add to resolution times if we have both valid timestamps
         if (resolvedDate && resolvedDate > raisedDate) {
           const resolutionTime = (resolvedDate - raisedDate) / (1000 * 60 * 60) // hours
           
-          if (resolutionTime >= 0) {
-            totalResolved += 1
-            monthlyStats[month].resolved += 1
+          if (resolutionTime >= 0 && resolutionTime < 8760) { // Less than 1 year (filter outliers)
             monthlyStats[month].resolutionTimes.push(resolutionTime)
-            clientStats[clientName].resolved += 1
             clientStats[clientName].resolutionTimes.push(resolutionTime)
             resolutionTimes.push(resolutionTime)
           }
@@ -172,7 +237,12 @@ export async function GET() {
       avgResolutionTime: parseFloat(avgResolutionTime.toFixed(2)),
       minResolutionTime: parseFloat(minResolutionTime.toFixed(2)),
       maxResolutionTime: parseFloat(maxResolutionTime.toFixed(2)),
-      medianResolutionTime: parseFloat(medianResolutionTime.toFixed(2))
+      medianResolutionTime: parseFloat(medianResolutionTime.toFixed(2)),
+      debug: {
+        totalRowsProcessed: filteredRows.length,
+        resolutionTimesCount: resolutionTimes.length,
+        headers: headers
+      }
     })
 
   } catch (error) {
@@ -188,7 +258,9 @@ function parseTimestamp(timestampStr) {
   if (!timestampStr || !timestampStr.trim()) return null
   
   try {
-    // Handle DD/MM/YYYY HH:mm:ss format
+    // Handle multiple timestamp formats
+    
+    // Format: DD/MM/YYYY HH:mm:ss
     const parts = timestampStr.split(' ')
     if (parts.length >= 2) {
       const datePart = parts[0]
@@ -208,6 +280,40 @@ function parseTimestamp(timestampStr) {
         const second = parseInt(timeParts[2]) || 0
         
         return new Date(year, month, day, hour, minute, second)
+      }
+    }
+    
+    // Format: DD-MM-YYYY HH:mm:ss
+    if (timestampStr.includes('-') && timestampStr.includes(' ')) {
+      const [datePart, timePart] = timestampStr.split(' ')
+      const dateParts = datePart.split('-')
+      if (dateParts.length === 3) {
+        const day = parseInt(dateParts[0])
+        const month = parseInt(dateParts[1]) - 1
+        let year = parseInt(dateParts[2])
+        
+        if (year < 100) year += 2000
+        
+        const timeParts = timePart.split(':')
+        const hour = parseInt(timeParts[0]) || 0
+        const minute = parseInt(timeParts[1]) || 0
+        const second = parseInt(timeParts[2]) || 0
+        
+        return new Date(year, month, day, hour, minute, second)
+      }
+    }
+    
+    // Format: Just date DD/MM/YYYY or DD-MM-YYYY
+    if (!timestampStr.includes(' ')) {
+      const dateParts = timestampStr.includes('/') ? timestampStr.split('/') : timestampStr.split('-')
+      if (dateParts.length === 3) {
+        const day = parseInt(dateParts[0])
+        const month = parseInt(dateParts[1]) - 1
+        let year = parseInt(dateParts[2])
+        
+        if (year < 100) year += 2000
+        
+        return new Date(year, month, day)
       }
     }
     
