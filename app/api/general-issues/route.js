@@ -10,7 +10,7 @@ export async function GET() {
     }
 
     // Fetch Issues-Realtime sheet data for all issues
-    const issuesUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Issues-Realtime!A:Z?key=${API_KEY}`
+    const issuesUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Issues-%20Realtime!A:Z?key=${API_KEY}`
     
     const issuesResponse = await fetch(issuesUrl)
     
