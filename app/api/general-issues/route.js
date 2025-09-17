@@ -29,21 +29,51 @@ export async function GET() {
     const headers = rows[0]
     console.log('General Issues - Headers found:', headers)
     
-    const timestampRaisedIndex = headers.findIndex(h => 
-      h && h.toLowerCase().includes('timestamp') && h.toLowerCase().includes('raised')
-    )
-    const timestampResolvedIndex = headers.findIndex(h => 
-      h && h.toLowerCase().includes('timestamp') && h.toLowerCase().includes('resolved')
-    )
-    const clientIndex = headers.findIndex(h => 
-      h && h.toLowerCase().includes('client')
-    )
-    const issueIndex = headers.findIndex(h => 
-      h && (h.toLowerCase().includes('issue') || h.toLowerCase().includes('sub-request') || h.toLowerCase().includes('sub request'))
-    )
-    const statusIndex = headers.findIndex(h => 
-      h && h.toLowerCase().includes('status')
-    )
+    let timestampRaisedIndex = -1
+    let timestampResolvedIndex = -1
+    let clientIndex = -1
+    let issueIndex = -1
+    let statusIndex = -1
+
+    // More flexible column detection
+    headers.forEach((header, index) => {
+      if (!header) return
+      const h = header.toLowerCase().trim()
+      
+      // Timestamp Raised
+      if ((h.includes('timestamp') && h.includes('raised')) ||
+          (h.includes('time') && h.includes('raised')) ||
+          h.includes('raised timestamp') ||
+          h.includes('issue raised') ||
+          h.includes('created')) {
+        timestampRaisedIndex = index
+      }
+      
+      // Timestamp Resolved
+      if ((h.includes('timestamp') && h.includes('resolved')) ||
+          (h.includes('time') && h.includes('resolved')) ||
+          h.includes('resolved timestamp') ||
+          h.includes('issue resolved') ||
+          h.includes('completed')) {
+        timestampResolvedIndex = index
+      }
+      
+      // Client
+      if (h.includes('client') || h.includes('customer') || h.includes('company')) {
+        clientIndex = index
+      }
+      
+      // Issue/Sub-request
+      if (h.includes('issue') || h.includes('sub-request') || h.includes('sub request') || 
+          h.includes('type') || h.includes('request') || h.includes('description')) {
+        issueIndex = index
+      }
+      
+      // Status
+      if (h.includes('status') || h.includes('state') || h.includes('condition')) {
+        statusIndex = index
+      }
+    })
 
     console.log('General Issues - Column indices:', { 
       timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex, statusIndex 
@@ -52,123 +82,114 @@ export async function GET() {
     if (timestampRaisedIndex === -1 || clientIndex === -1) {
       return NextResponse.json({ 
         error: 'Required columns not found',
-        headers: headers 
+        headers: headers,
+        indices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex, statusIndex }
       }, { status: 400 })
     }
 
-    // Process ALL issues (exclude Historical Video Requests to avoid duplication)
+    // Process ALL issues EXCEPT Historical Video Requests (to avoid duplication)
     const filteredRows = rows.slice(1).filter(row => {
-      const issueType = row[issueIndex] || ''
+      const issueType = (row[issueIndex] || '').toString().toLowerCase()
       // Exclude Historical Video Requests as they have separate endpoint
-      return !issueType.toLowerCase().includes('historical video request')
+      return !(issueType.includes('historical') && issueType.includes('video'))
     })
 
     console.log('General Issues - Filtered rows count:', filteredRows.length)
 
+    // ROW-BY-ROW processing for perfect matching
     const monthlyStats = {}
     const clientStats = {}
     const resolutionTimes = []
     let totalRaised = 0
     let totalResolved = 0
 
-    filteredRows.forEach(row => {
+    filteredRows.forEach((row, rowIndex) => {
       const timestampRaised = row[timestampRaisedIndex]
       const timestampResolved = row[timestampResolvedIndex]
-      const clientName = row[clientIndex] || 'Unknown'
-      const issueType = row[issueIndex] || 'Unknown Issue'
-      const status = row[statusIndex] || ''
+      const clientName = (row[clientIndex] || 'Unknown').toString()
+      const issueType = (row[issueIndex] || 'Unknown Issue').toString()
+      const status = row[statusIndex] ? row[statusIndex].toString() : ''
       
-      if (!timestampRaised || !timestampRaised.trim()) return
+      // STEP 1: Check if this row has a RAISED issue
+      if (!timestampRaised || !timestampRaised.toString().trim()) {
+        return // Skip rows without raised timestamp
+      }
 
+      // Count as RAISED
       totalRaised += 1
 
       // Parse raised timestamp
       const raisedDate = parseTimestamp(timestampRaised)
-      if (!raisedDate) return
+      if (!raisedDate) {
+        console.log(`Row ${rowIndex + 1}: Could not parse raised timestamp: "${timestampRaised}"`)
+        return
+      }
 
       const month = getMonthYear(raisedDate)
       
-      // Monthly stats
+      // Initialize monthly stats
       if (!monthlyStats[month]) {
         monthlyStats[month] = { 
           raised: 0, 
           resolved: 0, 
-          resolutionTimes: [],
-          issueTypes: {}
+          resolutionTimes: []
         }
       }
       monthlyStats[month].raised += 1
 
-      // Track issue types per month
-      if (!monthlyStats[month].issueTypes[issueType]) {
-        monthlyStats[month].issueTypes[issueType] = 0
-      }
-      monthlyStats[month].issueTypes[issueType] += 1
-
-      // Client stats
+      // Initialize client stats
       if (!clientStats[clientName]) {
         clientStats[clientName] = { 
           raised: 0, 
           resolved: 0, 
-          resolutionTimes: [],
-          issueTypes: {}
+          resolutionTimes: []
         }
       }
       clientStats[clientName].raised += 1
 
-      // Track issue types per client
-      if (!clientStats[clientName].issueTypes[issueType]) {
-        clientStats[clientName].issueTypes[issueType] = 0
-      }
-      clientStats[clientName].issueTypes[issueType] += 1
-
-      // Better resolution detection logic
-      let isResolved = false
+      // STEP 2: Check if THIS SAME ROW has a RESOLVED issue
+      let isResolvedInThisRow = false
       let resolvedDate = null
 
-      // Method 1: Check if resolved timestamp exists and is valid
-      if (timestampResolved && timestampResolved.trim() && 
-          timestampResolved.toLowerCase() !== 'pending' && 
-          timestampResolved.toLowerCase() !== 'open' &&
-          timestampResolved.toLowerCase() !== 'in progress' &&
-          timestampResolved !== '-' &&
-          timestampResolved !== '') {
+      // Method 1: Check if resolved timestamp exists and is valid in THIS ROW
+      if (timestampResolved && timestampResolved.toString().trim()) {
+        const resolvedStr = timestampResolved.toString().toLowerCase().trim()
         
-        resolvedDate = parseTimestamp(timestampResolved)
-        if (resolvedDate && resolvedDate > raisedDate) {
-          isResolved = true
+        // Skip common "not resolved" indicators
+        if (!['pending', 'open', 'in progress', 'not resolved', 'ongoing', '-', '', 'n/a', 'na'].includes(resolvedStr)) {
+          resolvedDate = parseTimestamp(timestampResolved)
+          if (resolvedDate && resolvedDate >= raisedDate) {
+            isResolvedInThisRow = true
+          }
         }
       }
 
-      // Method 2: Check status column if available
-      if (!isResolved && status) {
-        const statusLower = status.toLowerCase()
+      // Method 2: Check status column in THIS ROW if resolved timestamp not conclusive
+      if (!isResolvedInThisRow && status) {
+        const statusLower = status.toLowerCase().trim()
         if (statusLower.includes('resolved') || 
             statusLower.includes('closed') || 
             statusLower.includes('completed') || 
-            statusLower.includes('done')) {
-          isResolved = true
+            statusLower.includes('done') ||
+            statusLower === 'complete' ||
+            statusLower === 'finished') {
+          isResolvedInThisRow = true
+          
+          // If no resolved date but marked as resolved, use raised date + some time
+          if (!resolvedDate) {
+            resolvedDate = new Date(raisedDate.getTime() + (24 * 60 * 60 * 1000)) // +1 day
+          }
         }
       }
 
-      // Method 3: If resolved timestamp exists but no time diff, still consider resolved
-      if (!isResolved && timestampResolved && timestampResolved.trim() &&
-          timestampResolved.toLowerCase() !== 'pending' &&
-          timestampResolved !== '-') {
-        resolvedDate = parseTimestamp(timestampResolved)
-        if (resolvedDate) {
-          isResolved = true
-        }
-      }
-
-      // Calculate resolution time if resolved
-      if (isResolved) {
+      // STEP 3: If resolved in this row, count it and calculate time
+      if (isResolvedInThisRow) {
         totalResolved += 1
         monthlyStats[month].resolved += 1
         clientStats[clientName].resolved += 1
 
-        // Only add to resolution times if we have both valid timestamps
-        if (resolvedDate && resolvedDate > raisedDate) {
+        // Calculate resolution time if we have both dates
+        if (resolvedDate && raisedDate) {
           const resolutionTime = (resolvedDate - raisedDate) / (1000 * 60 * 60) // hours
           
           if (resolutionTime >= 0 && resolutionTime < 8760) { // Less than 1 year (filter outliers)
@@ -178,6 +199,12 @@ export async function GET() {
           }
         }
       }
+    })
+
+    console.log('Processing complete:', {
+      totalRaised,
+      totalResolved,
+      resolutionRate: totalRaised > 0 ? ((totalResolved / totalRaised) * 100).toFixed(1) : 0
     })
 
     // Calculate resolution statistics
@@ -201,11 +228,7 @@ export async function GET() {
         avgTime: data.resolutionTimes.length > 0 
           ? parseFloat((data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length).toFixed(2))
           : 0,
-        resolutionRate: data.raised > 0 ? parseFloat(((data.resolved / data.raised) * 100).toFixed(1)) : 0,
-        topIssueTypes: Object.entries(data.issueTypes)
-          .sort(([,a], [,b]) => b - a)
-          .slice(0, 3)
-          .map(([type, count]) => ({ type, count }))
+        resolutionRate: data.raised > 0 ? parseFloat(((data.resolved / data.raised) * 100).toFixed(1)) : 0
       }))
 
     const clientBreakdown = Object.entries(clientStats)
@@ -221,11 +244,7 @@ export async function GET() {
           : 0,
         minTime: data.resolutionTimes.length > 0 ? parseFloat(Math.min(...data.resolutionTimes).toFixed(2)) : 0,
         maxTime: data.resolutionTimes.length > 0 ? parseFloat(Math.max(...data.resolutionTimes).toFixed(2)) : 0,
-        medianTime: data.resolutionTimes.length > 0 ? parseFloat(calculateMedian(data.resolutionTimes).toFixed(2)) : 0,
-        topIssueTypes: Object.entries(data.issueTypes)
-          .sort(([,a], [,b]) => b - a)
-          .slice(0, 3)
-          .map(([type, count]) => ({ type, count }))
+        medianTime: data.resolutionTimes.length > 0 ? parseFloat(calculateMedian(data.resolutionTimes).toFixed(2)) : 0
       }))
 
     return NextResponse.json({
@@ -241,7 +260,8 @@ export async function GET() {
       debug: {
         totalRowsProcessed: filteredRows.length,
         resolutionTimesCount: resolutionTimes.length,
-        headers: headers
+        headers: headers,
+        columnIndices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex, statusIndex }
       }
     })
 
@@ -255,17 +275,17 @@ export async function GET() {
 }
 
 function parseTimestamp(timestampStr) {
-  if (!timestampStr || !timestampStr.trim()) return null
+  if (!timestampStr) return null
+  
+  const str = timestampStr.toString().trim()
+  if (!str) return null
   
   try {
     // Handle multiple timestamp formats
     
     // Format: DD/MM/YYYY HH:mm:ss
-    const parts = timestampStr.split(' ')
-    if (parts.length >= 2) {
-      const datePart = parts[0]
-      const timePart = parts[1]
-      
+    if (str.includes('/') && str.includes(' ')) {
+      const [datePart, timePart] = str.split(' ')
       const dateParts = datePart.split('/')
       if (dateParts.length === 3) {
         const day = parseInt(dateParts[0])
@@ -274,18 +294,21 @@ function parseTimestamp(timestampStr) {
         
         if (year < 100) year += 2000
         
-        const timeParts = timePart.split(':')
-        const hour = parseInt(timeParts[0]) || 0
-        const minute = parseInt(timeParts[1]) || 0
-        const second = parseInt(timeParts[2]) || 0
-        
-        return new Date(year, month, day, hour, minute, second)
+        if (timePart) {
+          const timeParts = timePart.split(':')
+          const hour = parseInt(timeParts[0]) || 0
+          const minute = parseInt(timeParts[1]) || 0
+          const second = parseInt(timeParts[2]) || 0
+          return new Date(year, month, day, hour, minute, second)
+        } else {
+          return new Date(year, month, day)
+        }
       }
     }
     
     // Format: DD-MM-YYYY HH:mm:ss
-    if (timestampStr.includes('-') && timestampStr.includes(' ')) {
-      const [datePart, timePart] = timestampStr.split(' ')
+    if (str.includes('-') && str.includes(' ')) {
+      const [datePart, timePart] = str.split(' ')
       const dateParts = datePart.split('-')
       if (dateParts.length === 3) {
         const day = parseInt(dateParts[0])
@@ -304,8 +327,8 @@ function parseTimestamp(timestampStr) {
     }
     
     // Format: Just date DD/MM/YYYY or DD-MM-YYYY
-    if (!timestampStr.includes(' ')) {
-      const dateParts = timestampStr.includes('/') ? timestampStr.split('/') : timestampStr.split('-')
+    if (!str.includes(' ')) {
+      const dateParts = str.includes('/') ? str.split('/') : str.split('-')
       if (dateParts.length === 3) {
         const day = parseInt(dateParts[0])
         const month = parseInt(dateParts[1]) - 1
@@ -317,9 +340,9 @@ function parseTimestamp(timestampStr) {
       }
     }
     
-    return new Date(timestampStr)
+    return new Date(str)
   } catch (e) {
-    console.error('Error parsing timestamp:', timestampStr, e)
+    console.error('Error parsing timestamp:', str, e)
     return null
   }
 }
