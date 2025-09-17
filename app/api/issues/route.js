@@ -9,7 +9,7 @@ export async function GET() {
       throw new Error('Missing API key or Sheet ID')
     }
 
-    // Fetch Issues-Realtime sheet data
+    // Fixed: Tab name with space "Issues- Realtime"
     const issuesUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Issues-%20Realtime!A:Z?key=${API_KEY}`
     
     const issuesResponse = await fetch(issuesUrl)
@@ -25,28 +25,40 @@ export async function GET() {
       return NextResponse.json({ error: 'No data found' }, { status: 404 })
     }
 
-    // Find column indices
+    // Find column indices - more flexible search
     const headers = rows[0]
-    const subRequestIndex = headers.findIndex(h => 
-      h.toLowerCase().includes('sub-request') || h.toLowerCase().includes('sub request') || h.toLowerCase().includes('issue')
-    )
+    console.log('Headers found:', headers) // Debug log
+    
     const timestampRaisedIndex = headers.findIndex(h => 
-      h.toLowerCase().includes('timestamp') && h.toLowerCase().includes('raised')
+      h && h.toLowerCase().includes('timestamp') && h.toLowerCase().includes('raised')
     )
     const timestampResolvedIndex = headers.findIndex(h => 
-      h.toLowerCase().includes('timestamp') && h.toLowerCase().includes('resolved')
+      h && h.toLowerCase().includes('timestamp') && h.toLowerCase().includes('resolved')
     )
-    const clientIndex = headers.findIndex(h => h.toLowerCase().includes('client'))
+    const clientIndex = headers.findIndex(h => 
+      h && h.toLowerCase().includes('client')
+    )
+    const issueIndex = headers.findIndex(h => 
+      h && (h.toLowerCase().includes('issue') || h.toLowerCase().includes('sub-request') || h.toLowerCase().includes('sub request'))
+    )
+
+    console.log('Column indices:', { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex })
 
     if (timestampRaisedIndex === -1 || clientIndex === -1) {
-      return NextResponse.json({ error: 'Required columns not found' }, { status: 400 })
+      return NextResponse.json({ 
+        error: 'Required columns not found',
+        headers: headers,
+        indices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex }
+      }, { status: 400 })
     }
 
-    // Filter for "Historical Video Request" only
+    // Filter for "Historical Video Request" only - more flexible filtering
     const filteredRows = rows.slice(1).filter(row => {
-      const issueType = row[subRequestIndex] || ''
-      return issueType.toLowerCase().includes('historical video request')
+      const issueType = row[issueIndex] || ''
+      return issueType.toLowerCase().includes('historical') && issueType.toLowerCase().includes('video')
     })
+
+    console.log('Filtered rows count:', filteredRows.length)
 
     // Process data
     const monthlyStats = {}
@@ -91,7 +103,7 @@ export async function GET() {
       clientStats[clientName].requests += 1
 
       // Calculate delivery time if video was delivered
-      if (timestampResolved && timestampResolved.trim()) {
+      if (timestampResolved && timestampResolved.trim() && timestampResolved.toLowerCase() !== 'pending') {
         const resolvedDate = parseTimestamp(timestampResolved)
         if (resolvedDate && resolvedDate > raisedDate) {
           const deliveryTime = (resolvedDate - raisedDate) / (1000 * 60 * 60) // hours
@@ -159,7 +171,12 @@ export async function GET() {
       avgDeliveryTime: parseFloat(avgDeliveryTime.toFixed(2)),
       fastestDeliveryTime: parseFloat(fastestDeliveryTime.toFixed(2)),
       slowestDeliveryTime: parseFloat(slowestDeliveryTime.toFixed(2)),
-      medianDeliveryTime: parseFloat(medianDeliveryTime.toFixed(2))
+      medianDeliveryTime: parseFloat(medianDeliveryTime.toFixed(2)),
+      debug: {
+        totalRowsProcessed: filteredRows.length,
+        headers: headers,
+        columnIndices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex }
+      }
     })
 
   } catch (error) {
@@ -175,7 +192,9 @@ function parseTimestamp(timestampStr) {
   if (!timestampStr || !timestampStr.trim()) return null
   
   try {
-    // Handle DD/MM/YYYY HH:mm:ss format
+    // Handle multiple timestamp formats
+    
+    // Format: DD/MM/YYYY HH:mm:ss
     const parts = timestampStr.split(' ')
     if (parts.length >= 2) {
       const datePart = parts[0]
@@ -191,6 +210,26 @@ function parseTimestamp(timestampStr) {
         if (year < 100) {
           year += 2000
         }
+        
+        const timeParts = timePart.split(':')
+        const hour = parseInt(timeParts[0]) || 0
+        const minute = parseInt(timeParts[1]) || 0
+        const second = parseInt(timeParts[2]) || 0
+        
+        return new Date(year, month, day, hour, minute, second)
+      }
+    }
+    
+    // Format: DD-MM-YYYY HH:mm:ss
+    if (timestampStr.includes('-') && timestampStr.includes(' ')) {
+      const [datePart, timePart] = timestampStr.split(' ')
+      const dateParts = datePart.split('-')
+      if (dateParts.length === 3) {
+        const day = parseInt(dateParts[0])
+        const month = parseInt(dateParts[1]) - 1
+        let year = parseInt(dateParts[2])
+        
+        if (year < 100) year += 2000
         
         const timeParts = timePart.split(':')
         const hour = parseInt(timeParts[0]) || 0
