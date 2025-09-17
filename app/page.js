@@ -790,27 +790,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Issue Types Breakdown */}
-            <div className="bg-white p-6 rounded-lg card-shadow">
-              <h3 className="text-xl font-semibold mb-4">Top Issue Types by Month</h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {generalIssuesData.monthlyData?.map((month, index) => (
-                  <div key={index}>
-                    <h4 className="font-medium mb-3">{month.month} - Top Issues</h4>
-                    <div className="space-y-2">
-                      {month.topIssueTypes?.map((issueType, tIndex) => (
-                        <div key={tIndex} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                          <div className="font-medium text-sm">{issueType.type}</div>
-                          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                            {issueType.count}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+
           </div>
         )}
       </div>
