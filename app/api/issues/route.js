@@ -27,123 +27,143 @@ export async function GET() {
 
     // Find column indices
     const headers = rows[0]
-    const subRequestIndex = headers.findIndex(h => h.toLowerCase().includes('sub-request') || h.toLowerCase().includes('sub request'))
-    const timestampRaisedIndex = headers.findIndex(h => h.toLowerCase().includes('timestamp') && h.toLowerCase().includes('raised'))
-    const timestampResolvedIndex = headers.findIndex(h => h.toLowerCase().includes('timestamp') && h.toLowerCase().includes('resolved'))
-    const clientsIndex = headers.findIndex(h => h.toLowerCase().includes('client'))
+    const subRequestIndex = headers.findIndex(h => 
+      h.toLowerCase().includes('sub-request') || h.toLowerCase().includes('sub request') || h.toLowerCase().includes('issue')
+    )
+    const timestampRaisedIndex = headers.findIndex(h => 
+      h.toLowerCase().includes('timestamp') && h.toLowerCase().includes('raised')
+    )
+    const timestampResolvedIndex = headers.findIndex(h => 
+      h.toLowerCase().includes('timestamp') && h.toLowerCase().includes('resolved')
+    )
+    const clientIndex = headers.findIndex(h => h.toLowerCase().includes('client'))
 
-    if (subRequestIndex === -1 || timestampRaisedIndex === -1) {
+    if (timestampRaisedIndex === -1 || clientIndex === -1) {
       return NextResponse.json({ error: 'Required columns not found' }, { status: 400 })
     }
 
     // Filter for "Historical Video Request" only
-    const filteredRows = rows.slice(1).filter(row => 
-      row[subRequestIndex] && row[subRequestIndex].toLowerCase().includes('historical video request')
-    )
+    const filteredRows = rows.slice(1).filter(row => {
+      const issueType = row[subRequestIndex] || ''
+      return issueType.toLowerCase().includes('historical video request')
+    })
 
     // Process data
     const monthlyStats = {}
     const clientStats = {}
     const resolutionTimes = []
-    let totalRaised = 0
-    let totalResolved = 0
+    let totalRequests = 0
+    let totalDelivered = 0
 
     filteredRows.forEach(row => {
       const timestampRaised = row[timestampRaisedIndex]
       const timestampResolved = row[timestampResolvedIndex]
-      const clientName = row[clientsIndex] || 'Unknown'
+      const clientName = row[clientIndex] || 'Unknown'
       
       if (!timestampRaised) return
 
-      totalRaised += 1
+      totalRequests += 1
 
-      // Extract month from raised timestamp
-      const raisedDate = new Date(timestampRaised)
-      if (!isNaN(raisedDate.getTime())) {
-        const month = `${getMonthName(raisedDate.getMonth() + 1)} ${raisedDate.getFullYear()}`
-        
-        // Monthly stats
-        if (!monthlyStats[month]) {
-          monthlyStats[month] = { raised: 0, resolved: 0, resolutionTimes: [] }
+      // Parse raised timestamp
+      const raisedDate = parseTimestamp(timestampRaised)
+      if (!raisedDate) return
+
+      const month = getMonthYear(raisedDate)
+      
+      // Monthly stats
+      if (!monthlyStats[month]) {
+        monthlyStats[month] = { 
+          requests: 0, 
+          delivered: 0, 
+          resolutionTimes: []
         }
-        monthlyStats[month].raised += 1
+      }
+      monthlyStats[month].requests += 1
 
-        // Client stats
-        if (!clientStats[clientName]) {
-          clientStats[clientName] = { raised: 0, resolved: 0, resolutionTimes: [] }
+      // Client stats
+      if (!clientStats[clientName]) {
+        clientStats[clientName] = { 
+          requests: 0, 
+          delivered: 0, 
+          resolutionTimes: []
         }
-        clientStats[clientName].raised += 1
+      }
+      clientStats[clientName].requests += 1
 
-        // Calculate resolution time if resolved
-        if (timestampResolved) {
-          const resolvedDate = new Date(timestampResolved)
-          if (!isNaN(resolvedDate.getTime())) {
-            const resolutionTime = (resolvedDate - raisedDate) / (1000 * 60 * 60) // hours
-            
-            if (resolutionTime >= 0) {
-              totalResolved += 1
-              monthlyStats[month].resolved += 1
-              monthlyStats[month].resolutionTimes.push(resolutionTime)
-              clientStats[clientName].resolved += 1
-              clientStats[clientName].resolutionTimes.push(resolutionTime)
-              resolutionTimes.push(resolutionTime)
-            }
+      // Calculate delivery time if video was delivered
+      if (timestampResolved && timestampResolved.trim()) {
+        const resolvedDate = parseTimestamp(timestampResolved)
+        if (resolvedDate && resolvedDate > raisedDate) {
+          const deliveryTime = (resolvedDate - raisedDate) / (1000 * 60 * 60) // hours
+          
+          if (deliveryTime >= 0) {
+            totalDelivered += 1
+            monthlyStats[month].delivered += 1
+            monthlyStats[month].resolutionTimes.push(deliveryTime)
+            clientStats[clientName].delivered += 1
+            clientStats[clientName].resolutionTimes.push(deliveryTime)
+            resolutionTimes.push(deliveryTime)
           }
         }
       }
     })
 
-    // Calculate statistics
-    const avgResolutionTime = resolutionTimes.length > 0 
+    // Calculate delivery time statistics
+    const avgDeliveryTime = resolutionTimes.length > 0 
       ? resolutionTimes.reduce((a, b) => a + b, 0) / resolutionTimes.length 
       : 0
     
-    const minResolutionTime = resolutionTimes.length > 0 ? Math.min(...resolutionTimes) : 0
-    const maxResolutionTime = resolutionTimes.length > 0 ? Math.max(...resolutionTimes) : 0
-    const medianResolutionTime = resolutionTimes.length > 0 
+    const fastestDeliveryTime = resolutionTimes.length > 0 ? Math.min(...resolutionTimes) : 0
+    const slowestDeliveryTime = resolutionTimes.length > 0 ? Math.max(...resolutionTimes) : 0
+    const medianDeliveryTime = resolutionTimes.length > 0 
       ? calculateMedian(resolutionTimes) 
       : 0
 
     // Convert to arrays for frontend  
     const monthlyData = Object.entries(monthlyStats)
-      .sort(([a], [b]) => new Date(a.split(' ')[0] + ' 1, ' + a.split(' ')[1]) - new Date(b.split(' ')[0] + ' 1, ' + b.split(' ')[1]))
+      .sort(([a], [b]) => new Date(a.replace(' ', ' 1, ')) - new Date(b.replace(' ', ' 1, ')))
       .map(([month, data]) => ({
         month,
-        raised: data.raised,
-        resolved: data.resolved,
-        avgTime: data.resolutionTimes.length > 0 
+        requests: data.requests,
+        delivered: data.delivered,
+        deliveryRate: data.requests > 0 ? parseFloat(((data.delivered / data.requests) * 100).toFixed(1)) : 0,
+        avgDeliveryTime: data.resolutionTimes.length > 0 
           ? parseFloat((data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length).toFixed(2))
-          : 0
+          : 0,
+        fastestDelivery: data.resolutionTimes.length > 0 ? parseFloat(Math.min(...data.resolutionTimes).toFixed(2)) : 0,
+        slowestDelivery: data.resolutionTimes.length > 0 ? parseFloat(Math.max(...data.resolutionTimes).toFixed(2)) : 0
       }))
 
     const clientBreakdown = Object.entries(clientStats)
-      .filter(([, data]) => data.raised > 0)
-      .sort((a, b) => b[1].raised - a[1].raised)
+      .filter(([, data]) => data.requests > 0)
+      .sort((a, b) => b[1].requests - a[1].requests)
       .map(([client, data]) => ({
         client,
-        raised: data.raised,
-        resolved: data.resolved,
-        avgTime: data.resolutionTimes.length > 0 
+        requests: data.requests,
+        delivered: data.delivered,
+        deliveryRate: data.requests > 0 ? parseFloat(((data.delivered / data.requests) * 100).toFixed(1)) : 0,
+        avgDeliveryTime: data.resolutionTimes.length > 0 
           ? parseFloat((data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length).toFixed(2))
           : 0,
-        minTime: data.resolutionTimes.length > 0 ? parseFloat(Math.min(...data.resolutionTimes).toFixed(2)) : 0,
-        maxTime: data.resolutionTimes.length > 0 ? parseFloat(Math.max(...data.resolutionTimes).toFixed(2)) : 0,
-        medianTime: data.resolutionTimes.length > 0 ? parseFloat(calculateMedian(data.resolutionTimes).toFixed(2)) : 0
+        fastestDelivery: data.resolutionTimes.length > 0 ? parseFloat(Math.min(...data.resolutionTimes).toFixed(2)) : 0,
+        slowestDelivery: data.resolutionTimes.length > 0 ? parseFloat(Math.max(...data.resolutionTimes).toFixed(2)) : 0,
+        medianDeliveryTime: data.resolutionTimes.length > 0 ? parseFloat(calculateMedian(data.resolutionTimes).toFixed(2)) : 0
       }))
 
     return NextResponse.json({
       monthlyData,
       clientBreakdown,
-      totalRaised,
-      totalResolved,
-      avgResolutionTime: parseFloat(avgResolutionTime.toFixed(2)),
-      minResolutionTime: parseFloat(minResolutionTime.toFixed(2)),
-      maxResolutionTime: parseFloat(maxResolutionTime.toFixed(2)),
-      medianResolutionTime: parseFloat(medianResolutionTime.toFixed(2))
+      totalRequests,
+      totalDelivered,
+      overallDeliveryRate: totalRequests > 0 ? parseFloat(((totalDelivered / totalRequests) * 100).toFixed(1)) : 0,
+      avgDeliveryTime: parseFloat(avgDeliveryTime.toFixed(2)),
+      fastestDeliveryTime: parseFloat(fastestDeliveryTime.toFixed(2)),
+      slowestDeliveryTime: parseFloat(slowestDeliveryTime.toFixed(2)),
+      medianDeliveryTime: parseFloat(medianDeliveryTime.toFixed(2))
     })
 
   } catch (error) {
-    console.error('Error fetching issues data:', error)
+    console.error('Error fetching historical video data:', error)
     return NextResponse.json(
       { error: 'Failed to fetch data', details: error.message },
       { status: 500 }
@@ -151,12 +171,50 @@ export async function GET() {
   }
 }
 
-function getMonthName(monthNum) {
+function parseTimestamp(timestampStr) {
+  if (!timestampStr || !timestampStr.trim()) return null
+  
+  try {
+    // Handle DD/MM/YYYY HH:mm:ss format
+    const parts = timestampStr.split(' ')
+    if (parts.length >= 2) {
+      const datePart = parts[0]
+      const timePart = parts[1]
+      
+      const dateParts = datePart.split('/')
+      if (dateParts.length === 3) {
+        const day = parseInt(dateParts[0])
+        const month = parseInt(dateParts[1]) - 1 // JavaScript months are 0-indexed
+        let year = parseInt(dateParts[2])
+        
+        // Handle 2-digit years
+        if (year < 100) {
+          year += 2000
+        }
+        
+        const timeParts = timePart.split(':')
+        const hour = parseInt(timeParts[0]) || 0
+        const minute = parseInt(timeParts[1]) || 0
+        const second = parseInt(timeParts[2]) || 0
+        
+        return new Date(year, month, day, hour, minute, second)
+      }
+    }
+    
+    // Fallback to standard Date parsing
+    return new Date(timestampStr)
+  } catch (e) {
+    console.error('Error parsing timestamp:', timestampStr, e)
+    return null
+  }
+}
+
+function getMonthYear(date) {
   const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
   ]
-  return months[monthNum - 1] || 'Unknown'
+  return `${months[date.getMonth()]} ${date.getFullYear()}`
 }
 
 function calculateMedian(arr) {
