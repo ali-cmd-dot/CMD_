@@ -177,7 +177,7 @@ export default function Dashboard() {
     )
   }
 
-  // Combine monthly data for overview
+  // Combine monthly data for overview with proper date sorting
   const combineMonthlyData = () => {
     const months = new Set([
       ...alertData.monthlyData.map(d => d.month),
@@ -186,20 +186,28 @@ export default function Dashboard() {
       ...generalIssuesData.monthlyData.map(d => d.month)
     ])
 
-    return Array.from(months).sort().map(month => {
-      const alertMonth = alertData.monthlyData.find(d => d.month === month)
-      const misalignMonth = misalignmentData.monthlyData.find(d => d.month === month)
-      const videoMonth = historicalVideoData.monthlyData.find(d => d.month === month)
-      const issueMonth = generalIssuesData.monthlyData.find(d => d.month === month)
+    // Convert to array and sort by actual date
+    return Array.from(months)
+      .sort((a, b) => {
+        // Convert "MMM YYYY" to date for proper sorting
+        const dateA = new Date(a.replace(' ', ' 1, '))
+        const dateB = new Date(b.replace(' ', ' 1, '))
+        return dateA - dateB
+      })
+      .map(month => {
+        const alertMonth = alertData.monthlyData.find(d => d.month === month)
+        const misalignMonth = misalignmentData.monthlyData.find(d => d.month === month)
+        const videoMonth = historicalVideoData.monthlyData.find(d => d.month === month)
+        const issueMonth = generalIssuesData.monthlyData.find(d => d.month === month)
 
-      return {
-        month,
-        alerts: alertMonth?.total || 0,
-        misalignments: misalignMonth?.raised || 0,
-        videos: videoMonth?.requests || 0,
-        issues: issueMonth?.raised || 0
-      }
-    })
+        return {
+          month,
+          alerts: alertMonth?.total || 0,
+          misalignments: misalignMonth?.raised || 0,
+          videos: videoMonth?.requests || 0,
+          issues: issueMonth?.raised || 0
+        }
+      })
   }
 
   const combinedMonthlyData = combineMonthlyData()
