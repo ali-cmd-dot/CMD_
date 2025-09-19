@@ -86,15 +86,16 @@ export async function GET() {
 
     console.log('General Issues - Filtered rows count (excluding Historical Video):', filteredRows.length)
 
-    // EXACT LOGIC as per user requirement:
-    // Raised = Row has data in "Timestamp Issues Raised" column
-    // Resolved = Row has data in BOTH "Timestamp Issues Raised" AND "Timestamp Issues Resolved" columns
+    // NEW LOGIC: Track issues by raised month and resolved month separately
     const monthlyStats = {}
     const clientStats = {}
     const resolutionTimes = []
     let totalRaised = 0
     let totalResolved = 0
 
+    // First pass: Process all issues with raised timestamps
+    const issuesData = []
+    
     filteredRows.forEach((row, rowIndex) => {
       const timestampRaised = row[timestampRaisedIndex]
       const timestampResolved = row[timestampResolvedIndex]
@@ -107,9 +108,6 @@ export async function GET() {
         return // Skip rows without raised timestamp
       }
 
-      // Count as RAISED
-      totalRaised += 1
-
       // Parse raised timestamp
       const raisedDate = parseTimestamp(timestampRaised)
       if (!raisedDate) {
@@ -117,48 +115,89 @@ export async function GET() {
         return
       }
 
-      const month = getMonthYear(raisedDate)
-      
-      // Initialize monthly stats
-      if (!monthlyStats[month]) {
-        monthlyStats[month] = { 
-          raised: 0, 
-          resolved: 0, 
-          resolutionTimes: []
-        }
-      }
-      monthlyStats[month].raised += 1
+      const raisedMonth = getMonthYear(raisedDate)
+      let resolvedMonth = null
+      let resolvedDate = null
+      let resolutionTime = null
 
-      // Initialize client stats
-      if (!clientStats[clientName]) {
-        clientStats[clientName] = { 
-          raised: 0, 
-          resolved: 0, 
-          resolutionTimes: []
-        }
-      }
-      clientStats[clientName].raised += 1
-
-      // STEP 2: Check if this SAME ROW has RESOLVED issue (data in "Timestamp Issues Resolved")
+      // Check if resolved
       const hasResolvedData = timestampResolved && timestampResolved.toString().trim()
-      
       if (hasResolvedData) {
-        // Count as RESOLVED
-        totalResolved += 1
-        monthlyStats[month].resolved += 1
-        clientStats[clientName].resolved += 1
-
-        // Calculate resolution time
-        const resolvedDate = parseTimestamp(timestampResolved)
+        resolvedDate = parseTimestamp(timestampResolved)
         if (resolvedDate && resolvedDate >= raisedDate) {
-          const resolutionTime = (resolvedDate - raisedDate) / (1000 * 60 * 60) // hours
+          resolvedMonth = getMonthYear(resolvedDate)
+          resolutionTime = (resolvedDate - raisedDate) / (1000 * 60 * 60) // hours
           
-          if (resolutionTime >= 0 && resolutionTime < 8760) { // Less than 1 year (filter outliers)
-            monthlyStats[month].resolutionTimes.push(resolutionTime)
-            clientStats[clientName].resolutionTimes.push(resolutionTime)
+          if (resolutionTime >= 0 && resolutionTime < 8760) { // Less than 1 year
             resolutionTimes.push(resolutionTime)
+            totalResolved += 1
           }
         }
+      }
+
+      // Store issue data
+      issuesData.push({
+        client: clientName,
+        raisedMonth,
+        resolvedMonth,
+        resolutionTime,
+        isResolved: !!resolvedMonth,
+        raisedDate,
+        resolvedDate
+      })
+
+      totalRaised += 1
+    })
+
+    // Second pass: Calculate monthly statistics with carry forward logic
+    const monthlyBreakdown = {}
+    
+    issuesData.forEach(issue => {
+      const { raisedMonth, resolvedMonth, resolutionTime, client, isResolved } = issue
+      
+      // Initialize raised month
+      if (!monthlyBreakdown[raisedMonth]) {
+        monthlyBreakdown[raisedMonth] = {
+          raised: 0,
+          resolvedSameMonth: 0,
+          resolvedLaterMonths: 0,
+          carryForward: 0,
+          resolutionTimes: []
+        }
+      }
+      
+      monthlyBreakdown[raisedMonth].raised += 1
+
+      if (isResolved) {
+        if (raisedMonth === resolvedMonth) {
+          // Resolved in same month
+          monthlyBreakdown[raisedMonth].resolvedSameMonth += 1
+        } else {
+          // Resolved in later month
+          monthlyBreakdown[raisedMonth].resolvedLaterMonths += 1
+        }
+        
+        if (resolutionTime !== null) {
+          monthlyBreakdown[raisedMonth].resolutionTimes.push(resolutionTime)
+        }
+      } else {
+        // Still pending (carry forward)
+        monthlyBreakdown[raisedMonth].carryForward += 1
+      }
+
+      // Client stats
+      if (!clientStats[client]) {
+        clientStats[client] = { 
+          raised: 0, 
+          resolved: 0, 
+          resolutionTimes: []
+        }
+      }
+      clientStats[client].raised += 1
+      
+      if (isResolved && resolutionTime !== null) {
+        clientStats[client].resolved += 1
+        clientStats[client].resolutionTimes.push(resolutionTime)
       }
     })
 
@@ -179,17 +218,21 @@ export async function GET() {
       ? calculateMedian(resolutionTimes) 
       : 0
 
-    // Convert to arrays for frontend  
-    const monthlyData = Object.entries(monthlyStats)
+    // Convert to arrays for frontend with NEW STRUCTURE
+    const monthlyData = Object.entries(monthlyBreakdown)
       .sort(([a], [b]) => new Date(a.replace(' ', ' 1, ')) - new Date(b.replace(' ', ' 1, ')))
       .map(([month, data]) => ({
         month,
         raised: data.raised,
-        resolved: data.resolved,
+        resolved: data.resolvedSameMonth + data.resolvedLaterMonths, // Total resolved from this month's raised issues
+        resolvedSameMonth: data.resolvedSameMonth, // NEW: Resolved in same month
+        resolvedLaterMonths: data.resolvedLaterMonths, // NEW: Resolved in later months
+        carryForward: data.carryForward, // NEW: Still pending/carried forward
         avgTime: data.resolutionTimes.length > 0 
           ? parseFloat((data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length).toFixed(2))
           : 0,
-        resolutionRate: data.raised > 0 ? parseFloat(((data.resolved / data.raised) * 100).toFixed(1)) : 0
+        resolutionRate: data.raised > 0 ? parseFloat((((data.resolvedSameMonth + data.resolvedLaterMonths) / data.raised) * 100).toFixed(1)) : 0,
+        sameMonthResolutionRate: data.raised > 0 ? parseFloat(((data.resolvedSameMonth / data.raised) * 100).toFixed(1)) : 0 // NEW: Same month resolution rate
       }))
 
     const clientBreakdown = Object.entries(clientStats)
@@ -223,7 +266,7 @@ export async function GET() {
         resolutionTimesCount: resolutionTimes.length,
         headers: headers,
         columnIndices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex },
-        logic: 'Raised = data in "Timestamp Issues Raised", Resolved = data in both raised & resolved columns'
+        logic: 'NEW: Tracks same-month resolution vs carry-forward separately'
       }
     })
 
