@@ -696,7 +696,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* General Issues Section */}
+        {/* General Issues Section - UPDATED WITH CARRY FORWARD LOGIC */}
         {activeTab === 'issues' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -739,17 +739,44 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white p-6 rounded-lg card-shadow">
-                <h3 className="text-xl font-semibold mb-4">Monthly Issues Overview</h3>
-                <ResponsiveContainer width="100%" height={300}>
+                <h3 className="text-xl font-semibold mb-4">Monthly Issues Overview - Detailed Breakdown</h3>
+                <div className="mb-3 text-sm text-gray-600">
+                  <div className="flex flex-wrap gap-4">
+                    <span className="flex items-center"><span className="w-3 h-3 bg-red-500 rounded mr-1"></span>Raised in Month</span>
+                    <span className="flex items-center"><span className="w-3 h-3 bg-green-500 rounded mr-1"></span>Resolved Same Month</span>
+                    <span className="flex items-center"><span className="w-3 h-3 bg-orange-500 rounded mr-1"></span>Carry Forward</span>
+                    <span className="flex items-center"><span className="w-3 h-3 bg-purple-500 rounded mr-1"></span>Avg Time (h)</span>
+                  </div>
+                </div>
+                <ResponsiveContainer width="100%" height={350}>
                   <ComposedChart data={generalIssuesData.monthlyData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis yAxisId="left" />
                     <YAxis yAxisId="right" orientation="right" />
-                    <Tooltip />
+                    <Tooltip 
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload
+                          return (
+                            <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                              <p className="font-semibold">{label}</p>
+                              <p className="text-red-600">📈 Raised: {data.raised}</p>
+                              <p className="text-green-600">✅ Resolved Same Month: {data.resolvedSameMonth}</p>
+                              <p className="text-orange-600">⏳ Carry Forward: {data.carryForward}</p>
+                              <p className="text-blue-600">🔄 Resolved Later: {data.resolvedLaterMonths}</p>
+                              <p className="text-purple-600">⏱️ Avg Time: {data.avgTime}h</p>
+                              <p className="text-gray-600">📊 Same Month Rate: {data.sameMonthResolutionRate}%</p>
+                            </div>
+                          )
+                        }
+                        return null
+                      }}
+                    />
                     <Legend />
-                    <Bar yAxisId="left" dataKey="raised" fill="#EF4444" name="Raised" />
-                    <Bar yAxisId="left" dataKey="resolved" fill="#10B981" name="Resolved" />
+                    <Bar yAxisId="left" dataKey="raised" fill="#EF4444" name="Raised in Month" />
+                    <Bar yAxisId="left" dataKey="resolvedSameMonth" fill="#10B981" name="Resolved Same Month" />
+                    <Bar yAxisId="left" dataKey="carryForward" fill="#F59E0B" name="Carry Forward" />
                     <Line yAxisId="right" type="monotone" dataKey="avgTime" stroke="#8B5CF6" strokeWidth={3} name="Avg Time (h)" />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -798,7 +825,95 @@ export default function Dashboard() {
               </div>
             </div>
 
-
+            {/* NEW: Monthly Breakdown Details Table */}
+            <div className="bg-white p-6 rounded-lg card-shadow">
+              <h3 className="text-xl font-semibold mb-4">📊 Monthly Issues Breakdown - Complete Analysis</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-3 py-3 text-left font-semibold">Month</th>
+                      <th className="px-3 py-3 text-center font-semibold text-red-600">📈 Raised</th>
+                      <th className="px-3 py-3 text-center font-semibold text-green-600">✅ Same Month<br/>Resolved</th>
+                      <th className="px-3 py-3 text-center font-semibold text-blue-600">🔄 Later Month<br/>Resolved</th>
+                      <th className="px-3 py-3 text-center font-semibold text-orange-600">⏳ Carry<br/>Forward</th>
+                      <th className="px-3 py-3 text-center font-semibold text-purple-600">⚡ Same Month<br/>Rate%</th>
+                      <th className="px-3 py-3 text-center font-semibold text-gray-600">🎯 Overall<br/>Rate%</th>
+                      <th className="px-3 py-3 text-center font-semibold text-indigo-600">⏱️ Avg Time<br/>(hours)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {generalIssuesData.monthlyData?.map((month, index) => (
+                      <tr key={index} className="border-t hover:bg-gray-50">
+                        <td className="px-3 py-3 font-medium">{month.month}</td>
+                        <td className="px-3 py-3 text-center">
+                          <span className="inline-block bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">
+                            {month.raised}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-medium">
+                            {month.resolvedSameMonth}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">
+                            {month.resolvedLaterMonths}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
+                            month.carryForward > 0 
+                              ? 'bg-orange-100 text-orange-800' 
+                              : 'bg-gray-100 text-gray-500'
+                          }`}>
+                            {month.carryForward}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
+                            month.sameMonthResolutionRate >= 80 
+                              ? 'bg-green-100 text-green-800' 
+                              : month.sameMonthResolutionRate >= 60 
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {month.sameMonthResolutionRate}%
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
+                            month.resolutionRate >= 80 
+                              ? 'bg-green-100 text-green-800' 
+                              : month.resolutionRate >= 60 
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {month.resolutionRate}%
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <span className="inline-block bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-sm font-medium">
+                            {month.avgTime}h
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Legend */}
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-semibold text-sm mb-2">📋 Understanding the Data:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-600">
+                  <div>• <strong>Raised:</strong> Issues raised in that specific month</div>
+                  <div>• <strong>Same Month Resolved:</strong> Issues raised & resolved within same month</div>
+                  <div>• <strong>Later Month Resolved:</strong> Issues raised in this month but resolved later</div>
+                  <div>• <strong>Carry Forward:</strong> Issues still pending/unresolved</div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
