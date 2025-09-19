@@ -696,7 +696,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* General Issues Section - UPDATED WITH CARRY FORWARD LOGIC */}
+        {/* General Issues Section - SENSIBLE CARRY FORWARD LOGIC */}
         {activeTab === 'issues' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -739,12 +739,13 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white p-6 rounded-lg card-shadow">
-                <h3 className="text-xl font-semibold mb-4">Monthly Issues Overview - Detailed Breakdown</h3>
+                <h3 className="text-xl font-semibold mb-4">Monthly Issues Overview - Smart Carry Forward Analysis</h3>
                 <div className="mb-3 text-sm text-gray-600">
                   <div className="flex flex-wrap gap-4">
-                    <span className="flex items-center"><span className="w-3 h-3 bg-red-500 rounded mr-1"></span>Raised in Month</span>
+                    <span className="flex items-center"><span className="w-3 h-3 bg-red-500 rounded mr-1"></span>Raised This Month</span>
                     <span className="flex items-center"><span className="w-3 h-3 bg-green-500 rounded mr-1"></span>Resolved Same Month</span>
-                    <span className="flex items-center"><span className="w-3 h-3 bg-orange-500 rounded mr-1"></span>Carry Forward</span>
+                    <span className="flex items-center"><span className="w-3 h-3 bg-blue-500 rounded mr-1"></span>From Previous Months</span>
+                    <span className="flex items-center"><span className="w-3 h-3 bg-orange-500 rounded mr-1"></span>To Next Months / Pending</span>
                     <span className="flex items-center"><span className="w-3 h-3 bg-purple-500 rounded mr-1"></span>Avg Time (h)</span>
                   </div>
                 </div>
@@ -758,15 +759,41 @@ export default function Dashboard() {
                       content={({ active, payload, label }) => {
                         if (active && payload && payload.length) {
                           const data = payload[0].payload
+                          const isCurrentMonth = data.isCurrentMonth
+                          
                           return (
-                            <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-                              <p className="font-semibold">{label}</p>
-                              <p className="text-red-600">📈 Raised: {data.raised}</p>
-                              <p className="text-green-600">✅ Resolved Same Month: {data.resolvedSameMonth}</p>
-                              <p className="text-orange-600">⏳ Carry Forward: {data.carryForward}</p>
-                              <p className="text-blue-600">🔄 Resolved Later: {data.resolvedLaterMonths}</p>
-                              <p className="text-purple-600">⏱️ Avg Time: {data.avgTime}h</p>
-                              <p className="text-gray-600">📊 Same Month Rate: {data.sameMonthResolutionRate}%</p>
+                            <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg min-w-64">
+                              <p className="font-semibold text-lg mb-2 flex items-center">
+                                {label}
+                                {isCurrentMonth && <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">CURRENT</span>}
+                              </p>
+                              
+                              <div className="space-y-1 text-sm">
+                                <p className="text-red-600 font-medium">📈 Raised This Month: {data.raised}</p>
+                                <p className="text-green-600">✅ Resolved Same Month: {data.resolvedSameMonth}</p>
+                                
+                                {data.carryForwardIn > 0 && (
+                                  <p className="text-blue-600">⬅️ From Previous Months: {data.carryForwardIn}</p>
+                                )}
+                                
+                                {isCurrentMonth ? (
+                                  data.stillPending > 0 && (
+                                    <p className="text-orange-600">⏳ Still Pending: {data.stillPending}</p>
+                                  )
+                                ) : (
+                                  data.carryForwardOut > 0 && (
+                                    <p className="text-orange-600">➡️ Carried to Next Months: {data.carryForwardOut}</p>
+                                  )
+                                )}
+                                
+                                <div className="border-t pt-2 mt-2">
+                                  <p className="text-purple-600">⏱️ Avg Resolution Time: {data.avgTime}h</p>
+                                  <p className="text-gray-600">📊 Same Month Resolution: {data.sameMonthResolutionRate}%</p>
+                                  {!isCurrentMonth && (
+                                    <p className="text-gray-600">🎯 Overall Resolution: {data.resolutionRate}%</p>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           )
                         }
@@ -774,9 +801,15 @@ export default function Dashboard() {
                       }}
                     />
                     <Legend />
-                    <Bar yAxisId="left" dataKey="raised" fill="#EF4444" name="Raised in Month" />
+                    <Bar yAxisId="left" dataKey="raised" fill="#EF4444" name="Raised This Month" />
                     <Bar yAxisId="left" dataKey="resolvedSameMonth" fill="#10B981" name="Resolved Same Month" />
-                    <Bar yAxisId="left" dataKey="carryForward" fill="#F59E0B" name="Carry Forward" />
+                    <Bar yAxisId="left" dataKey="carryForwardIn" fill="#3B82F6" name="From Previous Months" />
+                    <Bar 
+                      yAxisId="left" 
+                      dataKey={(entry) => entry.isCurrentMonth ? entry.stillPending : entry.carryForwardOut} 
+                      fill="#F59E0B" 
+                      name="To Next / Pending" 
+                    />
                     <Line yAxisId="right" type="monotone" dataKey="avgTime" stroke="#8B5CF6" strokeWidth={3} name="Avg Time (h)" />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -825,18 +858,18 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* NEW: Monthly Breakdown Details Table */}
+            {/* UPDATED: Smart Monthly Breakdown Details Table */}
             <div className="bg-white p-6 rounded-lg card-shadow">
-              <h3 className="text-xl font-semibold mb-4">📊 Monthly Issues Breakdown - Complete Analysis</h3>
+              <h3 className="text-xl font-semibold mb-4">📊 Smart Monthly Issues Breakdown - Real Carry Forward Analysis</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-3 py-3 text-left font-semibold">Month</th>
-                      <th className="px-3 py-3 text-center font-semibold text-red-600">📈 Raised</th>
-                      <th className="px-3 py-3 text-center font-semibold text-green-600">✅ Same Month<br/>Resolved</th>
-                      <th className="px-3 py-3 text-center font-semibold text-blue-600">🔄 Later Month<br/>Resolved</th>
-                      <th className="px-3 py-3 text-center font-semibold text-orange-600">⏳ Carry<br/>Forward</th>
+                      <th className="px-3 py-3 text-center font-semibold text-red-600">📈 Raised<br/>This Month</th>
+                      <th className="px-3 py-3 text-center font-semibold text-green-600">✅ Resolved<br/>Same Month</th>
+                      <th className="px-3 py-3 text-center font-semibold text-blue-600">⬅️ From<br/>Previous</th>
+                      <th className="px-3 py-3 text-center font-semibold text-orange-600">➡️ To Next /<br/>⏳ Pending</th>
                       <th className="px-3 py-3 text-center font-semibold text-purple-600">⚡ Same Month<br/>Rate%</th>
                       <th className="px-3 py-3 text-center font-semibold text-gray-600">🎯 Overall<br/>Rate%</th>
                       <th className="px-3 py-3 text-center font-semibold text-indigo-600">⏱️ Avg Time<br/>(hours)</th>
@@ -845,7 +878,12 @@ export default function Dashboard() {
                   <tbody>
                     {generalIssuesData.monthlyData?.map((month, index) => (
                       <tr key={index} className="border-t hover:bg-gray-50">
-                        <td className="px-3 py-3 font-medium">{month.month}</td>
+                        <td className="px-3 py-3 font-medium flex items-center">
+                          {month.month}
+                          {month.isCurrentMonth && (
+                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">CURRENT</span>
+                          )}
+                        </td>
                         <td className="px-3 py-3 text-center">
                           <span className="inline-block bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">
                             {month.raised}
@@ -857,18 +895,32 @@ export default function Dashboard() {
                           </span>
                         </td>
                         <td className="px-3 py-3 text-center">
-                          <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">
-                            {month.resolvedLaterMonths}
-                          </span>
+                          {month.carryForwardIn > 0 ? (
+                            <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">
+                              {month.carryForwardIn}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
                         </td>
                         <td className="px-3 py-3 text-center">
-                          <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
-                            month.carryForward > 0 
-                              ? 'bg-orange-100 text-orange-800' 
-                              : 'bg-gray-100 text-gray-500'
-                          }`}>
-                            {month.carryForward}
-                          </span>
+                          {month.isCurrentMonth ? (
+                            month.stillPending > 0 ? (
+                              <span className="inline-block bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm font-medium">
+                                ⏳ {month.stillPending}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )
+                          ) : (
+                            month.carryForwardOut > 0 ? (
+                              <span className="inline-block bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm font-medium">
+                                ➡️ {month.carryForwardOut}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )
+                          )}
                         </td>
                         <td className="px-3 py-3 text-center">
                           <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
@@ -882,20 +934,28 @@ export default function Dashboard() {
                           </span>
                         </td>
                         <td className="px-3 py-3 text-center">
-                          <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
-                            month.resolutionRate >= 80 
-                              ? 'bg-green-100 text-green-800' 
-                              : month.resolutionRate >= 60 
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {month.resolutionRate}%
-                          </span>
+                          {month.isCurrentMonth ? (
+                            <span className="text-gray-400 text-xs">TBD</span>
+                          ) : (
+                            <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
+                              month.resolutionRate >= 80 
+                                ? 'bg-green-100 text-green-800' 
+                                : month.resolutionRate >= 60 
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {month.resolutionRate}%
+                            </span>
+                          )}
                         </td>
                         <td className="px-3 py-3 text-center">
-                          <span className="inline-block bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-sm font-medium">
-                            {month.avgTime}h
-                          </span>
+                          {month.avgTime > 0 ? (
+                            <span className="inline-block bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-sm font-medium">
+                              {month.avgTime}h
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -903,14 +963,16 @@ export default function Dashboard() {
                 </table>
               </div>
               
-              {/* Legend */}
+              {/* Updated Legend */}
               <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold text-sm mb-2">📋 Understanding the Data:</h4>
+                <h4 className="font-semibold text-sm mb-2">📋 Smart Carry Forward Logic:</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-600">
-                  <div>• <strong>Raised:</strong> Issues raised in that specific month</div>
-                  <div>• <strong>Same Month Resolved:</strong> Issues raised & resolved within same month</div>
-                  <div>• <strong>Later Month Resolved:</strong> Issues raised in this month but resolved later</div>
-                  <div>• <strong>Carry Forward:</strong> Issues still pending/unresolved</div>
+                  <div>• <strong>Raised This Month:</strong> Issues raised in that specific month</div>
+                  <div>• <strong>Resolved Same Month:</strong> Issues raised & resolved within same month</div>
+                  <div>• <strong>From Previous:</strong> Issues that came from previous months and got resolved</div>
+                  <div>• <strong>To Next/Pending:</strong> Past months = carried to future; Current = still pending</div>
+                  <div>• <strong>Current Month:</strong> Shows pending count, not future predictions</div>
+                  <div>• <strong>Smart Logic:</strong> No future assumptions for current month</div>
                 </div>
               </div>
             </div>
