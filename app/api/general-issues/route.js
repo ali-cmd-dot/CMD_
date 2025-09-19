@@ -9,7 +9,6 @@ export async function GET() {
       throw new Error('Missing API key or Sheet ID')
     }
 
-    // Fixed: Tab name with space "Issues- Realtime"
     const issuesUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Issues-%20Realtime!A:Z?key=${API_KEY}`
     
     const issuesResponse = await fetch(issuesUrl)
@@ -25,118 +24,81 @@ export async function GET() {
       return NextResponse.json({ error: 'No data found' }, { status: 404 })
     }
 
-    // Find EXACT column names
+    // Find column indices
     const headers = rows[0]
-    console.log('General Issues - Headers found:', headers)
-    
     let timestampRaisedIndex = -1
     let timestampResolvedIndex = -1
     let clientIndex = -1
     let issueIndex = -1
 
-    // Search for EXACT column names
     headers.forEach((header, index) => {
       if (!header) return
       const h = header.toString().trim()
       
-      // Exact match for "Timestamp Issues Raised"
       if (h === 'Timestamp Issues Raised') {
         timestampRaisedIndex = index
       }
-      
-      // Exact match for "Timestamp Issues Resolved"
       if (h === 'Timestamp Issues Resolved') {
         timestampResolvedIndex = index
       }
-      
-      // Exact match for "Client"
       if (h === 'Client' || h === 'client') {
         clientIndex = index
       }
-      
-      // Exact match for "Issue"
       if (h === 'Issue' || h === 'issue') {
         issueIndex = index
       }
     })
 
-    console.log('General Issues - Exact column indices:', { 
-      timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex 
-    })
-
     if (timestampRaisedIndex === -1 || timestampResolvedIndex === -1 || clientIndex === -1 || issueIndex === -1) {
       return NextResponse.json({ 
         error: 'Required columns not found',
-        missingColumns: {
-          timestampRaised: timestampRaisedIndex === -1 ? 'Missing "Timestamp Issues Raised"' : 'Found',
-          timestampResolved: timestampResolvedIndex === -1 ? 'Missing "Timestamp Issues Resolved"' : 'Found',
-          client: clientIndex === -1 ? 'Missing "Client"' : 'Found',
-          issue: issueIndex === -1 ? 'Missing "Issue"' : 'Found'
-        },
         headers: headers
       }, { status: 400 })
     }
 
-    // Process ALL issues EXCEPT "Historical Video Request" (to avoid duplication)
+    // Filter out Historical Video Requests
     const filteredRows = rows.slice(1).filter(row => {
       const issueType = (row[issueIndex] || '').toString().trim()
-      // Exclude Historical Video Request as it has separate endpoint
       return issueType !== 'Historical Video Request'
     })
 
-    console.log('General Issues - Filtered rows count (excluding Historical Video):', filteredRows.length)
-
-    // NEW LOGIC: Track issues by raised month and resolved month separately
-    const monthlyStats = {}
-    const clientStats = {}
-    const resolutionTimes = []
+    // Process all issues
+    const allIssues = []
     let totalRaised = 0
     let totalResolved = 0
+    const resolutionTimes = []
 
-    // First pass: Process all issues with raised timestamps
-    const processedIssues = []
-    
     filteredRows.forEach((row, rowIndex) => {
       const timestampRaised = row[timestampRaisedIndex]
       const timestampResolved = row[timestampResolvedIndex]
       const clientName = (row[clientIndex] || 'Unknown').toString().trim()
       
-      // STEP 1: Check if this row has RAISED issue (data in "Timestamp Issues Raised")
       const hasRaisedData = timestampRaised && timestampRaised.toString().trim()
-      
-      if (!hasRaisedData) {
-        return // Skip rows without raised timestamp
-      }
+      if (!hasRaisedData) return
 
-      // Parse raised timestamp
       const raisedDate = parseTimestamp(timestampRaised)
-      if (!raisedDate) {
-        console.log(`Row ${rowIndex + 1}: Could not parse raised timestamp: "${timestampRaised}"`)
-        return
-      }
+      if (!raisedDate) return
 
       const raisedMonth = getMonthYear(raisedDate)
       let resolvedMonth = null
       let resolvedDate = null
       let resolutionTime = null
 
-      // Check if resolved
       const hasResolvedData = timestampResolved && timestampResolved.toString().trim()
       if (hasResolvedData) {
         resolvedDate = parseTimestamp(timestampResolved)
         if (resolvedDate && resolvedDate >= raisedDate) {
           resolvedMonth = getMonthYear(resolvedDate)
-          resolutionTime = (resolvedDate - raisedDate) / (1000 * 60 * 60) // hours
+          resolutionTime = (resolvedDate - raisedDate) / (1000 * 60 * 60)
           
-          if (resolutionTime >= 0 && resolutionTime < 8760) { // Less than 1 year
+          if (resolutionTime >= 0 && resolutionTime < 8760) {
             resolutionTimes.push(resolutionTime)
             totalResolved += 1
           }
         }
       }
 
-      // Store issue data
-      processedIssues.push({
+      allIssues.push({
         client: clientName,
         raisedMonth,
         resolvedMonth,
@@ -149,22 +111,30 @@ export async function GET() {
       totalRaised += 1
     })
 
-    // Second pass: Calculate monthly statistics with carry forward logic
-    const monthlyBreakdown = {}
+    // Get current month for logic
+    const currentMonth = getMonthYear(new Date())
     
-    processedIssues.forEach(issue => {
-      const { raisedMonth, resolvedMonth, resolutionTime, client, isResolved } = issue
-      
-      // Initialize raised month
-      if (!monthlyBreakdown[raisedMonth]) {
-        monthlyBreakdown[raisedMonth] = {
+    // Calculate monthly statistics with REAL carry forward logic
+    const monthlyBreakdown = {}
+    const clientStats = {}
+
+    // Initialize all months
+    allIssues.forEach(issue => {
+      if (!monthlyBreakdown[issue.raisedMonth]) {
+        monthlyBreakdown[issue.raisedMonth] = {
           raised: 0,
           resolvedSameMonth: 0,
-          resolvedLaterMonths: 0,
-          carryForward: 0,
+          carryForwardIn: 0,    // Issues that came FROM previous months
+          carryForwardOut: 0,   // Issues that went TO next months
+          stillPending: 0,      // Issues still unresolved (for current month)
           resolutionTimes: []
         }
       }
+    })
+
+    // Process each issue for raised month statistics
+    allIssues.forEach(issue => {
+      const { raisedMonth, resolvedMonth, resolutionTime, client, isResolved } = issue
       
       monthlyBreakdown[raisedMonth].raised += 1
 
@@ -173,25 +143,27 @@ export async function GET() {
           // Resolved in same month
           monthlyBreakdown[raisedMonth].resolvedSameMonth += 1
         } else {
-          // Resolved in later month
-          monthlyBreakdown[raisedMonth].resolvedLaterMonths += 1
+          // Resolved in later month - this is carry forward OUT
+          monthlyBreakdown[raisedMonth].carryForwardOut += 1
         }
         
         if (resolutionTime !== null) {
           monthlyBreakdown[raisedMonth].resolutionTimes.push(resolutionTime)
         }
       } else {
-        // Still pending (carry forward)
-        monthlyBreakdown[raisedMonth].carryForward += 1
+        // Still pending
+        if (raisedMonth === currentMonth) {
+          // Current month - just mark as pending
+          monthlyBreakdown[raisedMonth].stillPending += 1
+        } else {
+          // Past month - mark as carry forward OUT (went to future months)
+          monthlyBreakdown[raisedMonth].carryForwardOut += 1
+        }
       }
 
       // Client stats
       if (!clientStats[client]) {
-        clientStats[client] = { 
-          raised: 0, 
-          resolved: 0, 
-          resolutionTimes: []
-        }
+        clientStats[client] = { raised: 0, resolved: 0, resolutionTimes: [] }
       }
       clientStats[client].raised += 1
       
@@ -201,10 +173,21 @@ export async function GET() {
       }
     })
 
-    console.log('General Issues Processing complete:', {
-      totalRaised,
-      totalResolved,
-      resolutionRate: totalRaised > 0 ? ((totalResolved / totalRaised) * 100).toFixed(1) : 0
+    // Calculate carry forward IN for each month
+    allIssues.forEach(issue => {
+      const { raisedMonth, resolvedMonth, isResolved } = issue
+      
+      if (isResolved && raisedMonth !== resolvedMonth) {
+        // This issue was resolved in a different month
+        // Add to carryForwardIn for the resolved month
+        if (!monthlyBreakdown[resolvedMonth]) {
+          monthlyBreakdown[resolvedMonth] = {
+            raised: 0, resolvedSameMonth: 0, carryForwardIn: 0,
+            carryForwardOut: 0, stillPending: 0, resolutionTimes: []
+          }
+        }
+        monthlyBreakdown[resolvedMonth].carryForwardIn += 1
+      }
     })
 
     // Calculate resolution statistics
@@ -218,22 +201,28 @@ export async function GET() {
       ? calculateMedian(resolutionTimes) 
       : 0
 
-    // Convert to arrays for frontend with NEW STRUCTURE
+    // Convert to frontend format
     const monthlyData = Object.entries(monthlyBreakdown)
       .sort(([a], [b]) => new Date(a.replace(' ', ' 1, ')) - new Date(b.replace(' ', ' 1, ')))
-      .map(([month, data]) => ({
-        month,
-        raised: data.raised,
-        resolved: data.resolvedSameMonth + data.resolvedLaterMonths, // Total resolved from this month's raised issues
-        resolvedSameMonth: data.resolvedSameMonth, // NEW: Resolved in same month
-        resolvedLaterMonths: data.resolvedLaterMonths, // NEW: Resolved in later months
-        carryForward: data.carryForward, // NEW: Still pending/carried forward
-        avgTime: data.resolutionTimes.length > 0 
-          ? parseFloat((data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length).toFixed(2))
-          : 0,
-        resolutionRate: data.raised > 0 ? parseFloat((((data.resolvedSameMonth + data.resolvedLaterMonths) / data.raised) * 100).toFixed(1)) : 0,
-        sameMonthResolutionRate: data.raised > 0 ? parseFloat(((data.resolvedSameMonth / data.raised) * 100).toFixed(1)) : 0 // NEW: Same month resolution rate
-      }))
+      .map(([month, data]) => {
+        const isCurrentMonth = month === currentMonth
+        
+        return {
+          month,
+          raised: data.raised,
+          resolved: data.resolvedSameMonth + data.carryForwardOut + (isCurrentMonth ? 0 : 0), // Total resolved
+          resolvedSameMonth: data.resolvedSameMonth,
+          carryForwardIn: data.carryForwardIn,     // FROM previous months
+          carryForwardOut: isCurrentMonth ? 0 : data.carryForwardOut,  // TO next months (not for current)
+          stillPending: isCurrentMonth ? data.stillPending : 0,         // Only for current month
+          avgTime: data.resolutionTimes.length > 0 
+            ? parseFloat((data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length).toFixed(2))
+            : 0,
+          resolutionRate: data.raised > 0 ? parseFloat((((data.resolvedSameMonth + data.carryForwardOut) / data.raised) * 100).toFixed(1)) : 0,
+          sameMonthResolutionRate: data.raised > 0 ? parseFloat(((data.resolvedSameMonth / data.raised) * 100).toFixed(1)) : 0,
+          isCurrentMonth
+        }
+      })
 
     const clientBreakdown = Object.entries(clientStats)
       .filter(([, data]) => data.raised > 0)
@@ -261,12 +250,11 @@ export async function GET() {
       minResolutionTime: parseFloat(minResolutionTime.toFixed(2)),
       maxResolutionTime: parseFloat(maxResolutionTime.toFixed(2)),
       medianResolutionTime: parseFloat(medianResolutionTime.toFixed(2)),
+      currentMonth,
       debug: {
         totalRowsProcessed: filteredRows.length,
         resolutionTimesCount: resolutionTimes.length,
-        headers: headers,
-        columnIndices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex },
-        logic: 'NEW: Tracks same-month resolution vs carry-forward separately'
+        logic: 'REAL carry forward: IN from previous, OUT to next, current shows pending'
       }
     })
 
@@ -286,8 +274,6 @@ function parseTimestamp(timestampStr) {
   if (!str) return null
   
   try {
-    // Handle multiple timestamp formats
-    
     // Format: DD/MM/YYYY HH:mm:ss
     if (str.includes('/') && str.includes(' ')) {
       const [datePart, timePart] = str.split(' ')
