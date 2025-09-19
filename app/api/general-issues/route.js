@@ -114,7 +114,7 @@ export async function GET() {
     // Get current month for logic
     const currentMonth = getMonthYear(new Date())
     
-    // Calculate monthly statistics with REAL carry forward logic
+    // Calculate monthly statistics with CORRECTED logic
     const monthlyBreakdown = {}
     const clientStats = {}
 
@@ -124,9 +124,9 @@ export async function GET() {
         monthlyBreakdown[issue.raisedMonth] = {
           raised: 0,
           resolvedSameMonth: 0,
-          carryForwardIn: 0,    // Issues that came FROM previous months
-          carryForwardOut: 0,   // Issues that went TO next months
-          stillPending: 0,      // Issues still unresolved (for current month)
+          resolvedLaterMonths: 0,    // FIXED: Actually resolved in later months
+          carryForwardIn: 0,         // Issues that came FROM previous months  
+          stillPending: 0,           // Issues still unresolved
           resolutionTimes: []
         }
       }
@@ -143,22 +143,16 @@ export async function GET() {
           // Resolved in same month
           monthlyBreakdown[raisedMonth].resolvedSameMonth += 1
         } else {
-          // Resolved in later month - this is carry forward OUT
-          monthlyBreakdown[raisedMonth].carryForwardOut += 1
+          // FIXED: Actually resolved in later month
+          monthlyBreakdown[raisedMonth].resolvedLaterMonths += 1
         }
         
         if (resolutionTime !== null) {
           monthlyBreakdown[raisedMonth].resolutionTimes.push(resolutionTime)
         }
       } else {
-        // Still pending
-        if (raisedMonth === currentMonth) {
-          // Current month - just mark as pending
-          monthlyBreakdown[raisedMonth].stillPending += 1
-        } else {
-          // Past month - mark as carry forward OUT (went to future months)
-          monthlyBreakdown[raisedMonth].carryForwardOut += 1
-        }
+        // FIXED: Still pending (not resolved yet)
+        monthlyBreakdown[raisedMonth].stillPending += 1
       }
 
       // Client stats
@@ -173,7 +167,7 @@ export async function GET() {
       }
     })
 
-    // Calculate carry forward IN for each month
+    // Calculate carry forward IN for each month (issues from previous months resolved here)
     allIssues.forEach(issue => {
       const { raisedMonth, resolvedMonth, isResolved } = issue
       
@@ -182,8 +176,8 @@ export async function GET() {
         // Add to carryForwardIn for the resolved month
         if (!monthlyBreakdown[resolvedMonth]) {
           monthlyBreakdown[resolvedMonth] = {
-            raised: 0, resolvedSameMonth: 0, carryForwardIn: 0,
-            carryForwardOut: 0, stillPending: 0, resolutionTimes: []
+            raised: 0, resolvedSameMonth: 0, resolvedLaterMonths: 0,
+            carryForwardIn: 0, stillPending: 0, resolutionTimes: []
           }
         }
         monthlyBreakdown[resolvedMonth].carryForwardIn += 1
@@ -201,24 +195,33 @@ export async function GET() {
       ? calculateMedian(resolutionTimes) 
       : 0
 
-    // Convert to frontend format
+    // Convert to frontend format with FIXED calculations
     const monthlyData = Object.entries(monthlyBreakdown)
       .sort(([a], [b]) => new Date(a.replace(' ', ' 1, ')) - new Date(b.replace(' ', ' 1, ')))
       .map(([month, data]) => {
         const isCurrentMonth = month === currentMonth
         
+        // FIXED: Correct resolution rate calculation
+        const totalResolved = data.resolvedSameMonth + data.resolvedLaterMonths
+        const actualResolutionRate = data.raised > 0 ? parseFloat(((totalResolved / data.raised) * 100).toFixed(1)) : 0
+        
         return {
           month,
           raised: data.raised,
-          resolved: data.resolvedSameMonth + data.carryForwardOut + (isCurrentMonth ? 0 : 0), // Total resolved
+          resolved: totalResolved,
           resolvedSameMonth: data.resolvedSameMonth,
-          carryForwardIn: data.carryForwardIn,     // FROM previous months
-          carryForwardOut: isCurrentMonth ? 0 : data.carryForwardOut,  // TO next months (not for current)
-          stillPending: isCurrentMonth ? data.stillPending : 0,         // Only for current month
+          resolvedLaterMonths: data.resolvedLaterMonths,
+          carryForwardIn: data.carryForwardIn,
+          stillPending: data.stillPending,
+          // FIXED: Convert hours to days + hours format
           avgTime: data.resolutionTimes.length > 0 
+            ? convertHoursToDaysHours(data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length)
+            : '0h',
+          avgTimeHours: data.resolutionTimes.length > 0 
             ? parseFloat((data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length).toFixed(2))
             : 0,
-          resolutionRate: data.raised > 0 ? parseFloat((((data.resolvedSameMonth + data.carryForwardOut) / data.raised) * 100).toFixed(1)) : 0,
+          // FIXED: Correct resolution rates
+          resolutionRate: isCurrentMonth ? null : actualResolutionRate, // null for current month
           sameMonthResolutionRate: data.raised > 0 ? parseFloat(((data.resolvedSameMonth / data.raised) * 100).toFixed(1)) : 0,
           isCurrentMonth
         }
@@ -233,11 +236,14 @@ export async function GET() {
         resolved: data.resolved,
         resolutionRate: data.raised > 0 ? parseFloat(((data.resolved / data.raised) * 100).toFixed(1)) : 0,
         avgTime: data.resolutionTimes.length > 0 
+          ? convertHoursToDaysHours(data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length)
+          : '0h',
+        avgTimeHours: data.resolutionTimes.length > 0 
           ? parseFloat((data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length).toFixed(2))
           : 0,
-        minTime: data.resolutionTimes.length > 0 ? parseFloat(Math.min(...data.resolutionTimes).toFixed(2)) : 0,
-        maxTime: data.resolutionTimes.length > 0 ? parseFloat(Math.max(...data.resolutionTimes).toFixed(2)) : 0,
-        medianTime: data.resolutionTimes.length > 0 ? parseFloat(calculateMedian(data.resolutionTimes).toFixed(2)) : 0
+        minTime: data.resolutionTimes.length > 0 ? convertHoursToDaysHours(Math.min(...data.resolutionTimes)) : '0h',
+        maxTime: data.resolutionTimes.length > 0 ? convertHoursToDaysHours(Math.max(...data.resolutionTimes)) : '0h',
+        medianTime: data.resolutionTimes.length > 0 ? convertHoursToDaysHours(calculateMedian(data.resolutionTimes)) : '0h'
       }))
 
     return NextResponse.json({
@@ -246,15 +252,16 @@ export async function GET() {
       totalRaised,
       totalResolved,
       resolutionRate: totalRaised > 0 ? parseFloat(((totalResolved / totalRaised) * 100).toFixed(1)) : 0,
-      avgResolutionTime: parseFloat(avgResolutionTime.toFixed(2)),
-      minResolutionTime: parseFloat(minResolutionTime.toFixed(2)),
-      maxResolutionTime: parseFloat(maxResolutionTime.toFixed(2)),
-      medianResolutionTime: parseFloat(medianResolutionTime.toFixed(2)),
+      avgResolutionTime: convertHoursToDaysHours(avgResolutionTime),
+      avgResolutionTimeHours: parseFloat(avgResolutionTime.toFixed(2)),
+      minResolutionTime: convertHoursToDaysHours(minResolutionTime),
+      maxResolutionTime: convertHoursToDaysHours(maxResolutionTime),
+      medianResolutionTime: convertHoursToDaysHours(medianResolutionTime),
       currentMonth,
       debug: {
         totalRowsProcessed: filteredRows.length,
         resolutionTimesCount: resolutionTimes.length,
-        logic: 'REAL carry forward: IN from previous, OUT to next, current shows pending'
+        logic: 'FIXED: Correct resolution rates, hours to days conversion'
       }
     })
 
@@ -265,6 +272,26 @@ export async function GET() {
       { status: 500 }
     )
   }
+}
+
+// ADDED: Convert hours to "X days Yh" format
+function convertHoursToDaysHours(hours) {
+  if (!hours || hours === 0) return '0h'
+  
+  const totalHours = Math.round(hours * 10) / 10 // Round to 1 decimal
+  
+  if (totalHours < 24) {
+    return `${totalHours}h`
+  }
+  
+  const days = Math.floor(totalHours / 24)
+  const remainingHours = Math.round((totalHours % 24) * 10) / 10
+  
+  if (remainingHours === 0) {
+    return `${days} day${days > 1 ? 's' : ''}`
+  }
+  
+  return `${days} day${days > 1 ? 's' : ''} ${remainingHours}h`
 }
 
 function parseTimestamp(timestampStr) {
