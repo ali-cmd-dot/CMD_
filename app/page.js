@@ -330,8 +330,8 @@ export default function Dashboard() {
                   <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg">
                     <div>
                       <div className="font-medium">General Issue Resolution</div>
-                      <div className="text-sm text-gray-600">Average: {generalIssuesData.avgResolutionTime}h</div>
-                      <div className="text-xs text-gray-500">Median: {generalIssuesData.medianResolutionTime}h</div>
+                      <div className="text-sm text-gray-600">Average: {generalIssuesData.avgResolutionTime}</div>
+                      <div className="text-xs text-gray-500">Median: {generalIssuesData.medianResolutionTime}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-2xl font-bold text-green-600">{generalIssuesData.resolutionRate}%</div>
@@ -696,7 +696,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* General Issues Section - SENSIBLE CARRY FORWARD LOGIC */}
+        {/* General Issues Section - FIXED RESOLUTION LOGIC & TIME FORMAT */}
         {activeTab === 'issues' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -723,14 +723,14 @@ export default function Dashboard() {
               />
               <MetricCard
                 title="Avg Resolution"
-                value={`${generalIssuesData.avgResolutionTime}h`}
-                subtitle="Hours to resolve"
+                value={generalIssuesData.avgResolutionTime || '0h'}
+                subtitle="Time to resolve"
                 icon={Clock}
                 color="bg-purple-500"
               />
               <MetricCard
                 title="Median Time"
-                value={`${generalIssuesData.medianResolutionTime}h`}
+                value={generalIssuesData.medianResolutionTime || '0h'}
                 subtitle="Typical resolution"
                 icon={TrendingUp}
                 color="bg-orange-500"
@@ -745,8 +745,7 @@ export default function Dashboard() {
                     <span className="flex items-center"><span className="w-3 h-3 bg-red-500 rounded mr-1"></span>Raised This Month</span>
                     <span className="flex items-center"><span className="w-3 h-3 bg-green-500 rounded mr-1"></span>Resolved Same Month</span>
                     <span className="flex items-center"><span className="w-3 h-3 bg-blue-500 rounded mr-1"></span>From Previous Months</span>
-                    <span className="flex items-center"><span className="w-3 h-3 bg-orange-500 rounded mr-1"></span>To Next Months / Pending</span>
-                    <span className="flex items-center"><span className="w-3 h-3 bg-purple-500 rounded mr-1"></span>Avg Time (h)</span>
+                    <span className="flex items-center"><span className="w-3 h-3 bg-orange-500 rounded mr-1"></span>Still Pending</span>
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={350}>
@@ -762,7 +761,7 @@ export default function Dashboard() {
                           const isCurrentMonth = data.isCurrentMonth
                           
                           return (
-                            <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg min-w-64">
+                            <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg min-w-72">
                               <p className="font-semibold text-lg mb-2 flex items-center">
                                 {label}
                                 {isCurrentMonth && <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">CURRENT</span>}
@@ -776,20 +775,18 @@ export default function Dashboard() {
                                   <p className="text-blue-600">⬅️ From Previous Months: {data.carryForwardIn}</p>
                                 )}
                                 
-                                {isCurrentMonth ? (
-                                  data.stillPending > 0 && (
-                                    <p className="text-orange-600">⏳ Still Pending: {data.stillPending}</p>
-                                  )
-                                ) : (
-                                  data.carryForwardOut > 0 && (
-                                    <p className="text-orange-600">➡️ Carried to Next Months: {data.carryForwardOut}</p>
-                                  )
+                                {data.resolvedLaterMonths > 0 && (
+                                  <p className="text-purple-600">🔄 Resolved in Later Months: {data.resolvedLaterMonths}</p>
+                                )}
+                                
+                                {data.stillPending > 0 && (
+                                  <p className="text-orange-600">⏳ Still Pending: {data.stillPending}</p>
                                 )}
                                 
                                 <div className="border-t pt-2 mt-2">
-                                  <p className="text-purple-600">⏱️ Avg Resolution Time: {data.avgTime}h</p>
+                                  <p className="text-indigo-600">⏱️ Avg Resolution Time: {data.avgTime}</p>
                                   <p className="text-gray-600">📊 Same Month Resolution: {data.sameMonthResolutionRate}%</p>
-                                  {!isCurrentMonth && (
+                                  {data.resolutionRate !== null && (
                                     <p className="text-gray-600">🎯 Overall Resolution: {data.resolutionRate}%</p>
                                   )}
                                 </div>
@@ -804,13 +801,8 @@ export default function Dashboard() {
                     <Bar yAxisId="left" dataKey="raised" fill="#EF4444" name="Raised This Month" />
                     <Bar yAxisId="left" dataKey="resolvedSameMonth" fill="#10B981" name="Resolved Same Month" />
                     <Bar yAxisId="left" dataKey="carryForwardIn" fill="#3B82F6" name="From Previous Months" />
-                    <Bar 
-                      yAxisId="left" 
-                      dataKey={(entry) => entry.isCurrentMonth ? entry.stillPending : entry.carryForwardOut} 
-                      fill="#F59E0B" 
-                      name="To Next / Pending" 
-                    />
-                    <Line yAxisId="right" type="monotone" dataKey="avgTime" stroke="#8B5CF6" strokeWidth={3} name="Avg Time (h)" />
+                    <Bar yAxisId="left" dataKey="stillPending" fill="#F59E0B" name="Still Pending" />
+                    <Line yAxisId="right" type="monotone" dataKey="avgTimeHours" stroke="#8B5CF6" strokeWidth={3} name="Avg Time (h)" />
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
@@ -825,7 +817,7 @@ export default function Dashboard() {
                         <th className="px-2 py-2 text-center">Raised</th>
                         <th className="px-2 py-2 text-center">Resolved</th>
                         <th className="px-2 py-2 text-center">Rate%</th>
-                        <th className="px-2 py-2 text-center">Avg(h)</th>
+                        <th className="px-2 py-2 text-center">Avg Time</th>
                         <th className="px-2 py-2 text-center">Range</th>
                       </tr>
                     </thead>
@@ -846,9 +838,9 @@ export default function Dashboard() {
                               {client.resolutionRate}%
                             </span>
                           </td>
-                          <td className="px-2 py-2 text-center">{client.avgTime}</td>
+                          <td className="px-2 py-2 text-center text-xs">{client.avgTime}</td>
                           <td className="px-2 py-2 text-center text-xs">
-                            {client.minTime}h-{client.maxTime}h
+                            {client.minTime} - {client.maxTime}
                           </td>
                         </tr>
                       ))}
@@ -858,9 +850,16 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* UPDATED: Smart Monthly Breakdown Details Table */}
+            {/* FIXED: Smart Monthly Breakdown with Clear Totals */}
             <div className="bg-white p-6 rounded-lg card-shadow">
-              <h3 className="text-xl font-semibold mb-4">📊 Smart Monthly Issues Breakdown - Real Carry Forward Analysis</h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold">📊 Complete Monthly Issues Analysis</h3>
+                <div className="text-sm bg-blue-50 px-3 py-2 rounded-lg">
+                  <span className="font-semibold text-blue-800">Total Issues: {generalIssuesData.totalRaised?.toLocaleString()}</span>
+                  <span className="text-blue-600 ml-2">| Resolved: {generalIssuesData.totalResolved?.toLocaleString()} ({generalIssuesData.resolutionRate}%)</span>
+                </div>
+              </div>
+              
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50">
@@ -868,111 +867,145 @@ export default function Dashboard() {
                       <th className="px-3 py-3 text-left font-semibold">Month</th>
                       <th className="px-3 py-3 text-center font-semibold text-red-600">📈 Raised<br/>This Month</th>
                       <th className="px-3 py-3 text-center font-semibold text-green-600">✅ Resolved<br/>Same Month</th>
+                      <th className="px-3 py-3 text-center font-semibold text-purple-600">🔄 Resolved<br/>Later</th>
                       <th className="px-3 py-3 text-center font-semibold text-blue-600">⬅️ From<br/>Previous</th>
-                      <th className="px-3 py-3 text-center font-semibold text-orange-600">➡️ To Next /<br/>⏳ Pending</th>
-                      <th className="px-3 py-3 text-center font-semibold text-purple-600">⚡ Same Month<br/>Rate%</th>
+                      <th className="px-3 py-3 text-center font-semibold text-orange-600">⏳ Still<br/>Pending</th>
                       <th className="px-3 py-3 text-center font-semibold text-gray-600">🎯 Overall<br/>Rate%</th>
-                      <th className="px-3 py-3 text-center font-semibold text-indigo-600">⏱️ Avg Time<br/>(hours)</th>
+                      <th className="px-3 py-3 text-center font-semibold text-indigo-600">⏱️ Avg Time</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {generalIssuesData.monthlyData?.map((month, index) => (
-                      <tr key={index} className="border-t hover:bg-gray-50">
-                        <td className="px-3 py-3 font-medium flex items-center">
-                          {month.month}
-                          {month.isCurrentMonth && (
-                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">CURRENT</span>
-                          )}
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className="inline-block bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">
-                            {month.raised}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-medium">
-                            {month.resolvedSameMonth}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          {month.carryForwardIn > 0 ? (
-                            <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">
-                              {month.carryForwardIn}
+                    {generalIssuesData.monthlyData?.map((month, index) => {
+                      const totalForMonth = month.raised + month.carryForwardIn
+                      const totalResolvedInMonth = month.resolvedSameMonth + month.carryForwardIn
+                      
+                      return (
+                        <tr key={index} className="border-t hover:bg-gray-50">
+                          <td className="px-3 py-3 font-medium flex items-center">
+                            {month.month}
+                            {month.isCurrentMonth && (
+                              <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">CURRENT</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-center">
+                            <span className="inline-block bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">
+                              {month.raised}
                             </span>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          {month.isCurrentMonth ? (
-                            month.stillPending > 0 ? (
-                              <span className="inline-block bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm font-medium">
-                                ⏳ {month.stillPending}
+                          </td>
+                          <td className="px-3 py-3 text-center">
+                            <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-medium">
+                              {month.resolvedSameMonth}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 text-center">
+                            {month.resolvedLaterMonths > 0 ? (
+                              <span className="inline-block bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm font-medium">
+                                {month.resolvedLaterMonths}
                               </span>
                             ) : (
                               <span className="text-gray-400">-</span>
-                            )
-                          ) : (
-                            month.carryForwardOut > 0 ? (
-                              <span className="inline-block bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm font-medium">
-                                ➡️ {month.carryForwardOut}
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-center">
+                            {month.carryForwardIn > 0 ? (
+                              <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">
+                                {month.carryForwardIn}
                               </span>
                             ) : (
                               <span className="text-gray-400">-</span>
-                            )
-                          )}
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
-                            month.sameMonthResolutionRate >= 80 
-                              ? 'bg-green-100 text-green-800' 
-                              : month.sameMonthResolutionRate >= 60 
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {month.sameMonthResolutionRate}%
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          {month.isCurrentMonth ? (
-                            <span className="text-gray-400 text-xs">TBD</span>
-                          ) : (
-                            <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
-                              month.resolutionRate >= 80 
-                                ? 'bg-green-100 text-green-800' 
-                                : month.resolutionRate >= 60 
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {month.resolutionRate}%
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          {month.avgTime > 0 ? (
-                            <span className="inline-block bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-sm font-medium">
-                              {month.avgTime}h
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-center">
+                            {month.stillPending > 0 ? (
+                              <span className="inline-block bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm font-medium">
+                                {month.stillPending}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-center">
+                            {month.resolutionRate !== null ? (
+                              <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
+                                month.resolutionRate >= 80 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : month.resolutionRate >= 60 
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {month.resolutionRate}%
+                              </span>
+                            ) : (
+                              <span className="text-gray-400 text-xs">TBD</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-center">
+                            {month.avgTime !== '0h' ? (
+                              <span className="inline-block bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs font-medium">
+                                {month.avgTime}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
+                  {/* Summary Row */}
+                  <tfoot className="bg-gray-100 border-t-2">
+                    <tr className="font-semibold">
+                      <td className="px-3 py-3 text-left">TOTAL</td>
+                      <td className="px-3 py-3 text-center">
+                        <span className="bg-red-200 text-red-900 px-2 py-1 rounded text-sm font-bold">
+                          {generalIssuesData.totalRaised?.toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <span className="bg-green-200 text-green-900 px-2 py-1 rounded text-sm font-bold">
+                          {generalIssuesData.monthlyData?.reduce((sum, month) => sum + month.resolvedSameMonth, 0)}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <span className="bg-purple-200 text-purple-900 px-2 py-1 rounded text-sm font-bold">
+                          {generalIssuesData.monthlyData?.reduce((sum, month) => sum + month.resolvedLaterMonths, 0)}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <span className="bg-blue-200 text-blue-900 px-2 py-1 rounded text-sm font-bold">
+                          {generalIssuesData.monthlyData?.reduce((sum, month) => sum + month.carryForwardIn, 0)}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <span className="bg-orange-200 text-orange-900 px-2 py-1 rounded text-sm font-bold">
+                          {generalIssuesData.monthlyData?.reduce((sum, month) => sum + month.stillPending, 0)}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <span className="bg-gray-200 text-gray-900 px-2 py-1 rounded text-sm font-bold">
+                          {generalIssuesData.resolutionRate}%
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <span className="bg-indigo-200 text-indigo-900 px-2 py-1 rounded text-xs font-bold">
+                          {generalIssuesData.avgResolutionTime}
+                        </span>
+                      </td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
               
               {/* Updated Legend */}
               <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold text-sm mb-2">📋 Smart Carry Forward Logic:</h4>
+                <h4 className="font-semibold text-sm mb-2">📋 Data Explanation:</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-600">
-                  <div>• <strong>Raised This Month:</strong> Issues raised in that specific month</div>
-                  <div>• <strong>Resolved Same Month:</strong> Issues raised & resolved within same month</div>
-                  <div>• <strong>From Previous:</strong> Issues that came from previous months and got resolved</div>
-                  <div>• <strong>To Next/Pending:</strong> Past months = carried to future; Current = still pending</div>
-                  <div>• <strong>Current Month:</strong> Shows pending count, not future predictions</div>
-                  <div>• <strong>Smart Logic:</strong> No future assumptions for current month</div>
+                  <div>• <strong>Raised This Month:</strong> New issues opened in that month</div>
+                  <div>• <strong>Resolved Same Month:</strong> Issues opened & closed within same month</div>
+                  <div>• <strong>Resolved Later:</strong> Issues from this month resolved in future months</div>
+                  <div>• <strong>From Previous:</strong> Old issues resolved in this month</div>
+                  <div>• <strong>Still Pending:</strong> Issues not yet resolved</div>
+                  <div>• <strong>Overall Rate:</strong> (Same Month + Later Resolved) / Raised × 100</div>
                 </div>
               </div>
             </div>
