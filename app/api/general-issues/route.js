@@ -94,7 +94,7 @@ export async function GET() {
     let totalResolved = 0
 
     // First pass: Process all issues with raised timestamps
-    const issuesData = []
+    const processedIssues = []
     
     filteredRows.forEach((row, rowIndex) => {
       const timestampRaised = row[timestampRaisedIndex]
@@ -136,7 +136,7 @@ export async function GET() {
       }
 
       // Store issue data
-      issuesData.push({
+      processedIssues.push({
         client: clientName,
         raisedMonth,
         resolvedMonth,
@@ -152,7 +152,7 @@ export async function GET() {
     // Second pass: Calculate monthly statistics with carry forward logic
     const monthlyBreakdown = {}
     
-    issuesData.forEach(issue => {
+    processedIssues.forEach(issue => {
       const { raisedMonth, resolvedMonth, resolutionTime, client, isResolved } = issue
       
       // Initialize raised month
