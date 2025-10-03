@@ -252,10 +252,10 @@ export default function Dashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 pb-6">
-        {/* Monthly Overview Section - PRIORITY TAB */}
+        {/* Monthly Overview Section - UPDATED CARDS WITH FULL DETAILS */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
-            {/* Executive Summary Metrics */}
+            {/* Executive Summary Metrics - UPDATED */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <MetricCard
                 title="Total Alerts"
@@ -266,22 +266,22 @@ export default function Dashboard() {
               />
               <MetricCard
                 title="Misalignments"
-                value={misalignmentData.totalRaised?.toLocaleString() || '0'}
-                subtitle={`${misalignmentData.rectificationRate || 0}% rectified`}
+                value={`${misalignmentData.totalRaised?.toLocaleString() || '0'} Raised`}
+                subtitle={`${misalignmentData.totalRectified?.toLocaleString() || '0'} Rectified`}
                 icon={Activity}
                 color="bg-orange-500"
               />
               <MetricCard
                 title="Video Requests"
-                value={historicalVideoData.totalRequests?.toLocaleString() || '0'}
-                subtitle={`${historicalVideoData.overallDeliveryRate || 0}% delivered`}
+                value={`${historicalVideoData.totalRequests?.toLocaleString() || '0'} Requests`}
+                subtitle={`${historicalVideoData.totalDelivered?.toLocaleString() || '0'} Delivered`}
                 icon={Video}
                 color="bg-purple-500"
               />
               <MetricCard
                 title="General Issues"
-                value={generalIssuesData.totalRaised?.toLocaleString() || '0'}
-                subtitle={`${generalIssuesData.resolutionRate || 0}% resolved`}
+                value={`${generalIssuesData.totalRaised?.toLocaleString() || '0'} Raised`}
+                subtitle={`${generalIssuesData.totalResolved?.toLocaleString() || '0'} Resolved`}
                 icon={Settings}
                 color="bg-green-500"
               />
@@ -696,7 +696,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* General Issues Section - FIXED RESOLUTION LOGIC & TIME FORMAT */}
+        {/* General Issues Section */}
         {activeTab === 'issues' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -850,7 +850,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* FIXED: Smart Monthly Breakdown with Clear Totals */}
+            {/* Complete Monthly Breakdown */}
             <div className="bg-white p-6 rounded-lg card-shadow">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold">📊 Complete Monthly Issues Analysis</h3>
@@ -876,9 +876,6 @@ export default function Dashboard() {
                   </thead>
                   <tbody>
                     {generalIssuesData.monthlyData?.map((month, index) => {
-                      const totalForMonth = month.raised + month.carryForwardIn
-                      const totalResolvedInMonth = month.resolvedSameMonth + month.carryForwardIn
-                      
                       return (
                         <tr key={index} className="border-t hover:bg-gray-50">
                           <td className="px-3 py-3 font-medium flex items-center">
@@ -996,7 +993,7 @@ export default function Dashboard() {
                 </table>
               </div>
               
-              {/* Updated Legend */}
+              {/* Legend */}
               <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                 <h4 className="font-semibold text-sm mb-2">📋 Data Explanation:</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-600">
