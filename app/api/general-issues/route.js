@@ -59,7 +59,7 @@ export async function GET() {
     // Filter out Historical Video Requests
     const filteredRows = rows.slice(1).filter(row => {
       const issueType = (row[issueIndex] || '').toString().trim()
-      return issueType !== 'Historical Video Request'
+      return issueType !== 'Customer request for video'
     })
 
     // Process all issues
