@@ -304,8 +304,8 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold mb-2">CAUTIO COMMAND CENTER MONITORING DASHBOARD</h1>
-              <p className="text-blue-100">Real-time analytics from live Google Sheets data - complete monthly analysis</p>
+              <h1 className="text-3xl font-bold mb-2">Professional Monitoring Dashboard</h1>
+              <p className="text-blue-100">Real-time analytics from live Google Sheets data - Your complete monthly analysis</p>
             </div>
             <button
               onClick={() => setShowDebug(!showDebug)}
@@ -763,7 +763,7 @@ export default function Dashboard() {
               />
               <MetricCard
                 title="Fastest Delivery"
-                value={`${historicalVideoData.fastestDeliveryTime}h`}
+                value={`${historicalVideoData.fastestDeliveryMinutes || 0}min`}
                 subtitle="Best performance"
                 icon={TrendingUp}
                 color="bg-green-600"
