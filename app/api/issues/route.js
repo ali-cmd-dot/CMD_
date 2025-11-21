@@ -89,15 +89,15 @@ export async function GET() {
       }, { status: 400 })
     }
 
-    // Filter for EXACT "Historical Video Request" in "Issue" column
+    // Filter for EXACT "Customer request for video" in "Issue" column
     const filteredRows = rows.slice(1).filter(row => {
       const issueType = (row[issueIndex] || '').toString().trim()
       
-      // Exact match for "Historical Video Request"
-      return issueType === 'Historical Video Request'
+      // Exact match for "Customer request for video"
+      return issueType === 'Customer request for video'
     })
 
-    console.log('Historical Video Request rows found:', filteredRows.length)
+    console.log('Customer request for video rows found:', filteredRows.length)
     console.log('Sample filtered rows:', filteredRows.slice(0, 3).map((row, idx) => ({
       row: idx + 1,
       timestampRaised: row[timestampRaisedIndex],
@@ -106,7 +106,7 @@ export async function GET() {
       issue: row[issueIndex]
     })))
 
-    // If no Historical Video Requests found, show all Issue types for debugging
+    // If no Customer request for video found, show all Issue types for debugging
     if (filteredRows.length === 0) {
       const allIssueTypes = rows.slice(1, 20)
         .map(row => row[issueIndex])
@@ -116,16 +116,16 @@ export async function GET() {
       const uniqueIssueTypes = [...new Set(allIssueTypes)]
       
       return NextResponse.json({
-        error: 'No "Historical Video Request" found in Issue column',
+        error: 'No "Customer request for video" found in Issue column',
         totalDataRows: rows.length - 1,
         issueColumnIndex: issueIndex,
         sampleIssueTypes: uniqueIssueTypes.slice(0, 10),
-        exactSearchTerm: 'Historical Video Request',
+        exactSearchTerm: 'Customer request for video',
         headers: headers
       }, { status: 404 })
     }
 
-    // Process Historical Video Request data
+    // Process Customer request for video data
     const monthlyStats = {}
     const clientStats = {}
     const resolutionTimes = []
@@ -192,7 +192,7 @@ export async function GET() {
       }
     })
 
-    console.log('Historical Video Processing complete:', {
+    console.log('Customer request for video Processing complete:', {
       totalRequests,
       totalDelivered,
       deliveryRate: totalRequests > 0 ? ((totalDelivered / totalRequests) * 100).toFixed(1) : 0
@@ -258,7 +258,7 @@ export async function GET() {
     })
 
   } catch (error) {
-    console.error('Error fetching historical video data:', error)
+    console.error('Error fetching customer video request data:', error)
     return NextResponse.json(
       { error: 'Failed to fetch data', details: error.message, stack: error.stack },
       { status: 500 }
