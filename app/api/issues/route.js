@@ -9,7 +9,6 @@ export async function GET() {
       throw new Error('Missing API key or Sheet ID')
     }
 
-    // Fixed: Tab name with space "Issues- Realtime"
     const issuesUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Issues-%20Realtime!A:Z?key=${API_KEY}`
     
     console.log('Fetching from URL:', issuesUrl)
@@ -33,7 +32,7 @@ export async function GET() {
       }, { status: 404 })
     }
 
-    // Find EXACT column names
+    // Find EXACT column names - FIXED: "Clients" and "Sub-request"
     const headers = rows[0]
     console.log('All headers:', headers)
     
@@ -57,13 +56,13 @@ export async function GET() {
         timestampResolvedIndex = index
       }
       
-      // Exact match for "Client"
-      if (h === 'Client' || h === 'client') {
+      // FIXED: Match "Clients" (with 's')
+      if (h === 'Clients' || h === 'Client' || h === 'clients') {
         clientIndex = index
       }
       
-      // Exact match for "Issue" (not "Sub-request")
-      if (h === 'Issue' || h === 'issue') {
+      // FIXED: Match "Sub-request" column for issue type
+      if (h === 'Sub-request' || h === 'Issue' || h === 'issue') {
         issueIndex = index
       }
     })
@@ -81,15 +80,15 @@ export async function GET() {
         error: 'Required columns not found',
         missingColumns: {
           timestampRaised: timestampRaisedIndex === -1 ? 'Missing "Timestamp Issues Raised"' : 'Found',
-          client: clientIndex === -1 ? 'Missing "Client"' : 'Found',
-          issue: issueIndex === -1 ? 'Missing "Issue"' : 'Found'
+          client: clientIndex === -1 ? 'Missing "Clients"' : 'Found',
+          issue: issueIndex === -1 ? 'Missing "Sub-request"' : 'Found'
         },
         headers: headers,
         indices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex }
       }, { status: 400 })
     }
 
-    // Filter for EXACT "Customer request for video" in "Issue" column
+    // Filter for EXACT "Customer request for video" in "Sub-request" column
     const filteredRows = rows.slice(1).filter(row => {
       const issueType = (row[issueIndex] || '').toString().trim()
       
@@ -116,9 +115,10 @@ export async function GET() {
       const uniqueIssueTypes = [...new Set(allIssueTypes)]
       
       return NextResponse.json({
-        error: 'No "Customer request for video" found in Issue column',
+        error: 'No "Customer request for video" found in Sub-request column',
         totalDataRows: rows.length - 1,
         issueColumnIndex: issueIndex,
+        issueColumnName: headers[issueIndex],
         sampleIssueTypes: uniqueIssueTypes.slice(0, 10),
         exactSearchTerm: 'Customer request for video',
         headers: headers
