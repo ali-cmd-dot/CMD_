@@ -56,7 +56,7 @@ export async function GET() {
       }, { status: 400 })
     }
 
-    // Filter out Historical Video Requests
+    // Filter out Customer request for video
     const filteredRows = rows.slice(1).filter(row => {
       const issueType = (row[issueIndex] || '').toString().trim()
       return issueType !== 'Customer request for video'
