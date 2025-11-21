@@ -24,7 +24,7 @@ export async function GET() {
       return NextResponse.json({ error: 'No data found' }, { status: 404 })
     }
 
-    // Find column indices
+    // Find column indices - FIXED: "Clients" and "Sub-request"
     const headers = rows[0]
     let timestampRaisedIndex = -1
     let timestampResolvedIndex = -1
@@ -41,10 +41,12 @@ export async function GET() {
       if (h === 'Timestamp Issues Resolved') {
         timestampResolvedIndex = index
       }
-      if (h === 'Client' || h === 'client') {
+      // FIXED: Match "Clients" (with 's')
+      if (h === 'Clients' || h === 'Client' || h === 'clients') {
         clientIndex = index
       }
-      if (h === 'Issue' || h === 'issue') {
+      // FIXED: Match "Sub-request" column
+      if (h === 'Sub-request' || h === 'Issue' || h === 'issue') {
         issueIndex = index
       }
     })
@@ -124,9 +126,9 @@ export async function GET() {
         monthlyBreakdown[issue.raisedMonth] = {
           raised: 0,
           resolvedSameMonth: 0,
-          resolvedLaterMonths: 0,    // FIXED: Actually resolved in later months
-          carryForwardIn: 0,         // Issues that came FROM previous months  
-          stillPending: 0,           // Issues still unresolved
+          resolvedLaterMonths: 0,
+          carryForwardIn: 0,
+          stillPending: 0,
           resolutionTimes: []
         }
       }
@@ -140,10 +142,8 @@ export async function GET() {
 
       if (isResolved) {
         if (raisedMonth === resolvedMonth) {
-          // Resolved in same month
           monthlyBreakdown[raisedMonth].resolvedSameMonth += 1
         } else {
-          // FIXED: Actually resolved in later month
           monthlyBreakdown[raisedMonth].resolvedLaterMonths += 1
         }
         
@@ -151,7 +151,6 @@ export async function GET() {
           monthlyBreakdown[raisedMonth].resolutionTimes.push(resolutionTime)
         }
       } else {
-        // FIXED: Still pending (not resolved yet)
         monthlyBreakdown[raisedMonth].stillPending += 1
       }
 
@@ -167,13 +166,11 @@ export async function GET() {
       }
     })
 
-    // Calculate carry forward IN for each month (issues from previous months resolved here)
+    // Calculate carry forward IN for each month
     allIssues.forEach(issue => {
       const { raisedMonth, resolvedMonth, isResolved } = issue
       
       if (isResolved && raisedMonth !== resolvedMonth) {
-        // This issue was resolved in a different month
-        // Add to carryForwardIn for the resolved month
         if (!monthlyBreakdown[resolvedMonth]) {
           monthlyBreakdown[resolvedMonth] = {
             raised: 0, resolvedSameMonth: 0, resolvedLaterMonths: 0,
@@ -195,13 +192,12 @@ export async function GET() {
       ? calculateMedian(resolutionTimes) 
       : 0
 
-    // Convert to frontend format with FIXED calculations
+    // Convert to frontend format
     const monthlyData = Object.entries(monthlyBreakdown)
       .sort(([a], [b]) => new Date(a.replace(' ', ' 1, ')) - new Date(b.replace(' ', ' 1, ')))
       .map(([month, data]) => {
         const isCurrentMonth = month === currentMonth
         
-        // FIXED: Correct resolution rate calculation
         const totalResolved = data.resolvedSameMonth + data.resolvedLaterMonths
         const actualResolutionRate = data.raised > 0 ? parseFloat(((totalResolved / data.raised) * 100).toFixed(1)) : 0
         
@@ -213,15 +209,13 @@ export async function GET() {
           resolvedLaterMonths: data.resolvedLaterMonths,
           carryForwardIn: data.carryForwardIn,
           stillPending: data.stillPending,
-          // FIXED: Convert hours to days + hours format
           avgTime: data.resolutionTimes.length > 0 
             ? convertHoursToDaysHours(data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length)
             : '0h',
           avgTimeHours: data.resolutionTimes.length > 0 
             ? parseFloat((data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length).toFixed(2))
             : 0,
-          // FIXED: Correct resolution rates
-          resolutionRate: isCurrentMonth ? null : actualResolutionRate, // null for current month
+          resolutionRate: isCurrentMonth ? null : actualResolutionRate,
           sameMonthResolutionRate: data.raised > 0 ? parseFloat(((data.resolvedSameMonth / data.raised) * 100).toFixed(1)) : 0,
           isCurrentMonth
         }
@@ -261,7 +255,7 @@ export async function GET() {
       debug: {
         totalRowsProcessed: filteredRows.length,
         resolutionTimesCount: resolutionTimes.length,
-        logic: 'FIXED: Correct resolution rates, hours to days conversion'
+        logic: 'FIXED: Column names updated to Clients and Sub-request'
       }
     })
 
@@ -274,11 +268,10 @@ export async function GET() {
   }
 }
 
-// ADDED: Convert hours to "X days Yh" format
 function convertHoursToDaysHours(hours) {
   if (!hours || hours === 0) return '0h'
   
-  const totalHours = Math.round(hours * 10) / 10 // Round to 1 decimal
+  const totalHours = Math.round(hours * 10) / 10
   
   if (totalHours < 24) {
     return `${totalHours}h`
@@ -301,7 +294,6 @@ function parseTimestamp(timestampStr) {
   if (!str) return null
   
   try {
-    // Format: DD/MM/YYYY HH:mm:ss
     if (str.includes('/') && str.includes(' ')) {
       const [datePart, timePart] = str.split(' ')
       const dateParts = datePart.split('/')
@@ -324,7 +316,6 @@ function parseTimestamp(timestampStr) {
       }
     }
     
-    // Format: DD-MM-YYYY HH:mm:ss
     if (str.includes('-') && str.includes(' ')) {
       const [datePart, timePart] = str.split(' ')
       const dateParts = datePart.split('-')
@@ -344,7 +335,6 @@ function parseTimestamp(timestampStr) {
       }
     }
     
-    // Format: Just date DD/MM/YYYY or DD-MM-YYYY
     if (!str.includes(' ')) {
       const dateParts = str.includes('/') ? str.split('/') : str.split('-')
       if (dateParts.length === 3) {
