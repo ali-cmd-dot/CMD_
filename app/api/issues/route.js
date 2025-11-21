@@ -221,6 +221,7 @@ export async function GET() {
           ? parseFloat((data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length).toFixed(2))
           : 0,
         fastestDelivery: data.resolutionTimes.length > 0 ? parseFloat(Math.min(...data.resolutionTimes).toFixed(2)) : 0,
+        fastestDeliveryMinutes: data.resolutionTimes.length > 0 ? parseFloat((Math.min(...data.resolutionTimes) * 60).toFixed(1)) : 0,
         slowestDelivery: data.resolutionTimes.length > 0 ? parseFloat(Math.max(...data.resolutionTimes).toFixed(2)) : 0
       }))
 
@@ -236,6 +237,7 @@ export async function GET() {
           ? parseFloat((data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length).toFixed(2))
           : 0,
         fastestDelivery: data.resolutionTimes.length > 0 ? parseFloat(Math.min(...data.resolutionTimes).toFixed(2)) : 0,
+        fastestDeliveryMinutes: data.resolutionTimes.length > 0 ? parseFloat((Math.min(...data.resolutionTimes) * 60).toFixed(1)) : 0,
         slowestDelivery: data.resolutionTimes.length > 0 ? parseFloat(Math.max(...data.resolutionTimes).toFixed(2)) : 0,
         medianDeliveryTime: data.resolutionTimes.length > 0 ? parseFloat(calculateMedian(data.resolutionTimes).toFixed(2)) : 0
       }))
@@ -248,6 +250,7 @@ export async function GET() {
       overallDeliveryRate: totalRequests > 0 ? parseFloat(((totalDelivered / totalRequests) * 100).toFixed(1)) : 0,
       avgDeliveryTime: parseFloat(avgDeliveryTime.toFixed(2)),
       fastestDeliveryTime: parseFloat(fastestDeliveryTime.toFixed(2)),
+      fastestDeliveryMinutes: parseFloat((fastestDeliveryTime * 60).toFixed(1)),
       slowestDeliveryTime: parseFloat(slowestDeliveryTime.toFixed(2)),
       medianDeliveryTime: parseFloat(medianDeliveryTime.toFixed(2)),
       debug: {
