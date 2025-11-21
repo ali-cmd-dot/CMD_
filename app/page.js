@@ -18,14 +18,25 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   const [error, setError] = useState(null)
+  const [debugInfo, setDebugInfo] = useState([])
+  const [showDebug, setShowDebug] = useState(false)
 
   useEffect(() => {
     fetchAllData()
   }, [])
 
+  const addDebugInfo = (message, data = null) => {
+    console.log(message, data)
+    setDebugInfo(prev => [...prev, { message, data, time: new Date().toLocaleTimeString() }])
+  }
+
   const fetchAllData = async () => {
     setLoading(true)
     setError(null)
+    setDebugInfo([])
+    
+    addDebugInfo('🚀 Starting to fetch all data...')
+    
     try {
       const results = await Promise.allSettled([
         fetchAlertData(),
@@ -34,12 +45,15 @@ export default function Dashboard() {
         fetchGeneralIssuesData()
       ])
 
-      // Check if any fetch failed
       const failed = results.filter(result => result.status === 'rejected')
       if (failed.length > 0) {
+        addDebugInfo('⚠️ Some API calls failed', failed)
         console.warn('Some API calls failed:', failed)
       }
+      
+      addDebugInfo('✅ All fetch attempts completed')
     } catch (error) {
+      addDebugInfo('❌ Error in fetchAllData', error)
       console.error('Error fetching data:', error)
       setError('Failed to load some data. Please check your internet connection.')
     } finally {
@@ -49,14 +63,21 @@ export default function Dashboard() {
 
   const fetchAlertData = async () => {
     try {
+      addDebugInfo('📡 Fetching Alert Data from /api/alerts')
       const response = await fetch('/api/alerts')
+      addDebugInfo(`📥 Alert Response Status: ${response.status}`)
+      
       if (response.ok) {
         const data = await response.json()
+        addDebugInfo('✅ Alert Data Received', { totalCount: data.totalCount, uniqueClients: data.uniqueClients })
         setAlertData(data)
       } else {
+        const errorText = await response.text()
+        addDebugInfo(`❌ Alert API failed: ${response.status}`, errorText)
         throw new Error(`Alert API failed: ${response.status}`)
       }
     } catch (error) {
+      addDebugInfo('❌ Error fetching alert data', error.message)
       console.error('Error fetching alert data:', error)
       setAlertData({ 
         totalCount: 0, avgPerMonth: 0, uniqueClients: 0, 
@@ -67,14 +88,21 @@ export default function Dashboard() {
 
   const fetchMisalignmentData = async () => {
     try {
+      addDebugInfo('📡 Fetching Misalignment Data from /api/misalignment')
       const response = await fetch('/api/misalignment')
+      addDebugInfo(`📥 Misalignment Response Status: ${response.status}`)
+      
       if (response.ok) {
         const data = await response.json()
+        addDebugInfo('✅ Misalignment Data Received', { totalRaised: data.totalRaised, totalRectified: data.totalRectified })
         setMisalignmentData(data)
       } else {
+        const errorText = await response.text()
+        addDebugInfo(`❌ Misalignment API failed: ${response.status}`, errorText)
         throw new Error(`Misalignment API failed: ${response.status}`)
       }
     } catch (error) {
+      addDebugInfo('❌ Error fetching misalignment data', error.message)
       console.error('Error fetching misalignment data:', error)
       setMisalignmentData({ 
         totalRaised: 0, totalRectified: 0, rectificationRate: 0, 
@@ -85,14 +113,22 @@ export default function Dashboard() {
 
   const fetchHistoricalVideoData = async () => {
     try {
+      addDebugInfo('📡 Fetching Historical Video Data from /api/issues')
       const response = await fetch('/api/issues')
+      addDebugInfo(`📥 Historical Video Response Status: ${response.status}`)
+      
       if (response.ok) {
         const data = await response.json()
+        addDebugInfo('✅ Historical Video Data Received', { totalRequests: data.totalRequests, totalDelivered: data.totalDelivered })
         setHistoricalVideoData(data)
       } else {
+        const errorText = await response.text()
+        addDebugInfo(`❌ Historical Video API failed: ${response.status}`, errorText)
+        console.error('Historical Video API Error:', errorText)
         throw new Error(`Historical Video API failed: ${response.status}`)
       }
     } catch (error) {
+      addDebugInfo('❌ Error fetching historical video data', error.message)
       console.error('Error fetching historical video data:', error)
       setHistoricalVideoData({ 
         totalRequests: 0, totalDelivered: 0, overallDeliveryRate: 0,
@@ -103,14 +139,22 @@ export default function Dashboard() {
 
   const fetchGeneralIssuesData = async () => {
     try {
+      addDebugInfo('📡 Fetching General Issues Data from /api/general-issues')
       const response = await fetch('/api/general-issues')
+      addDebugInfo(`📥 General Issues Response Status: ${response.status}`)
+      
       if (response.ok) {
         const data = await response.json()
+        addDebugInfo('✅ General Issues Data Received', { totalRaised: data.totalRaised, totalResolved: data.totalResolved })
         setGeneralIssuesData(data)
       } else {
+        const errorText = await response.text()
+        addDebugInfo(`❌ General Issues API failed: ${response.status}`, errorText)
+        console.error('General Issues API Error:', errorText)
         throw new Error(`General Issues API failed: ${response.status}`)
       }
     } catch (error) {
+      addDebugInfo('❌ Error fetching general issues data', error.message)
       console.error('Error fetching general issues data:', error)
       setGeneralIssuesData({ 
         totalRaised: 0, totalResolved: 0, resolutionRate: 0,
@@ -149,11 +193,28 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-3xl w-full">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <div className="text-xl font-semibold text-gray-700">Loading Professional Dashboard...</div>
           <div className="text-gray-500 mt-2">Fetching live data from Google Sheets...</div>
+          
+          {/* Debug Info Display */}
+          <div className="mt-6 bg-white p-4 rounded-lg shadow text-left max-h-96 overflow-y-auto">
+            <h3 className="font-semibold mb-2">🔍 Debug Log:</h3>
+            <div className="space-y-1">
+              {debugInfo.map((info, idx) => (
+                <div key={idx} className="text-xs font-mono border-b pb-1">
+                  <span className="text-gray-500">[{info.time}]</span> {info.message}
+                  {info.data && (
+                    <pre className="text-xs bg-gray-100 p-1 mt-1 rounded overflow-x-auto">
+                      {typeof info.data === 'string' ? info.data : JSON.stringify(info.data, null, 2).substring(0, 300)}
+                    </pre>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -161,17 +222,43 @@ export default function Dashboard() {
 
   if (!alertData || !misalignmentData || !historicalVideoData || !generalIssuesData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-4xl w-full">
           <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <div className="text-xl font-semibold text-gray-700">Data Loading Error</div>
-          <div className="text-gray-500 mt-2">Please check your API configuration</div>
+          <div className="text-gray-500 mt-2">Please check your API configuration and Sheet permissions</div>
+          
+          {/* Debug Info Display */}
+          <div className="mt-6 bg-white p-4 rounded-lg shadow text-left max-h-96 overflow-y-auto">
+            <h3 className="font-semibold mb-2">🔍 Debug Log:</h3>
+            {debugInfo.map((info, idx) => (
+              <div key={idx} className="text-xs mb-2 font-mono border-b pb-2">
+                <span className="text-gray-500">[{info.time}]</span> {info.message}
+                {info.data && (
+                  <pre className="text-xs bg-gray-100 p-2 mt-1 rounded overflow-x-auto">
+                    {typeof info.data === 'string' ? info.data : JSON.stringify(info.data, null, 2)}
+                  </pre>
+                )}
+              </div>
+            ))}
+          </div>
+          
           <button 
             onClick={fetchAllData}
             className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
-            Retry
+            Retry Loading Data
           </button>
+          
+          <div className="mt-4">
+            <a 
+              href="/api/test-sheet" 
+              target="_blank"
+              className="inline-block px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+            >
+              🔍 Test Sheet Connection
+            </a>
+          </div>
         </div>
       </div>
     )
@@ -186,10 +273,8 @@ export default function Dashboard() {
       ...generalIssuesData.monthlyData.map(d => d.month)
     ])
 
-    // Convert to array and sort by actual date
     return Array.from(months)
       .sort((a, b) => {
-        // Convert "MMM YYYY" to date for proper sorting
         const dateA = new Date(a.replace(' ', ' 1, '))
         const dateB = new Date(b.replace(' ', ' 1, '))
         return dateA - dateB
@@ -217,13 +302,73 @@ export default function Dashboard() {
       {/* Header */}
       <header className="dashboard-gradient text-white p-6">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold mb-2">Professional Monitoring Dashboard</h1>
-          <p className="text-blue-100">Real-time analytics from live Google Sheets data - Your complete monthly analysis</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Professional Monitoring Dashboard</h1>
+              <p className="text-blue-100">Real-time analytics from live Google Sheets data - Your complete monthly analysis</p>
+            </div>
+            <button
+              onClick={() => setShowDebug(!showDebug)}
+              className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm"
+            >
+              {showDebug ? '🔍 Hide Debug' : '🔍 Show Debug'}
+            </button>
+          </div>
           {error && (
             <div className="mt-2 text-yellow-200 text-sm">{error}</div>
           )}
         </div>
       </header>
+
+      {/* Debug Panel */}
+      {showDebug && (
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="font-semibold mb-2">🔍 Debug Information:</h3>
+            <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+              <div>
+                <strong>Alert Data:</strong> {alertData ? '✅ Loaded' : '❌ Missing'}
+                {alertData && <span className="text-gray-600 ml-2">({alertData.totalCount} alerts)</span>}
+              </div>
+              <div>
+                <strong>Misalignment Data:</strong> {misalignmentData ? '✅ Loaded' : '❌ Missing'}
+                {misalignmentData && <span className="text-gray-600 ml-2">({misalignmentData.totalRaised} raised)</span>}
+              </div>
+              <div>
+                <strong>Video Request Data:</strong> {historicalVideoData ? '✅ Loaded' : '❌ Missing'}
+                {historicalVideoData && <span className="text-gray-600 ml-2">({historicalVideoData.totalRequests} requests)</span>}
+              </div>
+              <div>
+                <strong>General Issues Data:</strong> {generalIssuesData ? '✅ Loaded' : '❌ Missing'}
+                {generalIssuesData && <span className="text-gray-600 ml-2">({generalIssuesData.totalRaised} issues)</span>}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  console.log('Full Data State:', {
+                    alertData,
+                    misalignmentData,
+                    historicalVideoData,
+                    generalIssuesData
+                  })
+                  alert('Check browser console (F12) for detailed data')
+                }}
+                className="text-sm bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              >
+                📊 Log All Data to Console
+              </button>
+              <a 
+                href="/api/test-sheet" 
+                target="_blank"
+                className="text-sm bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              >
+                🧪 Test Sheet API
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Navigation Tabs */}
       <div className="max-w-7xl mx-auto px-6 py-4">
@@ -252,10 +397,10 @@ export default function Dashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 pb-6">
-        {/* Monthly Overview Section - UPDATED CARDS WITH FULL DETAILS */}
+        {/* Monthly Overview Section */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
-            {/* Executive Summary Metrics - UPDATED */}
+            {/* Executive Summary Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <MetricCard
                 title="Total Alerts"
@@ -357,7 +502,6 @@ export default function Dashboard() {
               <div className="bg-white p-6 rounded-lg card-shadow">
                 <h3 className="text-xl font-semibold mb-4">Top Clients by Total Activity</h3>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {/* Combine and sort all client data */}
                   {[
                     ...alertData.clientBreakdown.map(c => ({ ...c, type: 'alerts', value: c.count })),
                     ...misalignmentData.clientBreakdown.map(c => ({ ...c, type: 'misalignments', value: c.raised }))
@@ -739,69 +883,17 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white p-6 rounded-lg card-shadow">
-                <h3 className="text-xl font-semibold mb-4">Monthly Issues Overview - Smart Carry Forward Analysis</h3>
-                <div className="mb-3 text-sm text-gray-600">
-                  <div className="flex flex-wrap gap-4">
-                    <span className="flex items-center"><span className="w-3 h-3 bg-red-500 rounded mr-1"></span>Raised This Month</span>
-                    <span className="flex items-center"><span className="w-3 h-3 bg-green-500 rounded mr-1"></span>Resolved Same Month</span>
-                    <span className="flex items-center"><span className="w-3 h-3 bg-blue-500 rounded mr-1"></span>From Previous Months</span>
-                    <span className="flex items-center"><span className="w-3 h-3 bg-orange-500 rounded mr-1"></span>Still Pending</span>
-                  </div>
-                </div>
+                <h3 className="text-xl font-semibold mb-4">Monthly Issues Overview</h3>
                 <ResponsiveContainer width="100%" height={350}>
                   <ComposedChart data={generalIssuesData.monthlyData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis yAxisId="left" />
                     <YAxis yAxisId="right" orientation="right" />
-                    <Tooltip 
-                      content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload
-                          const isCurrentMonth = data.isCurrentMonth
-                          
-                          return (
-                            <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg min-w-72">
-                              <p className="font-semibold text-lg mb-2 flex items-center">
-                                {label}
-                                {isCurrentMonth && <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">CURRENT</span>}
-                              </p>
-                              
-                              <div className="space-y-1 text-sm">
-                                <p className="text-red-600 font-medium">📈 Raised This Month: {data.raised}</p>
-                                <p className="text-green-600">✅ Resolved Same Month: {data.resolvedSameMonth}</p>
-                                
-                                {data.carryForwardIn > 0 && (
-                                  <p className="text-blue-600">⬅️ From Previous Months: {data.carryForwardIn}</p>
-                                )}
-                                
-                                {data.resolvedLaterMonths > 0 && (
-                                  <p className="text-purple-600">🔄 Resolved in Later Months: {data.resolvedLaterMonths}</p>
-                                )}
-                                
-                                {data.stillPending > 0 && (
-                                  <p className="text-orange-600">⏳ Still Pending: {data.stillPending}</p>
-                                )}
-                                
-                                <div className="border-t pt-2 mt-2">
-                                  <p className="text-indigo-600">⏱️ Avg Resolution Time: {data.avgTime}</p>
-                                  <p className="text-gray-600">📊 Same Month Resolution: {data.sameMonthResolutionRate}%</p>
-                                  {data.resolutionRate !== null && (
-                                    <p className="text-gray-600">🎯 Overall Resolution: {data.resolutionRate}%</p>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        }
-                        return null
-                      }}
-                    />
+                    <Tooltip />
                     <Legend />
-                    <Bar yAxisId="left" dataKey="raised" fill="#EF4444" name="Raised This Month" />
-                    <Bar yAxisId="left" dataKey="resolvedSameMonth" fill="#10B981" name="Resolved Same Month" />
-                    <Bar yAxisId="left" dataKey="carryForwardIn" fill="#3B82F6" name="From Previous Months" />
-                    <Bar yAxisId="left" dataKey="stillPending" fill="#F59E0B" name="Still Pending" />
+                    <Bar yAxisId="left" dataKey="raised" fill="#EF4444" name="Raised" />
+                    <Bar yAxisId="left" dataKey="resolved" fill="#10B981" name="Resolved" />
                     <Line yAxisId="right" type="monotone" dataKey="avgTimeHours" stroke="#8B5CF6" strokeWidth={3} name="Avg Time (h)" />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -818,7 +910,6 @@ export default function Dashboard() {
                         <th className="px-2 py-2 text-center">Resolved</th>
                         <th className="px-2 py-2 text-center">Rate%</th>
                         <th className="px-2 py-2 text-center">Avg Time</th>
-                        <th className="px-2 py-2 text-center">Range</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -839,9 +930,6 @@ export default function Dashboard() {
                             </span>
                           </td>
                           <td className="px-2 py-2 text-center text-xs">{client.avgTime}</td>
-                          <td className="px-2 py-2 text-center text-xs">
-                            {client.minTime} - {client.maxTime}
-                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -865,145 +953,89 @@ export default function Dashboard() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-3 py-3 text-left font-semibold">Month</th>
-                      <th className="px-3 py-3 text-center font-semibold text-red-600">📈 Raised<br/>This Month</th>
-                      <th className="px-3 py-3 text-center font-semibold text-green-600">✅ Resolved<br/>Same Month</th>
-                      <th className="px-3 py-3 text-center font-semibold text-purple-600">🔄 Resolved<br/>Later</th>
-                      <th className="px-3 py-3 text-center font-semibold text-blue-600">⬅️ From<br/>Previous</th>
-                      <th className="px-3 py-3 text-center font-semibold text-orange-600">⏳ Still<br/>Pending</th>
-                      <th className="px-3 py-3 text-center font-semibold text-gray-600">🎯 Overall<br/>Rate%</th>
+                      <th className="px-3 py-3 text-center font-semibold text-red-600">📈 Raised</th>
+                      <th className="px-3 py-3 text-center font-semibold text-green-600">✅ Same Month</th>
+                      <th className="px-3 py-3 text-center font-semibold text-purple-600">🔄 Later</th>
+                      <th className="px-3 py-3 text-center font-semibold text-blue-600">⬅️ Previous</th>
+                      <th className="px-3 py-3 text-center font-semibold text-orange-600">⏳ Pending</th>
+                      <th className="px-3 py-3 text-center font-semibold text-gray-600">🎯 Rate%</th>
                       <th className="px-3 py-3 text-center font-semibold text-indigo-600">⏱️ Avg Time</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {generalIssuesData.monthlyData?.map((month, index) => {
-                      return (
-                        <tr key={index} className="border-t hover:bg-gray-50">
-                          <td className="px-3 py-3 font-medium flex items-center">
-                            {month.month}
-                            {month.isCurrentMonth && (
-                              <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">CURRENT</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-3 text-center">
-                            <span className="inline-block bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">
-                              {month.raised}
+                    {generalIssuesData.monthlyData?.map((month, index) => (
+                      <tr key={index} className="border-t hover:bg-gray-50">
+                        <td className="px-3 py-3 font-medium flex items-center">
+                          {month.month}
+                          {month.isCurrentMonth && (
+                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">CURRENT</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <span className="inline-block bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">
+                            {month.raised}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-medium">
+                            {month.resolvedSameMonth}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          {month.resolvedLaterMonths > 0 ? (
+                            <span className="inline-block bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm font-medium">
+                              {month.resolvedLaterMonths}
                             </span>
-                          </td>
-                          <td className="px-3 py-3 text-center">
-                            <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-medium">
-                              {month.resolvedSameMonth}
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          {month.carryForwardIn > 0 ? (
+                            <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">
+                              {month.carryForwardIn}
                             </span>
-                          </td>
-                          <td className="px-3 py-3 text-center">
-                            {month.resolvedLaterMonths > 0 ? (
-                              <span className="inline-block bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm font-medium">
-                                {month.resolvedLaterMonths}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-3 text-center">
-                            {month.carryForwardIn > 0 ? (
-                              <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">
-                                {month.carryForwardIn}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-3 text-center">
-                            {month.stillPending > 0 ? (
-                              <span className="inline-block bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm font-medium">
-                                {month.stillPending}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-3 text-center">
-                            {month.resolutionRate !== null ? (
-                              <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
-                                month.resolutionRate >= 80 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : month.resolutionRate >= 60 
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {month.resolutionRate}%
-                              </span>
-                            ) : (
-                              <span className="text-gray-400 text-xs">TBD</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-3 text-center">
-                            {month.avgTime !== '0h' ? (
-                              <span className="inline-block bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs font-medium">
-                                {month.avgTime}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                        </tr>
-                      )
-                    })}
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          {month.stillPending > 0 ? (
+                            <span className="inline-block bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm font-medium">
+                              {month.stillPending}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          {month.resolutionRate !== null ? (
+                            <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
+                              month.resolutionRate >= 80 
+                                ? 'bg-green-100 text-green-800' 
+                                : month.resolutionRate >= 60 
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {month.resolutionRate}%
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 text-xs">TBD</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          {month.avgTime !== '0h' ? (
+                            <span className="inline-block bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs font-medium">
+                              {month.avgTime}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
-                  {/* Summary Row */}
-                  <tfoot className="bg-gray-100 border-t-2">
-                    <tr className="font-semibold">
-                      <td className="px-3 py-3 text-left">TOTAL</td>
-                      <td className="px-3 py-3 text-center">
-                        <span className="bg-red-200 text-red-900 px-2 py-1 rounded text-sm font-bold">
-                          {generalIssuesData.totalRaised?.toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3 text-center">
-                        <span className="bg-green-200 text-green-900 px-2 py-1 rounded text-sm font-bold">
-                          {generalIssuesData.monthlyData?.reduce((sum, month) => sum + month.resolvedSameMonth, 0)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3 text-center">
-                        <span className="bg-purple-200 text-purple-900 px-2 py-1 rounded text-sm font-bold">
-                          {generalIssuesData.monthlyData?.reduce((sum, month) => sum + month.resolvedLaterMonths, 0)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3 text-center">
-                        <span className="bg-blue-200 text-blue-900 px-2 py-1 rounded text-sm font-bold">
-                          {generalIssuesData.monthlyData?.reduce((sum, month) => sum + month.carryForwardIn, 0)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3 text-center">
-                        <span className="bg-orange-200 text-orange-900 px-2 py-1 rounded text-sm font-bold">
-                          {generalIssuesData.monthlyData?.reduce((sum, month) => sum + month.stillPending, 0)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3 text-center">
-                        <span className="bg-gray-200 text-gray-900 px-2 py-1 rounded text-sm font-bold">
-                          {generalIssuesData.resolutionRate}%
-                        </span>
-                      </td>
-                      <td className="px-3 py-3 text-center">
-                        <span className="bg-indigo-200 text-indigo-900 px-2 py-1 rounded text-xs font-bold">
-                          {generalIssuesData.avgResolutionTime}
-                        </span>
-                      </td>
-                    </tr>
-                  </tfoot>
                 </table>
-              </div>
-              
-              {/* Legend */}
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold text-sm mb-2">📋 Data Explanation:</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-600">
-                  <div>• <strong>Raised This Month:</strong> New issues opened in that month</div>
-                  <div>• <strong>Resolved Same Month:</strong> Issues opened & closed within same month</div>
-                  <div>• <strong>Resolved Later:</strong> Issues from this month resolved in future months</div>
-                  <div>• <strong>From Previous:</strong> Old issues resolved in this month</div>
-                  <div>• <strong>Still Pending:</strong> Issues not yet resolved</div>
-                  <div>• <strong>Overall Rate:</strong> (Same Month + Later Resolved) / Raised × 100</div>
-                </div>
               </div>
             </div>
           </div>
