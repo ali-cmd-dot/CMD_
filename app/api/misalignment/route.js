@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server'
 
+// CRITICAL: Disable caching for live data
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function GET() {
   try {
     const API_KEY = process.env.GOOGLE_SHEETS_API_KEY
@@ -12,7 +16,9 @@ export async function GET() {
     // Fetch Misalignment_Tracking sheet data
     const misalignmentUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Misalignment_Tracking!A:Z?key=${API_KEY}`
     
-    const misalignmentResponse = await fetch(misalignmentUrl)
+    const misalignmentResponse = await fetch(misalignmentUrl, {
+      cache: 'no-store'
+    })
     
     if (!misalignmentResponse.ok) {
       throw new Error(`Failed to fetch misalignment data: ${misalignmentResponse.status}`)
@@ -22,7 +28,14 @@ export async function GET() {
     const rows = misalignmentData.values || []
     
     if (rows.length < 2) {
-      return NextResponse.json({ error: 'No data found' }, { status: 404 })
+      return NextResponse.json({ error: 'No data found' }, { 
+        status: 404,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      })
     }
 
     // Find column indices
@@ -32,7 +45,14 @@ export async function GET() {
     const vehicleIndex = headers.findIndex(h => h.toLowerCase().includes('vehicle'))
 
     if (dateIndex === -1 || clientIndex === -1 || vehicleIndex === -1) {
-      return NextResponse.json({ error: 'Required columns not found' }, { status: 400 })
+      return NextResponse.json({ error: 'Required columns not found' }, { 
+        status: 400,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      })
     }
 
     // Process raw data - sort by date first
@@ -226,7 +246,7 @@ export async function GET() {
           vehicle: key.split('-')[1],
           client: key.split('-')[0],
           repeats: count
-        })).sort((a, b) => b.repeats - a.repeats).slice(0, 10) // Top 10 most repeated
+        })).sort((a, b) => b.repeats - a.repeats).slice(0, 10)
       }))
 
     const avgRaisedPerMonth = monthlyData.length > 0 ? totalRaised / monthlyData.length : 0
@@ -257,26 +277,37 @@ export async function GET() {
       avgRectifiedPerMonth: parseFloat(avgRectifiedPerMonth.toFixed(1)),
       uniqueClients: uniqueClientsTotal,
       rectificationRate: totalRaised > 0 ? parseFloat(((totalRectified / totalRaised) * 100).toFixed(1)) : 0
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     })
 
   } catch (error) {
     console.error('Error fetching misalignment data:', error)
     return NextResponse.json(
       { error: 'Failed to fetch data', details: error.message },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      }
     )
   }
 }
 
 function parseDate(dateStr) {
-  // Handle DD-MM-YYYY or DD-MM-YY format
   const parts = dateStr.split('-')
   if (parts.length === 3) {
     const day = parseInt(parts[0])
-    const month = parseInt(parts[1]) - 1 // JavaScript months are 0-indexed
+    const month = parseInt(parts[1]) - 1
     let year = parseInt(parts[2])
     
-    // Handle 2-digit years
     if (year < 100) {
       year += 2000
     }
