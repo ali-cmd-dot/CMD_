@@ -55,7 +55,22 @@ export async function GET() {
       // Extract month from date (assuming DD-MM-YYYY format)
       const dateParts = date.split('-')
       if (dateParts.length === 3) {
-        const month = `${getMonthName(parseInt(dateParts[1]))} ${dateParts[2]}`
+        // CRITICAL: Parse and validate date
+        const day = parseInt(dateParts[0])
+        const monthNum = parseInt(dateParts[1])
+        let year = parseInt(dateParts[2])
+        
+        if (year < 100) year += 2000
+        
+        // Skip future dates
+        const parsedDate = new Date(year, monthNum - 1, day)
+        const today = new Date()
+        if (parsedDate > today) {
+          console.log(`Skipping future alert date: ${date}`)
+          return
+        }
+        
+        const month = `${getMonthName(monthNum)} ${year}`
         
         // Monthly stats
         if (!monthlyStats[month]) {
