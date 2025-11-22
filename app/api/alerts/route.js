@@ -46,6 +46,7 @@ export async function GET() {
     // Process data by month and client
     const monthlyStats = {}
     const clientStats = {}
+    let totalValidAlerts = 0
 
     filteredRows.forEach(row => {
       const [date, clientName, alertType] = row
@@ -84,7 +85,15 @@ export async function GET() {
           clientStats[clientName] = 0
         }
         clientStats[clientName] += 1
+        totalValidAlerts += 1
       }
+    })
+    
+    console.log('Alert Processing Summary:', {
+      totalFilteredRows: filteredRows.length,
+      totalValidAlerts: totalValidAlerts,
+      clientStatsCount: Object.keys(clientStats).length,
+      clientStats: clientStats
     })
 
     // Convert to arrays for frontend
