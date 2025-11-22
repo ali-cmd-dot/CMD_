@@ -156,6 +156,14 @@ export async function GET() {
         return
       }
 
+      // CRITICAL: Skip future dates
+      const today = new Date()
+      if (raisedDate > today) {
+        console.log(`Row ${rowIndex + 1}: Future date detected, skipping: "${timestampRaised}"`)
+        totalRequests -= 1 // Rollback count
+        return
+      }
+
       const month = getMonthYear(raisedDate)
       
       // Monthly stats
