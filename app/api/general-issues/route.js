@@ -85,6 +85,13 @@ export async function GET() {
       const raisedDate = parseTimestamp(timestampRaised)
       if (!raisedDate) return
 
+      // CRITICAL: Skip future dates
+      const today = new Date()
+      if (raisedDate > today) {
+        console.log(`Skipping future date: ${timestampRaised}`)
+        return
+      }
+
       const raisedMonth = getMonthYear(raisedDate)
       let resolvedMonth = null
       let resolvedDate = null
