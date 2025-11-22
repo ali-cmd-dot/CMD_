@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server'
 
+// CRITICAL: Disable caching for live data
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function GET() {
   try {
     const API_KEY = process.env.GOOGLE_SHEETS_API_KEY
@@ -12,7 +16,9 @@ export async function GET() {
     // Fetch Alert_Tracking sheet data
     const alertUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Alert_Tracking!A:F?key=${API_KEY}`
     
-    const alertResponse = await fetch(alertUrl)
+    const alertResponse = await fetch(alertUrl, {
+      cache: 'no-store'
+    })
     
     if (!alertResponse.ok) {
       throw new Error(`Failed to fetch alerts: ${alertResponse.status}`)
@@ -22,7 +28,14 @@ export async function GET() {
     const rows = alertData.values || []
     
     if (rows.length < 2) {
-      return NextResponse.json({ error: 'No data found' }, { status: 404 })
+      return NextResponse.json({ error: 'No data found' }, { 
+        status: 404,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      })
     }
 
     // Skip header row and filter out "No L2 alerts found"
@@ -72,7 +85,7 @@ export async function GET() {
     const avgPerMonth = monthlyData.length > 0 ? totalCount / monthlyData.length : 0
     const uniqueClientsTotal = new Set(filteredRows.map(row => row[1])).size
 
-    // Top clients breakdown - Remove "Others" and show all clients
+    // Top clients breakdown
     const sortedClients = Object.entries(clientStats)
       .sort(([,a], [,b]) => b - a)
 
@@ -88,13 +101,26 @@ export async function GET() {
       totalCount,
       avgPerMonth: parseFloat(avgPerMonth.toFixed(1)),
       uniqueClients: uniqueClientsTotal
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     })
 
   } catch (error) {
     console.error('Error fetching alert data:', error)
     return NextResponse.json(
       { error: 'Failed to fetch data', details: error.message },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      }
     )
   }
 }
