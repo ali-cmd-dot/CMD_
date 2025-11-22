@@ -65,6 +65,14 @@ export async function GET() {
       
       if (!date || !clientName || !vehicleNumbers) return
 
+      // CRITICAL: Validate date is not in future
+      const parsedDate = parseDate(date)
+      const today = new Date()
+      if (parsedDate > today) {
+        console.log(`Skipping future misalignment date: ${date}`)
+        return
+      }
+
       // Parse vehicles (comma separated)
       const vehicles = vehicleNumbers.split(',').map(v => v.trim()).filter(v => v)
       
