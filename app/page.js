@@ -43,7 +43,8 @@ export default function Dashboard() {
         fetchAlertData(),
         fetchMisalignmentData(),
         fetchHistoricalVideoData(),
-        fetchGeneralIssuesData()
+        fetchGeneralIssuesData(),
+        fetchOfflineVehiclesData()
       ])
 
       const failed = results.filter(result => result.status === 'rejected')
@@ -164,6 +165,32 @@ export default function Dashboard() {
     }
   }
 
+  const fetchOfflineVehiclesData = async () => {
+    try {
+      addDebugInfo('📡 Fetching Offline Vehicles Data from /api/offline-vehicles')
+      const response = await fetch('/api/offline-vehicles')
+      addDebugInfo(`📥 Offline Vehicles Response Status: ${response.status}`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        addDebugInfo('✅ Offline Vehicles Data Received', { totalOfflineVehicles: data.totalOfflineVehicles, uniqueClients: data.uniqueClients })
+        setOfflineVehiclesData(data)
+      } else {
+        const errorText = await response.text()
+        addDebugInfo(`❌ Offline Vehicles API failed: ${response.status}`, errorText)
+        console.error('Offline Vehicles API Error:', errorText)
+        throw new Error(`Offline Vehicles API failed: ${response.status}`)
+      }
+    } catch (error) {
+      addDebugInfo('❌ Error fetching offline vehicles data', error.message)
+      console.error('Error fetching offline vehicles data:', error)
+      setOfflineVehiclesData({ 
+        totalOfflineVehicles: 0, uniqueClients: 0,
+        top10Clients: [], allClientsBreakdown: [], vehiclesByClient: []
+      })
+    }
+  }
+
   const COLORS = [
     '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899',
     '#14B8A6', '#F97316', '#84CC16', '#6366F1', '#8B5A2B', '#059669'
@@ -221,7 +248,7 @@ export default function Dashboard() {
     )
   }
 
-  if (!alertData || !misalignmentData || !historicalVideoData || !generalIssuesData) {
+  if (!alertData || !misalignmentData || !historicalVideoData || !generalIssuesData || !offlineVehiclesData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center max-w-4xl w-full">
@@ -379,7 +406,8 @@ export default function Dashboard() {
             { id: 'alerts', label: 'Alert Tracking', icon: AlertTriangle },
             { id: 'misalignment', label: 'Misalignment Analysis', icon: Activity },
             { id: 'videos', label: 'Historical Videos', icon: Video },
-            { id: 'issues', label: 'General Issues', icon: Settings }
+            { id: 'issues', label: 'General Issues', icon: Settings },
+            { id: 'offline', label: 'Offline Vehicles', icon: XCircle }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1037,6 +1065,205 @@ export default function Dashboard() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Offline Vehicles Section */}
+        {activeTab === 'offline' && (
+          <div className="space-y-6">
+            {/* Top Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-gradient-to-br from-red-500 to-red-600 p-8 rounded-xl shadow-2xl text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <XCircle size={48} className="mb-4 opacity-80" />
+                    <h2 className="text-5xl font-bold mb-2">{offlineVehiclesData.totalOfflineVehicles?.toLocaleString() || '0'}</h2>
+                    <p className="text-xl opacity-90">Total Offline Vehicles</p>
+                    <p className="text-sm opacity-75 mt-2">Real-time count from live data</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4">
+                      <Users size={32} className="mb-2" />
+                      <div className="text-2xl font-bold">{offlineVehiclesData.uniqueClients || '0'}</div>
+                      <div className="text-sm opacity-90">Clients</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Top Client Card */}
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-8 rounded-xl shadow-2xl text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <TrendingUp size={48} className="mb-4 opacity-80" />
+                    <h2 className="text-3xl font-bold mb-2">
+                      {offlineVehiclesData.top10Clients?.[0]?.client || 'N/A'}
+                    </h2>
+                    <p className="text-xl opacity-90">Top Client</p>
+                    <div className="flex items-center gap-4 mt-4">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                        <div className="text-3xl font-bold">{offlineVehiclesData.top10Clients?.[0]?.count || '0'}</div>
+                        <div className="text-xs opacity-90">Vehicles</div>
+                      </div>
+                      <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                        <div className="text-3xl font-bold">{offlineVehiclesData.top10Clients?.[0]?.percentage || '0'}%</div>
+                        <div className="text-xs opacity-90">Share</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Top 10 Clients Bar Chart */}
+            <div className="bg-white p-6 rounded-lg card-shadow">
+              <h3 className="text-2xl font-bold mb-6 flex items-center">
+                <BarChart3 className="mr-3 text-red-600" size={28} />
+                Top 10 Clients with Offline Vehicles
+              </h3>
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={offlineVehiclesData.top10Clients || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="client" angle={-45} textAnchor="end" height={120} />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="count" fill="#EF4444" name="Offline Vehicles" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Top 10 Table */}
+            <div className="bg-white p-6 rounded-lg card-shadow">
+              <h3 className="text-xl font-bold mb-4 flex items-center">
+                <Target className="mr-2 text-orange-600" />
+                Top 10 Clients - Detailed View
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gradient-to-r from-red-50 to-orange-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-semibold text-gray-700">#</th>
+                      <th className="px-4 py-3 text-left font-semibold text-gray-700">Client Name</th>
+                      <th className="px-4 py-3 text-center font-semibold text-gray-700">Offline Vehicles</th>
+                      <th className="px-4 py-3 text-center font-semibold text-gray-700">Percentage</th>
+                      <th className="px-4 py-3 text-center font-semibold text-gray-700">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {offlineVehiclesData.top10Clients?.map((client, index) => (
+                      <tr key={index} className="border-t hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-white ${
+                            index === 0 ? 'bg-yellow-500' : 
+                            index === 1 ? 'bg-gray-400' : 
+                            index === 2 ? 'bg-orange-600' : 'bg-gray-300'
+                          }`}>
+                            {index + 1}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 font-medium text-gray-900">{client.client}</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="inline-block bg-red-100 text-red-800 px-3 py-1 rounded-full font-semibold">
+                            {client.count}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="font-semibold text-orange-600">{client.percentage}%</span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            client.percentage > 20 ? 'bg-red-100 text-red-800' : 
+                            client.percentage > 10 ? 'bg-orange-100 text-orange-800' : 
+                            'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {client.percentage > 20 ? '🔴 Critical' : 
+                             client.percentage > 10 ? '🟠 High' : '🟡 Medium'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Detailed View - All Clients */}
+            <div className="bg-white p-6 rounded-lg card-shadow">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold flex items-center">
+                  <Activity className="mr-2 text-blue-600" />
+                  Complete Client Breakdown - All Clients
+                </h3>
+                <div className="text-sm bg-blue-50 px-4 py-2 rounded-lg">
+                  <span className="font-semibold text-blue-800">
+                    Total: {offlineVehiclesData.allClientsBreakdown?.length || 0} Clients
+                  </span>
+                </div>
+              </div>
+              <div className="max-h-96 overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-semibold">#</th>
+                      <th className="px-3 py-2 text-left font-semibold">Client Name</th>
+                      <th className="px-3 py-2 text-center font-semibold">Count</th>
+                      <th className="px-3 py-2 text-center font-semibold">Share %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {offlineVehiclesData.allClientsBreakdown?.map((client, index) => (
+                      <tr key={index} className="border-t hover:bg-gray-50">
+                        <td className="px-3 py-2 text-gray-600">{index + 1}</td>
+                        <td className="px-3 py-2 font-medium">{client.client}</td>
+                        <td className="px-3 py-2 text-center">
+                          <span className="bg-red-50 text-red-700 px-2 py-1 rounded font-medium">
+                            {client.count}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 text-center text-orange-600 font-medium">
+                          {client.percentage}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Vehicle Details by Client */}
+            <div className="bg-white p-6 rounded-lg card-shadow">
+              <h3 className="text-xl font-bold mb-6 flex items-center">
+                <Video className="mr-2 text-purple-600" />
+                Vehicle Numbers by Client - Complete Details
+              </h3>
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {offlineVehiclesData.vehiclesByClient?.map((clientData, index) => (
+                  <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-3 pb-3 border-b">
+                      <div>
+                        <h4 className="font-bold text-lg text-gray-900">{clientData.client}</h4>
+                        <p className="text-sm text-gray-600">Offline Vehicles</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-3xl font-bold text-red-600">{clientData.count}</div>
+                        <div className="text-xs text-gray-500">vehicles</div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {clientData.vehicles?.map((vehicle, vIndex) => (
+                        <span 
+                          key={vIndex}
+                          className="bg-gradient-to-r from-red-50 to-orange-50 text-red-700 px-3 py-1 rounded-full text-sm font-medium border border-red-200"
+                        >
+                          {vehicle}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
