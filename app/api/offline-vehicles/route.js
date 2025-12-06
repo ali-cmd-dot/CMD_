@@ -38,12 +38,13 @@ export async function GET() {
       }, { status: 404 })
     }
 
-    // Find column indices - Column J = Vehicle Number, Column K = Clients
+    // Find column indices - Column J = Vehicle Number, Column K = Clients, Column I = Status
     const headers = rows[0]
     console.log('All headers:', headers)
     
     let vehicleNumberIndex = -1
     let clientIndex = -1
+    let statusIndex = -1
 
     // Search for exact column positions
     headers.forEach((header, index) => {
@@ -59,27 +60,35 @@ export async function GET() {
       if (h === 'Clients' || h === 'Client' || h === 'clients' || h === 'client') {
         clientIndex = index
       }
+      
+      // Column I - Status
+      if (h === 'Status' || h === 'status') {
+        statusIndex = index
+      }
     })
 
     console.log('Column indices found:', {
       vehicleNumberIndex,
       clientIndex,
+      statusIndex,
       vehicleNumberHeader: headers[vehicleNumberIndex],
-      clientHeader: headers[clientIndex]
+      clientHeader: headers[clientIndex],
+      statusHeader: headers[statusIndex]
     })
 
-    if (vehicleNumberIndex === -1 || clientIndex === -1) {
+    if (vehicleNumberIndex === -1 || clientIndex === -1 || statusIndex === -1) {
       return NextResponse.json({ 
         error: 'Required columns not found',
         missingColumns: {
           vehicleNumber: vehicleNumberIndex === -1 ? 'Missing "Vehicle Number" column' : 'Found',
-          client: clientIndex === -1 ? 'Missing "Clients" column' : 'Found'
+          client: clientIndex === -1 ? 'Missing "Clients" column' : 'Found',
+          status: statusIndex === -1 ? 'Missing "Status" column' : 'Found'
         },
         headers: headers
       }, { status: 400 })
     }
 
-    // Process offline vehicles data
+    // Process offline vehicles data - ONLY count vehicles with Status = "Deployed"
     const clientVehicleCounts = {}
     let totalOfflineVehicles = 0
     const vehicleDetails = []
@@ -87,17 +96,26 @@ export async function GET() {
     rows.slice(1).forEach((row, rowIndex) => {
       const vehicleNumber = row[vehicleNumberIndex]
       const clientName = row[clientIndex]
+      const status = row[statusIndex]
       
-      // Skip if no vehicle number or no client
+      // Skip if no vehicle number, no client, or no status
       if (!vehicleNumber || !vehicleNumber.toString().trim()) return
       if (!clientName || !clientName.toString().trim()) return
+      if (!status || !status.toString().trim()) return
       
       const client = clientName.toString().trim()
       const vehicle = vehicleNumber.toString().trim()
+      const deviceStatus = status.toString().trim()
       
       // CRITICAL: Ignore #N/A clients and blank
       if (client === '#N/A' || client.toLowerCase() === '#n/a' || client === 'N/A' || client === '') {
         console.log(`Skipping #N/A or blank client at row ${rowIndex + 2}`)
+        return
+      }
+      
+      // CRITICAL: Only count vehicles with Status = "Deployed"
+      if (deviceStatus !== 'Deployed') {
+        console.log(`Skipping non-deployed device at row ${rowIndex + 2}, status: ${deviceStatus}`)
         return
       }
       
@@ -112,6 +130,7 @@ export async function GET() {
       vehicleDetails.push({
         client,
         vehicle,
+        status: deviceStatus,
         rowNumber: rowIndex + 2
       })
     })
@@ -157,7 +176,8 @@ export async function GET() {
       debug: {
         totalRowsProcessed: rows.length - 1,
         headers: headers,
-        columnIndices: { vehicleNumberIndex, clientIndex }
+        columnIndices: { vehicleNumberIndex, clientIndex, statusIndex },
+        filterApplied: 'Only Status = "Deployed" counted'
       }
     }, {
       headers: {
