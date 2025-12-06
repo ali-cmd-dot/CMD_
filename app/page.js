@@ -7,7 +7,7 @@ import {
 } from 'recharts'
 import { 
   Activity, AlertTriangle, TrendingUp, Calendar, Users, Clock, Target,
-  BarChart3, Video, Settings, CheckCircle2, XCircle, TrendingDown, WifiOff, Truck, Wifi
+  BarChart3, Video, Settings, CheckCircle2, XCircle, TrendingDown
 } from 'lucide-react'
 
 export default function Dashboard() {
@@ -15,8 +15,6 @@ export default function Dashboard() {
   const [misalignmentData, setMisalignmentData] = useState(null)
   const [historicalVideoData, setHistoricalVideoData] = useState(null)
   const [generalIssuesData, setGeneralIssuesData] = useState(null)
-  const [offlineVehiclesData, setOfflineVehiclesData] = useState(null)
-  const [deviceMovementData, setDeviceMovementData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   const [error, setError] = useState(null)
@@ -44,9 +42,7 @@ export default function Dashboard() {
         fetchAlertData(),
         fetchMisalignmentData(),
         fetchHistoricalVideoData(),
-        fetchGeneralIssuesData(),
-        fetchOfflineVehiclesData(),
-        fetchDeviceMovementData()
+        fetchGeneralIssuesData()
       ])
 
       const failed = results.filter(result => result.status === 'rejected')
@@ -167,56 +163,6 @@ export default function Dashboard() {
     }
   }
 
-  const fetchOfflineVehiclesData = async () => {
-    try {
-      addDebugInfo('📡 Fetching Offline Vehicles Data from /api/offline-vehicles')
-      const response = await fetch('/api/offline-vehicles')
-      addDebugInfo(`📥 Offline Vehicles Response Status: ${response.status}`)
-      
-      if (response.ok) {
-        const data = await response.json()
-        addDebugInfo('✅ Offline Vehicles Data Received', { totalOffline: data.totalOfflineVehicles })
-        setOfflineVehiclesData(data)
-      } else {
-        const errorText = await response.text()
-        addDebugInfo(`❌ Offline Vehicles API failed: ${response.status}`, errorText)
-        throw new Error(`Offline Vehicles API failed: ${response.status}`)
-      }
-    } catch (error) {
-      addDebugInfo('❌ Error fetching offline vehicles data', error.message)
-      console.error('Error fetching offline vehicles data:', error)
-      setOfflineVehiclesData({ 
-        totalOfflineVehicles: 0, uniqueClients: 0, top10Clients: [], allClients: [] 
-      })
-    }
-  }
-
-  const fetchDeviceMovementData = async () => {
-    try {
-      addDebugInfo('📡 Fetching Device Movement Data from /api/device-movement')
-      const response = await fetch('/api/device-movement')
-      addDebugInfo(`📥 Device Movement Response Status: ${response.status}`)
-      
-      if (response.ok) {
-        const data = await response.json()
-        addDebugInfo('✅ Device Movement Data Received', { totalDevices: data.totalDevices })
-        setDeviceMovementData(data)
-      } else {
-        const errorText = await response.text()
-        addDebugInfo(`❌ Device Movement API failed: ${response.status}`, errorText)
-        throw new Error(`Device Movement API failed: ${response.status}`)
-      }
-    } catch (error) {
-      addDebugInfo('❌ Error fetching device movement data', error.message)
-      console.error('Error fetching device movement data:', error)
-      setDeviceMovementData({ 
-        totalDevices: 0, deployedCount: 0, availableCount: 0, underRepairCount: 0, 
-        damagedCount: 0, deployedPercentage: 0, availablePercentage: 0, 
-        underRepairPercentage: 0, damagedPercentage: 0, monthlyData: [], deviceDetails: [] 
-      })
-    }
-  }
-
   const COLORS = [
     '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899',
     '#14B8A6', '#F97316', '#84CC16', '#6366F1', '#8B5A2B', '#059669'
@@ -253,6 +199,7 @@ export default function Dashboard() {
           <div className="text-xl font-semibold text-gray-700">Loading Professional Dashboard...</div>
           <div className="text-gray-500 mt-2">Fetching live data from Google Sheets...</div>
           
+          {/* Debug Info Display */}
           <div className="mt-6 bg-white p-4 rounded-lg shadow text-left max-h-96 overflow-y-auto">
             <h3 className="font-semibold mb-2">🔍 Debug Log:</h3>
             <div className="space-y-1">
@@ -273,7 +220,7 @@ export default function Dashboard() {
     )
   }
 
-  if (!alertData || !misalignmentData || !historicalVideoData || !generalIssuesData || !offlineVehiclesData || !deviceMovementData) {
+  if (!alertData || !misalignmentData || !historicalVideoData || !generalIssuesData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center max-w-4xl w-full">
@@ -281,6 +228,7 @@ export default function Dashboard() {
           <div className="text-xl font-semibold text-gray-700">Data Loading Error</div>
           <div className="text-gray-500 mt-2">Please check your API configuration and Sheet permissions</div>
           
+          {/* Debug Info Display */}
           <div className="mt-6 bg-white p-4 rounded-lg shadow text-left max-h-96 overflow-y-auto">
             <h3 className="font-semibold mb-2">🔍 Debug Log:</h3>
             {debugInfo.map((info, idx) => (
@@ -316,6 +264,7 @@ export default function Dashboard() {
     )
   }
 
+  // Combine monthly data for overview with proper date sorting
   const combineMonthlyData = () => {
     const months = new Set([
       ...alertData.monthlyData.map(d => d.month),
@@ -350,12 +299,13 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Header */}
       <header className="dashboard-gradient text-white p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold mb-2">CAUTIO COMMAND CENTER MONITORING DASHBOARD</h1>
-              <p className="text-blue-100">Real-time analytics from live Google Sheets data</p>
+              <p className="text-blue-100">Real-time analytics from live Google Sheets data - complete monthly analysis</p>
             </div>
             <button
               onClick={() => setShowDebug(!showDebug)}
@@ -364,41 +314,79 @@ export default function Dashboard() {
               {showDebug ? '🔍 Hide Debug' : '🔍 Show Debug'}
             </button>
           </div>
+          {error && (
+            <div className="mt-2 text-yellow-200 text-sm">{error}</div>
+          )}
         </div>
       </header>
 
+      {/* Debug Panel */}
       {showDebug && (
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="bg-white p-4 rounded-lg shadow">
             <h3 className="font-semibold mb-2">🔍 Debug Information:</h3>
             <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-              <div><strong>Alert Data:</strong> {alertData ? '✅' : '❌'}</div>
-              <div><strong>Misalignment:</strong> {misalignmentData ? '✅' : '❌'}</div>
-              <div><strong>Videos:</strong> {historicalVideoData ? '✅' : '❌'}</div>
-              <div><strong>Issues:</strong> {generalIssuesData ? '✅' : '❌'}</div>
-              <div><strong>Offline:</strong> {offlineVehiclesData ? '✅' : '❌'}</div>
-              <div><strong>Devices:</strong> {deviceMovementData ? '✅' : '❌'}</div>
+              <div>
+                <strong>Alert Data:</strong> {alertData ? '✅ Loaded' : '❌ Missing'}
+                {alertData && <span className="text-gray-600 ml-2">({alertData.totalCount} alerts)</span>}
+              </div>
+              <div>
+                <strong>Misalignment Data:</strong> {misalignmentData ? '✅ Loaded' : '❌ Missing'}
+                {misalignmentData && <span className="text-gray-600 ml-2">({misalignmentData.totalRaised} raised)</span>}
+              </div>
+              <div>
+                <strong>Video Request Data:</strong> {historicalVideoData ? '✅ Loaded' : '❌ Missing'}
+                {historicalVideoData && <span className="text-gray-600 ml-2">({historicalVideoData.totalRequests} requests)</span>}
+              </div>
+              <div>
+                <strong>General Issues Data:</strong> {generalIssuesData ? '✅ Loaded' : '❌ Missing'}
+                {generalIssuesData && <span className="text-gray-600 ml-2">({generalIssuesData.totalRaised} issues)</span>}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  console.log('Full Data State:', {
+                    alertData,
+                    misalignmentData,
+                    historicalVideoData,
+                    generalIssuesData
+                  })
+                  alert('Check browser console (F12) for detailed data')
+                }}
+                className="text-sm bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              >
+                📊 Log All Data to Console
+              </button>
+              <a 
+                href="/api/test-sheet" 
+                target="_blank"
+                className="text-sm bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              >
+                🧪 Test Sheet API
+              </a>
             </div>
           </div>
         </div>
       )}
 
+      {/* Navigation Tabs */}
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex flex-wrap gap-1 bg-gray-200 p-1 rounded-lg">
           {[
-            { id: 'overview', label: 'Overview', icon: BarChart3 },
-            { id: 'alerts', label: 'Alerts', icon: AlertTriangle },
-            { id: 'misalignment', label: 'Misalignment', icon: Activity },
-            { id: 'videos', label: 'Videos', icon: Video },
-            { id: 'issues', label: 'Issues', icon: Settings },
-            { id: 'offline', label: 'Offline Vehicles', icon: WifiOff },
-            { id: 'devices', label: 'Device Movement', icon: Truck }
+            { id: 'overview', label: 'Monthly Overview', icon: BarChart3 },
+            { id: 'alerts', label: 'Alert Tracking', icon: AlertTriangle },
+            { id: 'misalignment', label: 'Misalignment Analysis', icon: Activity },
+            { id: 'videos', label: 'Historical Videos', icon: Video },
+            { id: 'issues', label: 'General Issues', icon: Settings }
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
-                activeTab === tab.id ? 'bg-white text-blue-600 shadow' : 'text-gray-600 hover:text-gray-800'
+                activeTab === tab.id
+                  ? 'bg-white text-blue-600 shadow'
+                  : 'text-gray-600 hover:text-gray-800'
               }`}
             >
               <tab.icon size={18} />
@@ -409,17 +397,47 @@ export default function Dashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 pb-6">
+        {/* Monthly Overview Section */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
+            {/* Executive Summary Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <MetricCard title="Total Alerts" value={alertData.totalCount?.toLocaleString() || '0'} subtitle={`${alertData.uniqueClients || 0} clients`} icon={AlertTriangle} color="bg-red-500" />
-              <MetricCard title="Misalignments" value={`${misalignmentData.totalRaised?.toLocaleString() || '0'}`} subtitle={`${misalignmentData.totalRectified || 0} Fixed`} icon={Activity} color="bg-orange-500" />
-              <MetricCard title="Video Requests" value={`${historicalVideoData.totalRequests?.toLocaleString() || '0'}`} subtitle={`${historicalVideoData.totalDelivered || 0} Delivered`} icon={Video} color="bg-purple-500" />
-              <MetricCard title="General Issues" value={`${generalIssuesData.totalRaised?.toLocaleString() || '0'}`} subtitle={`${generalIssuesData.totalResolved || 0} Resolved`} icon={Settings} color="bg-green-500" />
+              <MetricCard
+                title="Total Alerts"
+                value={alertData.totalCount?.toLocaleString() || '0'}
+                subtitle={`${alertData.uniqueClients || 0} clients affected`}
+                icon={AlertTriangle}
+                color="bg-red-500"
+              />
+              <MetricCard
+                title="Misalignments"
+                value={`${misalignmentData.totalRaised?.toLocaleString() || '0'} Raised`}
+                subtitle={`${misalignmentData.totalRectified?.toLocaleString() || '0'} Rectified`}
+                icon={Activity}
+                color="bg-orange-500"
+              />
+              <MetricCard
+                title="Video Requests"
+                value={`${historicalVideoData.totalRequests?.toLocaleString() || '0'} Requests`}
+                subtitle={`${historicalVideoData.totalDelivered?.toLocaleString() || '0'} Delivered`}
+                icon={Video}
+                color="bg-purple-500"
+              />
+              <MetricCard
+                title="General Issues"
+                value={`${generalIssuesData.totalRaised?.toLocaleString() || '0'} Raised`}
+                subtitle={`${generalIssuesData.totalResolved?.toLocaleString() || '0'} Resolved`}
+                icon={Settings}
+                color="bg-green-500"
+              />
             </div>
 
+            {/* Combined Monthly Trends Chart */}
             <div className="bg-white p-6 rounded-lg card-shadow">
-              <h3 className="text-xl font-semibold mb-4">Monthly Overview</h3>
+              <h3 className="text-xl font-semibold mb-4 flex items-center">
+                <BarChart3 className="mr-2 text-blue-600" />
+                Monthly Performance Overview - All Categories
+              </h3>
               <ResponsiveContainer width="100%" height={400}>
                 <ComposedChart data={combinedMonthlyData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -430,26 +448,127 @@ export default function Dashboard() {
                   <Legend />
                   <Bar yAxisId="left" dataKey="alerts" fill="#EF4444" name="Alerts" />
                   <Bar yAxisId="left" dataKey="misalignments" fill="#F59E0B" name="Misalignments" />
-                  <Line yAxisId="right" type="monotone" dataKey="videos" stroke="#8B5CF6" strokeWidth={3} name="Videos" />
-                  <Line yAxisId="right" type="monotone" dataKey="issues" stroke="#10B981" strokeWidth={3} name="Issues" />
+                  <Line yAxisId="right" type="monotone" dataKey="videos" stroke="#8B5CF6" strokeWidth={3} name="Video Requests" />
+                  <Line yAxisId="right" type="monotone" dataKey="issues" stroke="#10B981" strokeWidth={3} name="General Issues" />
                 </ComposedChart>
               </ResponsiveContainer>
+            </div>
+
+            {/* Performance Summary Cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Resolution Performance */}
+              <div className="bg-white p-6 rounded-lg card-shadow">
+                <h3 className="text-xl font-semibold mb-4">Resolution Performance Summary</h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center p-4 bg-purple-50 rounded-lg">
+                    <div>
+                      <div className="font-medium">Video Delivery Performance</div>
+                      <div className="text-sm text-gray-600">Average: {historicalVideoData.avgDeliveryTime}h</div>
+                      <div className="text-xs text-gray-500">Range: {historicalVideoData.fastestDeliveryTime}h - {historicalVideoData.slowestDeliveryTime}h</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-purple-600">{historicalVideoData.overallDeliveryRate}%</div>
+                      <div className="text-sm text-gray-600">Success Rate</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg">
+                    <div>
+                      <div className="font-medium">General Issue Resolution</div>
+                      <div className="text-sm text-gray-600">Average: {generalIssuesData.avgResolutionTime}</div>
+                      <div className="text-xs text-gray-500">Median: {generalIssuesData.medianResolutionTime}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-green-600">{generalIssuesData.resolutionRate}%</div>
+                      <div className="text-sm text-gray-600">Resolution Rate</div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center p-4 bg-orange-50 rounded-lg">
+                    <div>
+                      <div className="font-medium">Misalignment Rectification</div>
+                      <div className="text-sm text-gray-600">Monthly avg raised: {misalignmentData.avgRaisedPerMonth}</div>
+                      <div className="text-xs text-gray-500">Monthly avg fixed: {misalignmentData.avgRectifiedPerMonth}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-orange-600">{misalignmentData.rectificationRate}%</div>
+                      <div className="text-sm text-gray-600">Fix Rate</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Top Clients by Total Activity */}
+              <div className="bg-white p-6 rounded-lg card-shadow">
+                <h3 className="text-xl font-semibold mb-4">Top Clients by Total Activity</h3>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {[
+                    ...alertData.clientBreakdown.map(c => ({ ...c, type: 'alerts', value: c.count })),
+                    ...misalignmentData.clientBreakdown.map(c => ({ ...c, type: 'misalignments', value: c.raised }))
+                  ]
+                    .sort((a, b) => b.value - a.value)
+                    .slice(0, 12)
+                    .map((client, index) => (
+                    <div key={`${client.client}-${client.type}-${index}`} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <div className="font-medium text-sm">{client.client}</div>
+                        <div className="text-sm text-gray-600">
+                          {client.value} {client.type}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold">{client.percentage}%</div>
+                        <div className={`text-xs px-2 py-1 rounded ${
+                          client.type === 'alerts' ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800'
+                        }`}>
+                          {client.type}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
 
+        {/* Alert Tracking Section */}
         {activeTab === 'alerts' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <MetricCard title="Total" value={alertData.totalCount?.toLocaleString()} subtitle="Alerts" icon={AlertTriangle} color="bg-red-500" />
-              <MetricCard title="Monthly Avg" value={alertData.avgPerMonth?.toFixed(1)} subtitle="Per month" icon={TrendingUp} color="bg-blue-500" />
-              <MetricCard title="Clients" value={alertData.uniqueClients} subtitle="Affected" icon={Users} color="bg-green-500" />
-              <MetricCard title="Latest" value={alertData.monthlyData?.[alertData.monthlyData?.length-1]?.total} subtitle={alertData.monthlyData?.[alertData.monthlyData?.length-1]?.month} icon={Calendar} color="bg-purple-500" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <MetricCard
+                title="Total Alerts"
+                value={alertData.totalCount?.toLocaleString() || '0'}
+                subtitle="Excluding 'No L2 alerts'"
+                icon={AlertTriangle}
+                color="bg-red-500"
+              />
+              <MetricCard
+                title="Monthly Average"
+                value={alertData.avgPerMonth?.toFixed(1) || '0'}
+                subtitle="Alerts per month"
+                icon={TrendingUp}
+                color="bg-blue-500"
+              />
+              <MetricCard
+                title="Active Clients"
+                value={alertData.uniqueClients || '0'}
+                subtitle="Unique clients with alerts"
+                icon={Users}
+                color="bg-green-500"
+              />
+              <MetricCard
+                title="Latest Month"
+                value={alertData.monthlyData?.[alertData.monthlyData?.length - 1]?.total || '0'}
+                subtitle={alertData.monthlyData?.[alertData.monthlyData?.length - 1]?.month || 'N/A'}
+                icon={Calendar}
+                color="bg-purple-500"
+              />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white p-6 rounded-lg card-shadow">
-                <h3 className="text-xl font-semibold mb-4">Monthly Trends</h3>
+                <h3 className="text-xl font-semibold mb-4">Monthly Alert Trends</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={alertData.monthlyData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -457,28 +576,29 @@ export default function Dashboard() {
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="total" fill="#EF4444" name="Alerts" />
+                    <Bar dataKey="total" fill="#EF4444" name="Total Alerts" />
+                    <Bar dataKey="clients" fill="#10B981" name="Active Clients" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
 
               <div className="bg-white p-6 rounded-lg card-shadow">
-                <h3 className="text-xl font-semibold mb-4">Client Distribution</h3>
+                <h3 className="text-xl font-semibold mb-4">All Clients Alert Distribution</h3>
                 <div className="max-h-80 overflow-y-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 sticky top-0">
                       <tr>
-                        <th className="px-3 py-2 text-left">Client</th>
+                        <th className="px-3 py-2 text-left">Client Name</th>
                         <th className="px-3 py-2 text-center">Count</th>
-                        <th className="px-3 py-2 text-center">%</th>
+                        <th className="px-3 py-2 text-center">Percentage</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {alertData.clientBreakdown?.map((c, i) => (
-                        <tr key={i} className="border-t hover:bg-gray-50">
-                          <td className="px-3 py-2">{c.client}</td>
-                          <td className="px-3 py-2 text-center">{c.count}</td>
-                          <td className="px-3 py-2 text-center">{c.percentage}%</td>
+                      {alertData.clientBreakdown?.map((client, index) => (
+                        <tr key={index} className="border-t hover:bg-gray-50">
+                          <td className="px-3 py-2 font-medium">{client.client}</td>
+                          <td className="px-3 py-2 text-center">{client.count}</td>
+                          <td className="px-3 py-2 text-center">{client.percentage}%</td>
                         </tr>
                       ))}
                     </tbody>
@@ -489,272 +609,429 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Misalignment Analysis Section */}
         {activeTab === 'misalignment' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <MetricCard title="Raised" value={misalignmentData.totalRaised?.toLocaleString()} subtitle="Total" icon={AlertTriangle} color="bg-red-500" />
-              <MetricCard title="Fixed" value={misalignmentData.totalRectified?.toLocaleString()} subtitle="Rectified" icon={CheckCircle2} color="bg-green-500" />
-              <MetricCard title="Rate" value={`${misalignmentData.rectificationRate}%`} subtitle="Fix rate" icon={TrendingUp} color="bg-blue-500" />
-              <MetricCard title="Monthly" value={misalignmentData.avgRaisedPerMonth?.toFixed(1)} subtitle="Average" icon={Calendar} color="bg-orange-500" />
-              <MetricCard title="Clients" value={misalignmentData.uniqueClients} subtitle="Affected" icon={Users} color="bg-purple-500" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <MetricCard
+                title="Total Raised"
+                value={misalignmentData.totalRaised?.toLocaleString() || '0'}
+                subtitle="Misalignments raised"
+                icon={AlertTriangle}
+                color="bg-red-500"
+              />
+              <MetricCard
+                title="Total Rectified"
+                value={misalignmentData.totalRectified?.toLocaleString() || '0'}
+                subtitle="Misalignments fixed"
+                icon={CheckCircle2}
+                color="bg-green-500"
+              />
+              <MetricCard
+                title="Rectification Rate"
+                value={`${misalignmentData.rectificationRate || 0}%`}
+                subtitle="Overall success rate"
+                icon={TrendingUp}
+                color="bg-blue-500"
+              />
+              <MetricCard
+                title="Monthly Raised Avg"
+                value={misalignmentData.avgRaisedPerMonth?.toFixed(1) || '0'}
+                subtitle="Average per month"
+                icon={Calendar}
+                color="bg-orange-500"
+              />
+              <MetricCard
+                title="Affected Clients"
+                value={misalignmentData.uniqueClients || '0'}
+                subtitle="Unique clients"
+                icon={Users}
+                color="bg-purple-500"
+              />
             </div>
 
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white p-6 rounded-lg card-shadow">
+                <h3 className="text-xl font-semibold mb-4">Monthly Misalignment Trends</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <ComposedChart data={misalignmentData.monthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis yAxisId="left" />
+                    <YAxis yAxisId="right" orientation="right" />
+                    <Tooltip />
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="raised" fill="#EF4444" name="Raised" />
+                    <Bar yAxisId="left" dataKey="rectified" fill="#10B981" name="Rectified" />
+                    <Line yAxisId="right" type="monotone" dataKey="clients" stroke="#8B5CF6" strokeWidth={2} name="Active Clients" />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg card-shadow">
+                <h3 className="text-xl font-semibold mb-4">Client Misalignment Performance</h3>
+                <div className="max-h-80 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th className="px-2 py-2 text-left">Client</th>
+                        <th className="px-2 py-2 text-center">Raised</th>
+                        <th className="px-2 py-2 text-center">Fixed</th>
+                        <th className="px-2 py-2 text-center">Rate%</th>
+                        <th className="px-2 py-2 text-center">Share%</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {misalignmentData.clientBreakdown?.map((client, index) => (
+                        <tr key={index} className="border-t hover:bg-gray-50">
+                          <td className="px-2 py-2 font-medium text-xs">{client.client}</td>
+                          <td className="px-2 py-2 text-center">{client.raised}</td>
+                          <td className="px-2 py-2 text-center">{client.rectified}</td>
+                          <td className="px-2 py-2 text-center">
+                            <span className={`px-1 py-0.5 rounded text-xs ${
+                              client.rectificationRate > 70 
+                                ? 'bg-green-100 text-green-800' 
+                                : client.rectificationRate > 40 
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {client.rectificationRate}%
+                            </span>
+                          </td>
+                          <td className="px-2 py-2 text-center">{client.percentage}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Vehicle Repeat Analysis */}
             <div className="bg-white p-6 rounded-lg card-shadow">
-              <h3 className="text-xl font-semibold mb-4">Monthly Trends</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <ComposedChart data={misalignmentData.monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="raised" fill="#EF4444" name="Raised" />
-                  <Bar dataKey="rectified" fill="#10B981" name="Fixed" />
-                </ComposedChart>
-              </ResponsiveContainer>
+              <h3 className="text-xl font-semibold mb-4">Most Repeated Misaligned Vehicles by Month</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {misalignmentData.monthlyData?.map((month, index) => (
+                  <div key={index}>
+                    <h4 className="font-medium mb-3">{month.month} - Top Vehicle Repeats</h4>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {month.vehicleRepeats?.slice(0, 8).map((vehicle, vIndex) => (
+                        <div key={vIndex} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                          <div>
+                            <div className="font-medium text-sm">{vehicle.vehicle}</div>
+                            <div className="text-xs text-gray-600">{vehicle.client}</div>
+                          </div>
+                          <div className="text-right">
+                            <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium">
+                              {vehicle.repeats} times
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
 
+        {/* Historical Videos Section */}
         {activeTab === 'videos' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <MetricCard title="Requests" value={historicalVideoData.totalRequests?.toLocaleString()} subtitle="Total" icon={Video} color="bg-purple-500" />
-              <MetricCard title="Delivered" value={historicalVideoData.totalDelivered?.toLocaleString()} subtitle={`${historicalVideoData.overallDeliveryRate}%`} icon={CheckCircle2} color="bg-green-500" />
-              <MetricCard title="Avg Time" value={`${historicalVideoData.avgDeliveryTime}h`} subtitle="Delivery" icon={Clock} color="bg-blue-500" />
-              <MetricCard title="Fastest" value={`${historicalVideoData.fastestDeliveryTime}h`} subtitle="Best" icon={TrendingUp} color="bg-green-600" />
-              <MetricCard title="Slowest" value={`${historicalVideoData.slowestDeliveryTime}h`} subtitle="Worst" icon={XCircle} color="bg-red-600" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <MetricCard
+                title="Total Requests"
+                value={historicalVideoData.totalRequests?.toLocaleString() || '0'}
+                subtitle="Video requests"
+                icon={Video}
+                color="bg-purple-500"
+              />
+              <MetricCard
+                title="Videos Delivered"
+                value={historicalVideoData.totalDelivered?.toLocaleString() || '0'}
+                subtitle={`${historicalVideoData.overallDeliveryRate}% success`}
+                icon={CheckCircle2}
+                color="bg-green-500"
+              />
+              <MetricCard
+                title="Average Time"
+                value={`${historicalVideoData.avgDeliveryTime}h`}
+                subtitle="Delivery time"
+                icon={Clock}
+                color="bg-blue-500"
+              />
+              <MetricCard
+                title="Fastest Delivery"
+                value={`${historicalVideoData.fastestDeliveryTime}h`}
+                subtitle="Best performance"
+                icon={TrendingUp}
+                color="bg-green-600"
+              />
+              <MetricCard
+                title="Slowest Delivery"
+                value={`${historicalVideoData.slowestDeliveryTime}h`}
+                subtitle="Worst performance"
+                icon={XCircle}
+                color="bg-red-600"
+              />
             </div>
 
-            <div className="bg-white p-6 rounded-lg card-shadow">
-              <h3 className="text-xl font-semibold mb-4">Monthly Trends</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <ComposedChart data={historicalVideoData.monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis yAxisId="left" />
-                  <YAxis yAxisId="right" orientation="right" />
-                  <Tooltip />
-                  <Legend />
-                  <Bar yAxisId="left" dataKey="requests" fill="#8B5CF6" name="Requests" />
-                  <Bar yAxisId="left" dataKey="delivered" fill="#10B981" name="Delivered" />
-                  <Line yAxisId="right" type="monotone" dataKey="avgDeliveryTime" stroke="#F59E0B" strokeWidth={3} name="Avg Time" />
-                </ComposedChart>
-              </ResponsiveContainer>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white p-6 rounded-lg card-shadow">
+                <h3 className="text-xl font-semibold mb-4">Monthly Video Request Trends</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <ComposedChart data={historicalVideoData.monthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis yAxisId="left" />
+                    <YAxis yAxisId="right" orientation="right" />
+                    <Tooltip />
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="requests" fill="#8B5CF6" name="Requests" />
+                    <Bar yAxisId="left" dataKey="delivered" fill="#10B981" name="Delivered" />
+                    <Line yAxisId="right" type="monotone" dataKey="avgDeliveryTime" stroke="#F59E0B" strokeWidth={3} name="Avg Time (h)" />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg card-shadow">
+                <h3 className="text-xl font-semibold mb-4">Client Video Performance</h3>
+                <div className="max-h-80 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th className="px-2 py-2 text-left">Client</th>
+                        <th className="px-2 py-2 text-center">Req</th>
+                        <th className="px-2 py-2 text-center">Del</th>
+                        <th className="px-2 py-2 text-center">Rate%</th>
+                        <th className="px-2 py-2 text-center">Avg(h)</th>
+                        <th className="px-2 py-2 text-center">Range</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {historicalVideoData.clientBreakdown?.map((client, index) => (
+                        <tr key={index} className="border-t hover:bg-gray-50">
+                          <td className="px-2 py-2 font-medium text-xs">{client.client}</td>
+                          <td className="px-2 py-2 text-center">{client.requests}</td>
+                          <td className="px-2 py-2 text-center">{client.delivered}</td>
+                          <td className="px-2 py-2 text-center">
+                            <span className={`px-1 py-0.5 rounded text-xs ${
+                              client.deliveryRate > 80 
+                                ? 'bg-green-100 text-green-800' 
+                                : client.deliveryRate > 60 
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {client.deliveryRate}%
+                            </span>
+                          </td>
+                          <td className="px-2 py-2 text-center">{client.avgDeliveryTime}</td>
+                          <td className="px-2 py-2 text-center text-xs">
+                            {client.fastestDelivery}h-{client.slowestDelivery}h
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
+        {/* General Issues Section */}
         {activeTab === 'issues' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <MetricCard title="Raised" value={generalIssuesData.totalRaised?.toLocaleString()} subtitle="Total" icon={AlertTriangle} color="bg-red-500" />
-              <MetricCard title="Resolved" value={generalIssuesData.totalResolved?.toLocaleString()} subtitle="Fixed" icon={CheckCircle2} color="bg-green-500" />
-              <MetricCard title="Rate" value={`${generalIssuesData.resolutionRate}%`} subtitle="Success" icon={Target} color="bg-blue-500" />
-              <MetricCard title="Avg Time" value={generalIssuesData.avgResolutionTime} subtitle="Resolution" icon={Clock} color="bg-purple-500" />
-              <MetricCard title="Median" value={generalIssuesData.medianResolutionTime} subtitle="Typical" icon={TrendingUp} color="bg-orange-500" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <MetricCard
+                title="Total Raised"
+                value={generalIssuesData.totalRaised?.toLocaleString() || '0'}
+                subtitle="Issues raised"
+                icon={AlertTriangle}
+                color="bg-red-500"
+              />
+              <MetricCard
+                title="Total Resolved"
+                value={generalIssuesData.totalResolved?.toLocaleString() || '0'}
+                subtitle="Issues resolved"
+                icon={CheckCircle2}
+                color="bg-green-500"
+              />
+              <MetricCard
+                title="Resolution Rate"
+                value={`${generalIssuesData.resolutionRate}%`}
+                subtitle="Success rate"
+                icon={Target}
+                color="bg-blue-500"
+              />
+              <MetricCard
+                title="Avg Resolution"
+                value={generalIssuesData.avgResolutionTime || '0h'}
+                subtitle="Time to resolve"
+                icon={Clock}
+                color="bg-purple-500"
+              />
+              <MetricCard
+                title="Median Time"
+                value={generalIssuesData.medianResolutionTime || '0h'}
+                subtitle="Typical resolution"
+                icon={TrendingUp}
+                color="bg-orange-500"
+              />
             </div>
 
-            <div className="bg-white p-6 rounded-lg card-shadow">
-              <h3 className="text-xl font-semibold mb-4">Monthly Overview</h3>
-              <ResponsiveContainer width="100%" height={350}>
-                <ComposedChart data={generalIssuesData.monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis yAxisId="left" />
-                  <YAxis yAxisId="right" orientation="right" />
-                  <Tooltip />
-                  <Legend />
-                  <Bar yAxisId="left" dataKey="raised" fill="#EF4444" name="Raised" />
-                  <Bar yAxisId="left" dataKey="resolved" fill="#10B981" name="Resolved" />
-                  <Line yAxisId="right" type="monotone" dataKey="avgTimeHours" stroke="#8B5CF6" strokeWidth={3} name="Avg Hours" />
-                </ComposedChart>
-              </ResponsiveContainer>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white p-6 rounded-lg card-shadow">
+                <h3 className="text-xl font-semibold mb-4">Monthly Issues Overview</h3>
+                <ResponsiveContainer width="100%" height={350}>
+                  <ComposedChart data={generalIssuesData.monthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis yAxisId="left" />
+                    <YAxis yAxisId="right" orientation="right" />
+                    <Tooltip />
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="raised" fill="#EF4444" name="Raised" />
+                    <Bar yAxisId="left" dataKey="resolved" fill="#10B981" name="Resolved" />
+                    <Line yAxisId="right" type="monotone" dataKey="avgTimeHours" stroke="#8B5CF6" strokeWidth={3} name="Avg Time (h)" />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg card-shadow">
+                <h3 className="text-xl font-semibold mb-4">Client Issue Performance</h3>
+                <div className="max-h-80 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th className="px-2 py-2 text-left">Client</th>
+                        <th className="px-2 py-2 text-center">Raised</th>
+                        <th className="px-2 py-2 text-center">Resolved</th>
+                        <th className="px-2 py-2 text-center">Rate%</th>
+                        <th className="px-2 py-2 text-center">Avg Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {generalIssuesData.clientBreakdown?.map((client, index) => (
+                        <tr key={index} className="border-t hover:bg-gray-50">
+                          <td className="px-2 py-2 font-medium text-xs">{client.client}</td>
+                          <td className="px-2 py-2 text-center">{client.raised}</td>
+                          <td className="px-2 py-2 text-center">{client.resolved}</td>
+                          <td className="px-2 py-2 text-center">
+                            <span className={`px-1 py-0.5 rounded text-xs ${
+                              client.resolutionRate > 80 
+                                ? 'bg-green-100 text-green-800' 
+                                : client.resolutionRate > 60 
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {client.resolutionRate}%
+                            </span>
+                          </td>
+                          <td className="px-2 py-2 text-center text-xs">{client.avgTime}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
 
+            {/* Complete Monthly Breakdown */}
             <div className="bg-white p-6 rounded-lg card-shadow">
-              <h3 className="text-xl font-semibold mb-4">📊 Complete Monthly Analysis</h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold">📊 Complete Monthly Issues Analysis</h3>
+                <div className="text-sm bg-blue-50 px-3 py-2 rounded-lg">
+                  <span className="font-semibold text-blue-800">Total Issues: {generalIssuesData.totalRaised?.toLocaleString()}</span>
+                  <span className="text-blue-600 ml-2">| Resolved: {generalIssuesData.totalResolved?.toLocaleString()} ({generalIssuesData.resolutionRate}%)</span>
+                </div>
+              </div>
+              
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-3 py-3 text-left">Month</th>
-                      <th className="px-3 py-3 text-center text-red-600">Raised</th>
-                      <th className="px-3 py-3 text-center text-green-600">Same Month</th>
-                      <th className="px-3 py-3 text-center text-purple-600">Later</th>
-                      <th className="px-3 py-3 text-center text-blue-600">Previous</th>
-                      <th className="px-3 py-3 text-center text-orange-600">Pending</th>
-                      <th className="px-3 py-3 text-center">Rate%</th>
+                      <th className="px-3 py-3 text-left font-semibold">Month</th>
+                      <th className="px-3 py-3 text-center font-semibold text-red-600">📈 Raised</th>
+                      <th className="px-3 py-3 text-center font-semibold text-green-600">✅ Same Month</th>
+                      <th className="px-3 py-3 text-center font-semibold text-purple-600">🔄 Later</th>
+                      <th className="px-3 py-3 text-center font-semibold text-blue-600">⬅️ Previous</th>
+                      <th className="px-3 py-3 text-center font-semibold text-orange-600">⏳ Pending</th>
+                      <th className="px-3 py-3 text-center font-semibold text-gray-600">🎯 Rate%</th>
+                      <th className="px-3 py-3 text-center font-semibold text-indigo-600">⏱️ Avg Time</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {generalIssuesData.monthlyData?.map((m, i) => (
-                      <tr key={i} className="border-t hover:bg-gray-50">
-                        <td className="px-3 py-3 font-medium">{m.month}</td>
-                        <td className="px-3 py-3 text-center"><span className="bg-red-100 text-red-800 px-2 py-1 rounded">{m.raised}</span></td>
-                        <td className="px-3 py-3 text-center"><span className="bg-green-100 text-green-800 px-2 py-1 rounded">{m.resolvedSameMonth}</span></td>
-                        <td className="px-3 py-3 text-center">{m.resolvedLaterMonths > 0 ? <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded">{m.resolvedLaterMonths}</span> : '-'}</td>
-                        <td className="px-3 py-3 text-center">{m.carryForwardIn > 0 ? <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">{m.carryForwardIn}</span> : '-'}</td>
-                        <td className="px-3 py-3 text-center">{m.stillPending > 0 ? <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded">{m.stillPending}</span> : '-'}</td>
-                        <td className="px-3 py-3 text-center">{m.resolutionRate !== null ? <span className={`px-2 py-1 rounded ${m.resolutionRate >= 80 ? 'bg-green-100 text-green-800' : m.resolutionRate >= 60 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{m.resolutionRate}%</span> : 'TBD'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'offline' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <MetricCard title="Total Devices" value={deviceMovementData.totalDevices?.toLocaleString()} subtitle="Registered" icon={Wifi} color="bg-blue-500" />
-              <MetricCard title="Offline Vehicles" value={offlineVehiclesData.totalOfflineVehicles?.toLocaleString()} subtitle={`${offlineVehiclesData.uniqueClients} clients`} icon={WifiOff} color="bg-red-500" />
-              <MetricCard title="Offline Rate" value={`${deviceMovementData.totalDevices > 0 ? ((offlineVehiclesData.totalOfflineVehicles / deviceMovementData.totalDevices) * 100).toFixed(1) : 0}%`} subtitle="Of fleet" icon={TrendingDown} color="bg-orange-500" />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white p-6 rounded-lg card-shadow">
-                <h3 className="text-xl font-semibold mb-4">Top 10 Clients</h3>
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={offlineVehiclesData.top10Clients}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="client" angle={-45} textAnchor="end" height={120} fontSize={11} />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#EF4444" name="Offline" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg card-shadow">
-                <h3 className="text-xl font-semibold mb-4">Distribution</h3>
-                <ResponsiveContainer width="100%" height={350}>
-                  <PieChart>
-                    <Pie data={offlineVehiclesData.top10Clients} cx="50%" cy="50%" labelLine={false} label={({ client, percentage }) => `${client}: ${percentage}%`} outerRadius={110} dataKey="count">
-                      {offlineVehiclesData.top10Clients.map((e, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg card-shadow">
-              <h3 className="text-xl font-semibold mb-4">All Clients Breakdown</h3>
-              <div className="max-h-96 overflow-y-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 sticky top-0">
-                    <tr>
-                      <th className="px-4 py-3 text-left">#</th>
-                      <th className="px-4 py-3 text-left">Client</th>
-                      <th className="px-4 py-3 text-center">Count</th>
-                      <th className="px-4 py-3 text-center">%</th>
-                      <th className="px-4 py-3 text-left">Vehicles</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {offlineVehiclesData.allClients?.map((c, i) => (
-                      <tr key={i} className="border-t hover:bg-gray-50">
-                        <td className="px-4 py-3">{i + 1}</td>
-                        <td className="px-4 py-3 font-medium">{c.client}</td>
-                        <td className="px-4 py-3 text-center"><span className="bg-red-100 text-red-800 px-3 py-1 rounded-full">{c.count}</span></td>
-                        <td className="px-4 py-3 text-center">{c.percentage}%</td>
-                        <td className="px-4 py-3">
-                          <details>
-                            <summary className="cursor-pointer text-blue-600 hover:text-blue-800">View {c.vehicles.length}</summary>
-                            <div className="mt-2 flex flex-wrap gap-1">
-                              {c.vehicles.map((v, vi) => <span key={vi} className="text-xs bg-gray-100 px-2 py-1 rounded border">{v}</span>)}
-                            </div>
-                          </details>
+                    {generalIssuesData.monthlyData?.map((month, index) => (
+                      <tr key={index} className="border-t hover:bg-gray-50">
+                        <td className="px-3 py-3 font-medium flex items-center">
+                          {month.month}
+                          {month.isCurrentMonth && (
+                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">CURRENT</span>
+                          )}
                         </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'devices' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <MetricCard title="Total" value={deviceMovementData.totalDevices?.toLocaleString()} subtitle="Devices" icon={Truck} color="bg-blue-500" />
-              <MetricCard title="Deployed" value={deviceMovementData.deployedCount?.toLocaleString()} subtitle={`${deviceMovementData.deployedPercentage}%`} icon={CheckCircle2} color="bg-green-500" />
-              <MetricCard title="Available" value={deviceMovementData.availableCount?.toLocaleString()} subtitle={`${deviceMovementData.availablePercentage}%`} icon={Wifi} color="bg-cyan-500" />
-              <MetricCard title="Repair" value={deviceMovementData.underRepairCount?.toLocaleString()} subtitle={`${deviceMovementData.underRepairPercentage}%`} icon={Settings} color="bg-orange-500" />
-              <MetricCard title="Damaged" value={deviceMovementData.damagedCount?.toLocaleString()} subtitle={`${deviceMovementData.damagedPercentage}%`} icon={XCircle} color="bg-red-500" />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white p-6 rounded-lg card-shadow">
-                <h3 className="text-xl font-semibold mb-4">Status Distribution</h3>
-                <ResponsiveContainer width="100%" height={350}>
-                  <PieChart>
-                    <Pie data={[
-                      { name: 'Deployed', value: deviceMovementData.deployedCount, color: '#10B981' },
-                      { name: 'Available', value: deviceMovementData.availableCount, color: '#06B6D4' },
-                      { name: 'Repair', value: deviceMovementData.underRepairCount, color: '#F59E0B' },
-                      { name: 'Damaged', value: deviceMovementData.damagedCount, color: '#EF4444' }
-                    ]} cx="50%" cy="50%" labelLine={true} label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(1)}%)`} outerRadius={110} dataKey="value">
-                      {[
-                        { color: '#10B981' },
-                        { color: '#06B6D4' },
-                        { color: '#F59E0B' },
-                        { color: '#EF4444' }
-                      ].map((e, i) => <Cell key={i} fill={e.color} />)}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg card-shadow">
-                <h3 className="text-xl font-semibold mb-4">Monthly Deployments</h3>
-                <ResponsiveContainer width="100%" height={350}>
-                  <AreaChart data={deviceMovementData.monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Area type="monotone" dataKey="deployed" stroke="#10B981" fill="#10B981" fillOpacity={0.6} name="Deployed" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg card-shadow">
-              <h3 className="text-xl font-semibold mb-4">All Devices</h3>
-              <div className="max-h-96 overflow-y-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 sticky top-0">
-                    <tr>
-                      <th className="px-4 py-3 text-left">#</th>
-                      <th className="px-4 py-3 text-left">Device</th>
-                      <th className="px-4 py-3 text-center">Status</th>
-                      <th className="px-4 py-3 text-left">Vehicle</th>
-                      <th className="px-4 py-3 text-left">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {deviceMovementData.deviceDetails?.map((d, i) => (
-                      <tr key={i} className="border-t hover:bg-gray-50">
-                        <td className="px-4 py-3">{i + 1}</td>
-                        <td className="px-4 py-3 font-medium">{d.device}</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className={`px-3 py-1 rounded-full text-xs ${
-                            d.status === 'Deployed' ? 'bg-green-100 text-green-800' :
-                            d.status === 'Device available for deployment' ? 'bg-cyan-100 text-cyan-800' :
-                            d.status === 'Under Repair' ? 'bg-orange-100 text-orange-800' :
-                            d.status === 'Device Damaged' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>{d.status}</span>
+                        <td className="px-3 py-3 text-center">
+                          <span className="inline-block bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">
+                            {month.raised}
+                          </span>
                         </td>
-                        <td className="px-4 py-3">{d.vehicleNumber}</td>
-                        <td className="px-4 py-3 text-xs text-gray-600">{d.installationDate}</td>
+                        <td className="px-3 py-3 text-center">
+                          <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-medium">
+                            {month.resolvedSameMonth}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          {month.resolvedLaterMonths > 0 ? (
+                            <span className="inline-block bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm font-medium">
+                              {month.resolvedLaterMonths}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          {month.carryForwardIn > 0 ? (
+                            <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">
+                              {month.carryForwardIn}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          {month.stillPending > 0 ? (
+                            <span className="inline-block bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm font-medium">
+                              {month.stillPending}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          {month.resolutionRate !== null ? (
+                            <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
+                              month.resolutionRate >= 80 
+                                ? 'bg-green-100 text-green-800' 
+                                : month.resolutionRate >= 60 
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {month.resolutionRate}%
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 text-xs">TBD</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          {month.avgTime !== '0h' ? (
+                            <span className="inline-block bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs font-medium">
+                              {month.avgTime}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
