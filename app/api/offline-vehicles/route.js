@@ -95,9 +95,9 @@ export async function GET() {
       const client = clientName.toString().trim()
       const vehicle = vehicleNumber.toString().trim()
       
-      // CRITICAL: Ignore #N/A clients
-      if (client === '#N/A' || client.toLowerCase() === '#n/a' || client === 'N/A') {
-        console.log(`Skipping #N/A client at row ${rowIndex + 2}`)
+      // CRITICAL: Ignore #N/A clients and blank
+      if (client === '#N/A' || client.toLowerCase() === '#n/a' || client === 'N/A' || client === '') {
+        console.log(`Skipping #N/A or blank client at row ${rowIndex + 2}`)
         return
       }
       
