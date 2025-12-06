@@ -840,7 +840,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* General Issues Section */}
+      {/* General Issues Section */}
         {activeTab === 'issues' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -1040,7 +1040,258 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* NEW TAB 1: Offline Devices */}
+        {activeTab === 'offline' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <MetricCard
+                title="Total Devices"
+                value={deviceMovementData.totalDevices?.toLocaleString() || '0'}
+                subtitle="All registered devices"
+                icon={Cpu}
+                color="bg-blue-500"
+              />
+              <MetricCard
+                title="Offline Devices"
+                value={offlineVehiclesData.totalOfflineVehicles?.toLocaleString() || '0'}
+                subtitle={`${offlineVehiclesData.uniqueClients} clients affected`}
+                icon={WifiOff}
+                color="bg-red-500"
+              />
+              <MetricCard
+                title="Offline Percentage"
+                value={`${deviceMovementData.totalDevices > 0 ? ((offlineVehiclesData.totalOfflineVehicles / deviceMovementData.totalDevices) * 100).toFixed(1) : 0}%`}
+                subtitle="Of total fleet"
+                icon={AlertTriangle}
+                color="bg-orange-500"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white p-6 rounded-lg card-shadow">
+                <h3 className="text-xl font-semibold mb-4 flex items-center">
+                  <WifiOff className="mr-2 text-red-600" />
+                  Top 10 Clients with Offline Devices
+                </h3>
+                <div className="space-y-3">
+                  {offlineVehiclesData.top10Clients?.map((client, index) => (
+                    <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                      <div className="flex items-center space-x-3">
+                        <div className="bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <div className="font-medium">{client.client}</div>
+                          <div className="text-xs text-gray-500">{client.percentage}% of total offline</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-red-600">{client.count}</div>
+                        <div className="text-xs text-gray-600">vehicles</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg card-shadow">
+                <h3 className="text-xl font-semibold mb-4">Offline Device Distribution</h3>
+                <ResponsiveContainer width="100%" height={400}>
+                  <PieChart>
+                    <Pie
+                      data={offlineVehiclesData.top10Clients}
+                      dataKey="count"
+                      nameKey="client"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={120}
+                      label={(entry) => `${entry.client}: ${entry.count}`}
+                    >
+                      {offlineVehiclesData.top10Clients?.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg card-shadow">
+              <h3 className="text-xl font-semibold mb-4">Complete Offline Devices List - All Clients</h3>
+              <div className="max-h-[600px] overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-semibold">#</th>
+                      <th className="px-4 py-3 text-left font-semibold">Client Name</th>
+                      <th className="px-4 py-3 text-center font-semibold">Offline Count</th>
+                      <th className="px-4 py-3 text-center font-semibold">Percentage</th>
+                      <th className="px-4 py-3 text-left font-semibold">Vehicle Numbers</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {offlineVehiclesData.allClients?.map((client, index) => (
+                      <tr key={index} className="border-t hover:bg-gray-50">
+                        <td className="px-4 py-3 text-gray-600">{index + 1}</td>
+                        <td className="px-4 py-3 font-medium">{client.client}</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full font-semibold">
+                            {client.count}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center text-gray-600">{client.percentage}%</td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap gap-1">
+                            {client.vehicles?.slice(0, 10).map((vehicle, vIdx) => (
+                              <span key={vIdx} className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
+                                {vehicle}
+                              </span>
+                            ))}
+                            {client.vehicles?.length > 10 && (
+                              <span className="text-xs text-gray-500 italic px-2 py-1">
+                                +{client.vehicles.length - 10} more
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* NEW TAB 2: Device Management */}
+        {activeTab === 'devices' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <MetricCard
+                title="Total Devices"
+                value={deviceMovementData.totalDevices?.toLocaleString() || '0'}
+                subtitle="All registered"
+                icon={Cpu}
+                color="bg-blue-500"
+              />
+              <MetricCard
+                title="Deployed"
+                value={deviceMovementData.deployedCount?.toLocaleString() || '0'}
+                subtitle={`${deviceMovementData.deployedPercentage}% of total`}
+                icon={CheckCircle2}
+                color="bg-green-500"
+              />
+              <MetricCard
+                title="Available"
+                value={deviceMovementData.availableCount?.toLocaleString() || '0'}
+                subtitle={`${deviceMovementData.availablePercentage}% ready`}
+                icon={Zap}
+                color="bg-yellow-500"
+              />
+              <MetricCard
+                title="Under Repair"
+                value={deviceMovementData.underRepairCount?.toLocaleString() || '0'}
+                subtitle={`${deviceMovementData.underRepairPercentage}% maintenance`}
+                icon={Settings}
+                color="bg-orange-500"
+              />
+              <MetricCard
+                title="Damaged"
+                value={deviceMovementData.damagedCount?.toLocaleString() || '0'}
+                subtitle={`${deviceMovementData.damagedPercentage}% inactive`}
+                icon={XCircle}
+                color="bg-red-500"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white p-6 rounded-lg card-shadow">
+                <h3 className="text-xl font-semibold mb-4">Device Status Distribution</h3>
+                <ResponsiveContainer width="100%" height={350}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Deployed', value: deviceMovementData.deployedCount },
+                        { name: 'Available', value: deviceMovementData.availableCount },
+                        { name: 'Under Repair', value: deviceMovementData.underRepairCount },
+                        { name: 'Damaged', value: deviceMovementData.damagedCount }
+                      ]}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={120}
+                      label={(entry) => `${entry.name}: ${entry.value}`}
+                    >
+                      {[0, 1, 2, 3].map((index) => (
+                        <Cell key={`cell-${index}`} fill={['#10B981', '#F59E0B', '#F97316', '#EF4444'][index]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg card-shadow">
+                <h3 className="text-xl font-semibold mb-4">Monthly Device Deployment Trend</h3>
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={deviceMovementData.monthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="deployed" fill="#10B981" name="Deployed Devices" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg card-shadow">
+              <h3 className="text-xl font-semibold mb-4">Complete Device Registry</h3>
+              <div className="max-h-[600px] overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-3 py-3 text-left font-semibold">#</th>
+                      <th className="px-3 py-3 text-left font-semibold">Device ID</th>
+                      <th className="px-3 py-3 text-center font-semibold">Status</th>
+                      <th className="px-3 py-3 text-left font-semibold">Vehicle Number</th>
+                      <th className="px-3 py-3 text-left font-semibold">Installation Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {deviceMovementData.deviceDetails?.map((device, index) => (
+                      <tr key={index} className="border-t hover:bg-gray-50">
+                        <td className="px-3 py-3 text-gray-600">{index + 1}</td>
+                        <td className="px-3 py-3 font-medium text-xs">{device.device}</td>
+                        <td className="px-3 py-3 text-center">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            device.status === 'Deployed' ? 'bg-green-100 text-green-800' :
+                            device.status === 'Device available for deployment' ? 'bg-yellow-100 text-yellow-800' :
+                            device.status === 'Under Repair' ? 'bg-orange-100 text-orange-800' :
+                            device.status === 'Device Damaged' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {device.status}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-xs">{device.vehicleNumber}</td>
+                        <td className="px-3 py-3 text-xs text-gray-600">{device.installationDate}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
 }
+        
