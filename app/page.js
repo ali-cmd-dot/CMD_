@@ -7,7 +7,8 @@ import {
 } from 'recharts'
 import { 
   Activity, AlertTriangle, TrendingUp, Calendar, Users, Clock, Target,
-  BarChart3, Video, Settings, CheckCircle2, XCircle, TrendingDown
+  BarChart3, Video, Settings, CheckCircle2, XCircle, TrendingDown,
+  WifiOff, Cpu, Zap
 } from 'lucide-react'
 
 export default function Dashboard() {
@@ -15,6 +16,8 @@ export default function Dashboard() {
   const [misalignmentData, setMisalignmentData] = useState(null)
   const [historicalVideoData, setHistoricalVideoData] = useState(null)
   const [generalIssuesData, setGeneralIssuesData] = useState(null)
+  const [offlineVehiclesData, setOfflineVehiclesData] = useState(null)
+  const [deviceMovementData, setDeviceMovementData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   const [error, setError] = useState(null)
@@ -42,7 +45,9 @@ export default function Dashboard() {
         fetchAlertData(),
         fetchMisalignmentData(),
         fetchHistoricalVideoData(),
-        fetchGeneralIssuesData()
+        fetchGeneralIssuesData(),
+        fetchOfflineVehiclesData(),
+        fetchDeviceMovementData()
       ])
 
       const failed = results.filter(result => result.status === 'rejected')
@@ -163,6 +168,56 @@ export default function Dashboard() {
     }
   }
 
+  const fetchOfflineVehiclesData = async () => {
+    try {
+      addDebugInfo('📡 Fetching Offline Vehicles Data from /api/offline-vehicles')
+      const response = await fetch('/api/offline-vehicles')
+      addDebugInfo(`📥 Offline Vehicles Response Status: ${response.status}`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        addDebugInfo('✅ Offline Vehicles Data Received', { totalOfflineVehicles: data.totalOfflineVehicles, uniqueClients: data.uniqueClients })
+        setOfflineVehiclesData(data)
+      } else {
+        const errorText = await response.text()
+        addDebugInfo(`❌ Offline Vehicles API failed: ${response.status}`, errorText)
+        throw new Error(`Offline Vehicles API failed: ${response.status}`)
+      }
+    } catch (error) {
+      addDebugInfo('❌ Error fetching offline vehicles data', error.message)
+      console.error('Error fetching offline vehicles data:', error)
+      setOfflineVehiclesData({ 
+        totalOfflineVehicles: 0, uniqueClients: 0,
+        top10Clients: [], allClients: [], vehicleDetails: []
+      })
+    }
+  }
+
+  const fetchDeviceMovementData = async () => {
+    try {
+      addDebugInfo('📡 Fetching Device Movement Data from /api/device-movement')
+      const response = await fetch('/api/device-movement')
+      addDebugInfo(`📥 Device Movement Response Status: ${response.status}`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        addDebugInfo('✅ Device Movement Data Received', { totalDevices: data.totalDevices, deployedCount: data.deployedCount })
+        setDeviceMovementData(data)
+      } else {
+        const errorText = await response.text()
+        addDebugInfo(`❌ Device Movement API failed: ${response.status}`, errorText)
+        throw new Error(`Device Movement API failed: ${response.status}`)
+      }
+    } catch (error) {
+      addDebugInfo('❌ Error fetching device movement data', error.message)
+      console.error('Error fetching device movement data:', error)
+      setDeviceMovementData({ 
+        totalDevices: 0, deployedCount: 0, availableCount: 0,
+        underRepairCount: 0, damagedCount: 0, monthlyData: [], deviceDetails: []
+      })
+    }
+  }
+
   const COLORS = [
     '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899',
     '#14B8A6', '#F97316', '#84CC16', '#6366F1', '#8B5A2B', '#059669'
@@ -199,7 +254,6 @@ export default function Dashboard() {
           <div className="text-xl font-semibold text-gray-700">Loading Professional Dashboard...</div>
           <div className="text-gray-500 mt-2">Fetching live data from Google Sheets...</div>
           
-          {/* Debug Info Display */}
           <div className="mt-6 bg-white p-4 rounded-lg shadow text-left max-h-96 overflow-y-auto">
             <h3 className="font-semibold mb-2">🔍 Debug Log:</h3>
             <div className="space-y-1">
@@ -220,7 +274,7 @@ export default function Dashboard() {
     )
   }
 
-  if (!alertData || !misalignmentData || !historicalVideoData || !generalIssuesData) {
+  if (!alertData || !misalignmentData || !historicalVideoData || !generalIssuesData || !offlineVehiclesData || !deviceMovementData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center max-w-4xl w-full">
@@ -228,43 +282,17 @@ export default function Dashboard() {
           <div className="text-xl font-semibold text-gray-700">Data Loading Error</div>
           <div className="text-gray-500 mt-2">Please check your API configuration and Sheet permissions</div>
           
-          {/* Debug Info Display */}
-          <div className="mt-6 bg-white p-4 rounded-lg shadow text-left max-h-96 overflow-y-auto">
-            <h3 className="font-semibold mb-2">🔍 Debug Log:</h3>
-            {debugInfo.map((info, idx) => (
-              <div key={idx} className="text-xs mb-2 font-mono border-b pb-2">
-                <span className="text-gray-500">[{info.time}]</span> {info.message}
-                {info.data && (
-                  <pre className="text-xs bg-gray-100 p-2 mt-1 rounded overflow-x-auto">
-                    {typeof info.data === 'string' ? info.data : JSON.stringify(info.data, null, 2)}
-                  </pre>
-                )}
-              </div>
-            ))}
-          </div>
-          
           <button 
             onClick={fetchAllData}
             className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
             Retry Loading Data
           </button>
-          
-          <div className="mt-4">
-            <a 
-              href="/api/test-sheet" 
-              target="_blank"
-              className="inline-block px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-            >
-              🔍 Test Sheet Connection
-            </a>
-          </div>
         </div>
       </div>
     )
   }
 
-  // Combine monthly data for overview with proper date sorting
   const combineMonthlyData = () => {
     const months = new Set([
       ...alertData.monthlyData.map(d => d.month),
@@ -299,13 +327,12 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="dashboard-gradient text-white p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold mb-2">CAUTIO COMMAND CENTER MONITORING DASHBOARD</h1>
-              <p className="text-blue-100">Real-time analytics from live Google Sheets data - complete monthly analysis</p>
+              <p className="text-blue-100">Real-time analytics from live Google Sheets data</p>
             </div>
             <button
               onClick={() => setShowDebug(!showDebug)}
@@ -314,63 +341,25 @@ export default function Dashboard() {
               {showDebug ? '🔍 Hide Debug' : '🔍 Show Debug'}
             </button>
           </div>
-          {error && (
-            <div className="mt-2 text-yellow-200 text-sm">{error}</div>
-          )}
         </div>
       </header>
 
-      {/* Debug Panel */}
       {showDebug && (
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="bg-white p-4 rounded-lg shadow">
             <h3 className="font-semibold mb-2">🔍 Debug Information:</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-              <div>
-                <strong>Alert Data:</strong> {alertData ? '✅ Loaded' : '❌ Missing'}
-                {alertData && <span className="text-gray-600 ml-2">({alertData.totalCount} alerts)</span>}
-              </div>
-              <div>
-                <strong>Misalignment Data:</strong> {misalignmentData ? '✅ Loaded' : '❌ Missing'}
-                {misalignmentData && <span className="text-gray-600 ml-2">({misalignmentData.totalRaised} raised)</span>}
-              </div>
-              <div>
-                <strong>Video Request Data:</strong> {historicalVideoData ? '✅ Loaded' : '❌ Missing'}
-                {historicalVideoData && <span className="text-gray-600 ml-2">({historicalVideoData.totalRequests} requests)</span>}
-              </div>
-              <div>
-                <strong>General Issues Data:</strong> {generalIssuesData ? '✅ Loaded' : '❌ Missing'}
-                {generalIssuesData && <span className="text-gray-600 ml-2">({generalIssuesData.totalRaised} issues)</span>}
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  console.log('Full Data State:', {
-                    alertData,
-                    misalignmentData,
-                    historicalVideoData,
-                    generalIssuesData
-                  })
-                  alert('Check browser console (F12) for detailed data')
-                }}
-                className="text-sm bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-              >
-                📊 Log All Data to Console
-              </button>
-              <a 
-                href="/api/test-sheet" 
-                target="_blank"
-                className="text-sm bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-              >
-                🧪 Test Sheet API
-              </a>
+            <div className="grid grid-cols-3 gap-4 text-sm mb-4">
+              <div><strong>Alert Data:</strong> {alertData ? '✅' : '❌'}</div>
+              <div><strong>Misalignment Data:</strong> {misalignmentData ? '✅' : '❌'}</div>
+              <div><strong>Video Data:</strong> {historicalVideoData ? '✅' : '❌'}</div>
+              <div><strong>Issues Data:</strong> {generalIssuesData ? '✅' : '❌'}</div>
+              <div><strong>Offline Vehicles:</strong> {offlineVehiclesData ? '✅' : '❌'}</div>
+              <div><strong>Device Movement:</strong> {deviceMovementData ? '✅' : '❌'}</div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Navigation Tabs */}
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex flex-wrap gap-1 bg-gray-200 p-1 rounded-lg">
           {[
@@ -378,7 +367,9 @@ export default function Dashboard() {
             { id: 'alerts', label: 'Alert Tracking', icon: AlertTriangle },
             { id: 'misalignment', label: 'Misalignment Analysis', icon: Activity },
             { id: 'videos', label: 'Historical Videos', icon: Video },
-            { id: 'issues', label: 'General Issues', icon: Settings }
+            { id: 'issues', label: 'General Issues', icon: Settings },
+            { id: 'offline', label: 'Offline Devices', icon: WifiOff },
+            { id: 'devices', label: 'Device Management', icon: Cpu }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -397,42 +388,15 @@ export default function Dashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 pb-6">
-        {/* Monthly Overview Section */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
-            {/* Executive Summary Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <MetricCard
-                title="Total Alerts"
-                value={alertData.totalCount?.toLocaleString() || '0'}
-                subtitle={`${alertData.uniqueClients || 0} clients affected`}
-                icon={AlertTriangle}
-                color="bg-red-500"
-              />
-              <MetricCard
-                title="Misalignments"
-                value={`${misalignmentData.totalRaised?.toLocaleString() || '0'} Raised`}
-                subtitle={`${misalignmentData.totalRectified?.toLocaleString() || '0'} Rectified`}
-                icon={Activity}
-                color="bg-orange-500"
-              />
-              <MetricCard
-                title="Video Requests"
-                value={`${historicalVideoData.totalRequests?.toLocaleString() || '0'} Requests`}
-                subtitle={`${historicalVideoData.totalDelivered?.toLocaleString() || '0'} Delivered`}
-                icon={Video}
-                color="bg-purple-500"
-              />
-              <MetricCard
-                title="General Issues"
-                value={`${generalIssuesData.totalRaised?.toLocaleString() || '0'} Raised`}
-                subtitle={`${generalIssuesData.totalResolved?.toLocaleString() || '0'} Resolved`}
-                icon={Settings}
-                color="bg-green-500"
-              />
+              <MetricCard title="Total Alerts" value={alertData.totalCount?.toLocaleString() || '0'} subtitle={`${alertData.uniqueClients || 0} clients affected`} icon={AlertTriangle} color="bg-red-500" />
+              <MetricCard title="Misalignments" value={`${misalignmentData.totalRaised?.toLocaleString() || '0'} Raised`} subtitle={`${misalignmentData.totalRectified?.toLocaleString() || '0'} Rectified`} icon={Activity} color="bg-orange-500" />
+              <MetricCard title="Video Requests" value={`${historicalVideoData.totalRequests?.toLocaleString() || '0'} Requests`} subtitle={`${historicalVideoData.totalDelivered?.toLocaleString() || '0'} Delivered`} icon={Video} color="bg-purple-500" />
+              <MetricCard title="General Issues" value={`${generalIssuesData.totalRaised?.toLocaleString() || '0'} Raised`} subtitle={`${generalIssuesData.totalResolved?.toLocaleString() || '0'} Resolved`} icon={Settings} color="bg-green-500" />
             </div>
 
-            {/* Combined Monthly Trends Chart */}
             <div className="bg-white p-6 rounded-lg card-shadow">
               <h3 className="text-xl font-semibold mb-4 flex items-center">
                 <BarChart3 className="mr-2 text-blue-600" />
@@ -454,9 +418,7 @@ export default function Dashboard() {
               </ResponsiveContainer>
             </div>
 
-            {/* Performance Summary Cards */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Resolution Performance */}
               <div className="bg-white p-6 rounded-lg card-shadow">
                 <h3 className="text-xl font-semibold mb-4">Resolution Performance Summary</h3>
                 <div className="space-y-4">
@@ -498,7 +460,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Top Clients by Total Activity */}
               <div className="bg-white p-6 rounded-lg card-shadow">
                 <h3 className="text-xl font-semibold mb-4">Top Clients by Total Activity</h3>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -512,17 +473,11 @@ export default function Dashboard() {
                     <div key={`${client.client}-${client.type}-${index}`} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <div>
                         <div className="font-medium text-sm">{client.client}</div>
-                        <div className="text-sm text-gray-600">
-                          {client.value} {client.type}
-                        </div>
+                        <div className="text-sm text-gray-600">{client.value} {client.type}</div>
                       </div>
                       <div className="text-right">
                         <div className="font-semibold">{client.percentage}%</div>
-                        <div className={`text-xs px-2 py-1 rounded ${
-                          client.type === 'alerts' ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800'
-                        }`}>
-                          {client.type}
-                        </div>
+                        <div className={`text-xs px-2 py-1 rounded ${client.type === 'alerts' ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800'}`}>{client.type}</div>
                       </div>
                     </div>
                   ))}
@@ -532,38 +487,13 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Alert Tracking Section */}
         {activeTab === 'alerts' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <MetricCard
-                title="Total Alerts"
-                value={alertData.totalCount?.toLocaleString() || '0'}
-                subtitle="Excluding 'No L2 alerts'"
-                icon={AlertTriangle}
-                color="bg-red-500"
-              />
-              <MetricCard
-                title="Monthly Average"
-                value={alertData.avgPerMonth?.toFixed(1) || '0'}
-                subtitle="Alerts per month"
-                icon={TrendingUp}
-                color="bg-blue-500"
-              />
-              <MetricCard
-                title="Active Clients"
-                value={alertData.uniqueClients || '0'}
-                subtitle="Unique clients with alerts"
-                icon={Users}
-                color="bg-green-500"
-              />
-              <MetricCard
-                title="Latest Month"
-                value={alertData.monthlyData?.[alertData.monthlyData?.length - 1]?.total || '0'}
-                subtitle={alertData.monthlyData?.[alertData.monthlyData?.length - 1]?.month || 'N/A'}
-                icon={Calendar}
-                color="bg-purple-500"
-              />
+              <MetricCard title="Total Alerts" value={alertData.totalCount?.toLocaleString() || '0'} subtitle="Excluding 'No L2 alerts'" icon={AlertTriangle} color="bg-red-500" />
+              <MetricCard title="Monthly Average" value={alertData.avgPerMonth?.toFixed(1) || '0'} subtitle="Alerts per month" icon={TrendingUp} color="bg-blue-500" />
+              <MetricCard title="Active Clients" value={alertData.uniqueClients || '0'} subtitle="Unique clients with alerts" icon={Users} color="bg-green-500" />
+              <MetricCard title="Latest Month" value={alertData.monthlyData?.[alertData.monthlyData?.length - 1]?.total || '0'} subtitle={alertData.monthlyData?.[alertData.monthlyData?.length - 1]?.month || 'N/A'} icon={Calendar} color="bg-purple-500" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
