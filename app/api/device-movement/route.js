@@ -46,23 +46,32 @@ export async function GET() {
     let returnCommentsIndex = -1
     let installationDateIndex = -1
     let vehicleNumberIndex = -1
+    let statusIndex = -1
 
-    // Search for column indices
+    // Search for column indices - UPDATED COLUMNS
     headers.forEach((header, index) => {
       if (!header) return
       const h = header.toString().trim()
       
+      // Column D - Device Registration Number
       if (h === 'Device Registration Number' || h.toLowerCase().includes('device registration')) {
         deviceRegNumberIndex = index
       }
+      // Column P - Return Comments
       if (h === 'Return Comments' || h.toLowerCase().includes('return comment')) {
         returnCommentsIndex = index
       }
+      // Column L - Installation Date
       if (h === 'Installation Date' || h.toLowerCase().includes('installation date')) {
         installationDateIndex = index
       }
+      // Column K - Vehicle Number
       if (h === 'Vehicle Number' || h.toLowerCase().includes('vehicle number')) {
         vehicleNumberIndex = index
+      }
+      // Column O - Status
+      if (h === 'Status' || h === 'status') {
+        statusIndex = index
       }
     })
 
@@ -70,15 +79,16 @@ export async function GET() {
       deviceRegNumberIndex,
       returnCommentsIndex,
       installationDateIndex,
-      vehicleNumberIndex
+      vehicleNumberIndex,
+      statusIndex
     })
 
-    if (deviceRegNumberIndex === -1 || returnCommentsIndex === -1) {
+    if (deviceRegNumberIndex === -1 || statusIndex === -1) {
       return NextResponse.json({ 
         error: 'Required columns not found',
         missingColumns: {
           deviceRegNumber: deviceRegNumberIndex === -1 ? 'Missing "Device Registration Number"' : 'Found',
-          returnComments: returnCommentsIndex === -1 ? 'Missing "Return Comments"' : 'Found'
+          status: statusIndex === -1 ? 'Missing "Status"' : 'Found'
         },
         headers: headers
       }, { status: 400 })
@@ -96,21 +106,22 @@ export async function GET() {
 
     rows.slice(2).forEach((row, rowIndex) => {
       const deviceRegNumber = row[deviceRegNumberIndex]
-      const returnComment = row[returnCommentsIndex]
-      const installationDate = row[installationDateIndex]
-      const vehicleNumber = row[vehicleNumberIndex]
+      const status = row[statusIndex]
+      const returnComment = returnCommentsIndex >= 0 ? row[returnCommentsIndex] : ''
+      const installationDate = installationDateIndex >= 0 ? row[installationDateIndex] : ''
+      const vehicleNumber = vehicleNumberIndex >= 0 ? row[vehicleNumberIndex] : ''
       
       // Skip if no device registration number
       if (!deviceRegNumber || !deviceRegNumber.toString().trim()) return
       
-      totalDevices += 1
+      totalDevices++
       
-      const comment = returnComment ? returnComment.toString().trim() : ''
+      const deviceStatus = status ? status.toString().trim() : ''
       const device = deviceRegNumber.toString().trim()
       
-      // Count by status
-      if (comment === 'Deployed') {
-        deployedCount += 1
+      // Count by Status column (Column O)
+      if (deviceStatus === 'Deployed') {
+        deployedCount++
         
         // Track monthly deployments
         if (installationDate && installationDateIndex >= 0) {
@@ -119,21 +130,23 @@ export async function GET() {
             if (!monthlyDeployments[month]) {
               monthlyDeployments[month] = 0
             }
-            monthlyDeployments[month] += 1
+            monthlyDeployments[month]++
           }
         }
-      } else if (comment === 'Device available for deployment') {
-        availableCount += 1
-      } else if (comment === 'Under Repair') {
-        underRepairCount += 1
-      } else if (comment === 'Device Damaged') {
-        damagedCount += 1
+      } else if (deviceStatus === 'Under Repair') {
+        underRepairCount++
+      } else if (deviceStatus === 'Device Damaged') {
+        damagedCount++
+      } else {
+        // Any other status counts as available
+        availableCount++
       }
       
       // Store device details
       deviceDetails.push({
         device,
-        status: comment || 'Unknown',
+        status: deviceStatus || 'Unknown',
+        returnComment: returnComment ? returnComment.toString().trim() : 'N/A',
         installationDate: installationDate ? installationDate.toString().trim() : 'N/A',
         vehicleNumber: vehicleNumber ? vehicleNumber.toString().trim() : 'N/A',
         rowNumber: rowIndex + 3
@@ -181,7 +194,13 @@ export async function GET() {
       debug: {
         totalRowsProcessed: rows.length - 2,
         headers: headers,
-        columnIndices: { deviceRegNumberIndex, returnCommentsIndex, installationDateIndex, vehicleNumberIndex }
+        columnIndices: { 
+          deviceRegNumberIndex, 
+          returnCommentsIndex, 
+          installationDateIndex, 
+          vehicleNumberIndex,
+          statusIndex 
+        }
       }
     }, {
       headers: {
