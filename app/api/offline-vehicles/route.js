@@ -7,7 +7,7 @@ export const revalidate = 0
 export async function GET() {
   try {
     const API_KEY = process.env.GOOGLE_SHEETS_API_KEY
-    const SHEET_ID = '180CqEujgBjJPjP9eU8C--xMj-VTBSrRUrM_98-S0gjo'
+    const SHEET_ID = process.env.NEXT_PUBLIC_SHEET3_ID || '180CqEujgBjJPjP9eU8C--xMj-VTBSrRUrM_98-S0gjo'
     
     if (!API_KEY || !SHEET_ID) {
       throw new Error('Missing API key or Sheet ID')
