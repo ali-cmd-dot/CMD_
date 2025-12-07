@@ -129,8 +129,19 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Error fetching offline vehicles data:', error)
       setOfflineVehiclesData({ 
-        totalOfflineVehicles: 0, uniqueClients: 0,
-        top10Clients: [], allClients: [], vehicleDetails: []
+        totalDevices: 0,
+        totalOffline: 0,
+        notRunningCount: 0,
+        cameraIssueCount: 0,
+        offlinePercentage: 0,
+        uniqueClients: 0,
+        top10Clients: [],
+        allClients: [],
+        notRunningBreakdown: [],
+        cameraIssueBreakdown: [],
+        vehicleDetails: [],
+        notRunningVehicles: [],
+        cameraIssueVehicles: []
       })
     }
   }
@@ -831,27 +842,34 @@ export default function Dashboard() {
 
         {activeTab === 'offline' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <MetricCard
-                title="Total Deployed"
-                value={deviceMovementData.deployedCount?.toLocaleString() || '0'}
-                subtitle="Devices in field"
+                title="Total Devices"
+                value={offlineVehiclesData.totalDevices?.toLocaleString() || '0'}
+                subtitle="All vehicles with device"
                 icon={Cpu}
                 color="bg-blue-500"
               />
               <MetricCard
-                title="Offline Devices"
-                value={offlineVehiclesData.totalOfflineVehicles?.toLocaleString() || '0'}
-                subtitle={`${offlineVehiclesData.uniqueClients} clients`}
+                title="Total Offline (48h+)"
+                value={offlineVehiclesData.totalOffline?.toLocaleString() || '0'}
+                subtitle={`${offlineVehiclesData.offlinePercentage}% of fleet`}
                 icon={WifiOff}
                 color="bg-red-500"
               />
               <MetricCard
-                title="Offline Rate"
-                value={`${deviceMovementData.deployedCount > 0 ? ((offlineVehiclesData.totalOfflineVehicles / deviceMovementData.deployedCount) * 100).toFixed(1) : 0}%`}
-                subtitle="Of deployed"
-                icon={AlertTriangle}
+                title="Not Running"
+                value={offlineVehiclesData.notRunningCount?.toLocaleString() || '0'}
+                subtitle="Vehicles not running"
+                icon={XCircle}
                 color="bg-orange-500"
+              />
+              <MetricCard
+                title="Camera Issue"
+                value={offlineVehiclesData.cameraIssueCount?.toLocaleString() || '0'}
+                subtitle="Offline but running"
+                icon={AlertTriangle}
+                color="bg-yellow-500"
               />
             </div>
 
@@ -859,7 +877,7 @@ export default function Dashboard() {
               <div className="bg-white p-6 rounded-lg card-shadow">
                 <h3 className="text-xl font-semibold mb-4 flex items-center">
                   <WifiOff className="mr-2 text-red-600" />
-                  Top 10 Offline
+                  Top 10 Offline Clients
                 </h3>
                 <div className="space-y-3">
                   {offlineVehiclesData.top10Clients?.map((client, index) => (
@@ -870,12 +888,15 @@ export default function Dashboard() {
                         </div>
                         <div>
                           <div className="font-medium">{client.client}</div>
-                          <div className="text-xs text-gray-500">{client.percentage}%</div>
+                          <div className="text-xs text-gray-500">
+                            <span className="text-orange-600 font-semibold">{client.notRunning}</span> Not Running, 
+                            <span className="text-yellow-600 font-semibold ml-1">{client.cameraIssue}</span> Camera
+                          </div>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold text-red-600">{client.count}</div>
-                        <div className="text-xs text-gray-600">vehicles</div>
+                        <div className="text-xs text-gray-600">{client.percentage}%</div>
                       </div>
                     </div>
                   ))}
@@ -883,21 +904,23 @@ export default function Dashboard() {
               </div>
 
               <div className="bg-white p-6 rounded-lg card-shadow">
-                <h3 className="text-xl font-semibold mb-4">Distribution</h3>
+                <h3 className="text-xl font-semibold mb-4">Offline Category Distribution</h3>
                 <ResponsiveContainer width="100%" height={350}>
                   <PieChart>
                     <Pie
-                      data={offlineVehiclesData.top10Clients}
-                      dataKey="count"
-                      nameKey="client"
+                      data={[
+                        { name: 'Not Running', value: offlineVehiclesData.notRunningCount },
+                        { name: 'Camera Issue', value: offlineVehiclesData.cameraIssueCount }
+                      ]}
+                      dataKey="value"
+                      nameKey="name"
                       cx="50%"
                       cy="50%"
                       outerRadius={100}
                       label
                     >
-                      {offlineVehiclesData.top10Clients?.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
+                      <Cell fill="#F97316" />
+                      <Cell fill="#F59E0B" />
                     </Pie>
                     <Tooltip />
                     <Legend />
@@ -907,8 +930,39 @@ export default function Dashboard() {
             </div>
 
             <div className="bg-white p-6 rounded-lg card-shadow">
+              <h3 className="text-xl font-semibold mb-4 flex items-center">
+                <XCircle className="mr-2 text-orange-600" />
+                Not Running Vehicles by Client
+              </h3>
+              <div className="max-h-80 overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-4 py-3 text-left">#</th>
+                      <th className="px-4 py-3 text-left">Client</th>
+                      <th className="px-4 py-3 text-center">Count</th>
+                      <th className="px-4 py-3 text-center">%</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {offlineVehiclesData.notRunningBreakdown?.map((client, idx) => (
+                      <tr key={idx} className="border-t hover:bg-gray-50">
+                        <td className="px-4 py-3">{idx + 1}</td>
+                        <td className="px-4 py-3 font-medium">{client.client}</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full font-semibold">{client.count}</span>
+                        </td>
+                        <td className="px-4 py-3 text-center">{client.percentage}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg card-shadow">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold">All Offline Devices</h3>
+                <h3 className="text-xl font-semibold">All Offline Vehicles (48h+ only)</h3>
                 <div className="flex items-center space-x-2">
                   <Filter size={18} className="text-gray-500" />
                   <input
@@ -926,9 +980,10 @@ export default function Dashboard() {
                     <tr>
                       <th className="px-4 py-3 text-left">#</th>
                       <th className="px-4 py-3 text-left">Client</th>
-                      <th className="px-4 py-3 text-center">Count</th>
+                      <th className="px-4 py-3 text-center">Total</th>
+                      <th className="px-4 py-3 text-center">Not Running</th>
+                      <th className="px-4 py-3 text-center">Camera</th>
                       <th className="px-4 py-3 text-center">%</th>
-                      <th className="px-4 py-3 text-left">Vehicles</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -939,17 +994,13 @@ export default function Dashboard() {
                         <td className="px-4 py-3 text-center">
                           <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full font-semibold">{client.count}</span>
                         </td>
-                        <td className="px-4 py-3 text-center">{client.percentage}%</td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-wrap gap-1">
-                            {client.vehicles?.slice(0, 8).map((v, vIdx) => (
-                              <span key={vIdx} className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">{v}</span>
-                            ))}
-                            {client.vehicles?.length > 8 && (
-                              <span className="text-xs text-gray-500 italic">+{client.vehicles.length - 8}</span>
-                            )}
-                          </div>
+                        <td className="px-4 py-3 text-center">
+                          <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">{client.notRunning}</span>
                         </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">{client.cameraIssue}</span>
+                        </td>
+                        <td className="px-4 py-3 text-center">{client.percentage}%</td>
                       </tr>
                     ))}
                   </tbody>
