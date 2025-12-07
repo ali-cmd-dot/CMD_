@@ -845,15 +845,15 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <MetricCard
                 title="Total Devices"
-                value={offlineVehiclesData.totalDevices?.toLocaleString() || '0'}
-                subtitle="All vehicles with device"
+                value={deviceMovementData.deployedCount?.toLocaleString() || '0'}
+                subtitle="All deployed devices"
                 icon={Cpu}
                 color="bg-blue-500"
               />
               <MetricCard
                 title="Total Offline (48h+)"
                 value={offlineVehiclesData.totalOffline?.toLocaleString() || '0'}
-                subtitle={`${offlineVehiclesData.offlinePercentage}% of fleet`}
+                subtitle={`${deviceMovementData.deployedCount > 0 ? ((offlineVehiclesData.totalOffline / deviceMovementData.deployedCount) * 100).toFixed(1) : 0}% of deployed`}
                 icon={WifiOff}
                 color="bg-red-500"
               />
