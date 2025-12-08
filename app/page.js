@@ -336,28 +336,28 @@ export default function Dashboard() {
               <MetricCard 
                 title="Total Alerts" 
                 value={alertData.totalCount?.toLocaleString() || '0'} 
-                subtitle={`${alertData.uniqueClients || 0} clients affected`} 
+                subtitle={`${alertData.uniqueClients || 0} clients`} 
                 icon={AlertTriangle} 
                 color="bg-red-500" 
               />
               <MetricCard 
                 title="Misalignments" 
-                value={`${misalignmentData.totalRaised?.toLocaleString() || '0'}`} 
-                subtitle={`${misalignmentData.totalRectified?.toLocaleString() || '0'} fixed (${misalignmentData.rectificationRate}%)`} 
+                value={misalignmentData.totalRaised?.toLocaleString() || '0'} 
+                subtitle={`${misalignmentData.rectificationRate}% fixed rate`} 
                 icon={Activity} 
                 color="bg-orange-500" 
               />
               <MetricCard 
                 title="Video Requests" 
-                value={`${historicalVideoData.totalRequests?.toLocaleString() || '0'}`} 
-                subtitle={`${historicalVideoData.totalDelivered?.toLocaleString() || '0'} delivered (${historicalVideoData.overallDeliveryRate}%)`} 
+                value={historicalVideoData.totalRequests?.toLocaleString() || '0'} 
+                subtitle={`${historicalVideoData.overallDeliveryRate}% delivered`} 
                 icon={Video} 
                 color="bg-purple-500" 
               />
               <MetricCard 
                 title="General Issues" 
-                value={`${generalIssuesData.totalRaised?.toLocaleString() || '0'}`} 
-                subtitle={`${generalIssuesData.totalResolved?.toLocaleString() || '0'} resolved (${generalIssuesData.resolutionRate}%)`} 
+                value={generalIssuesData.totalRaised?.toLocaleString() || '0'} 
+                subtitle={`${generalIssuesData.resolutionRate}% resolved`} 
                 icon={Settings} 
                 color="bg-green-500" 
               />
@@ -365,33 +365,30 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <MetricCard 
-                title="Deployed Devices" 
+                title="Total Devices" 
                 value={deviceMovementData.deployedCount?.toLocaleString() || '0'} 
-                subtitle={`${deviceMovementData.deployedPercentage}% of total fleet`} 
+                subtitle="Deployed in field" 
                 icon={Cpu} 
-                color="bg-blue-600" 
+                color="bg-blue-500" 
               />
               <MetricCard 
-                title="Offline Devices (48h+)" 
+                title="Offline Devices" 
                 value={offlineVehiclesData.totalOffline?.toLocaleString() || '0'} 
-                subtitle={`${deviceMovementData.deployedCount > 0 ? ((offlineVehiclesData.totalOffline / deviceMovementData.deployedCount) * 100).toFixed(1) : 0}% offline rate`} 
+                subtitle={`${deviceMovementData.deployedCount > 0 ? ((offlineVehiclesData.totalOffline / deviceMovementData.deployedCount) * 100).toFixed(1) : 0}% of fleet (48h+)`} 
                 icon={WifiOff} 
                 color="bg-red-600" 
               />
               <MetricCard 
                 title="Camera Issues" 
                 value={offlineVehiclesData.cameraIssueCount?.toLocaleString() || '0'} 
-                subtitle={`Critical: Running but offline`} 
-                icon={Video} 
+                subtitle="Critical - needs attention" 
+                icon={AlertTriangle} 
                 color="bg-yellow-600" 
               />
             </div>
 
             <div className="bg-white p-6 rounded-lg card-shadow">
-              <h3 className="text-xl font-semibold mb-4 flex items-center">
-                <BarChart3 className="mr-2 text-blue-600" />
-                Monthly Performance Overview - All Categories
-              </h3>
+              <h3 className="text-xl font-semibold mb-4">Monthly Trends - All Categories</h3>
               <ResponsiveContainer width="100%" height={400}>
                 <ComposedChart data={combinedMonthlyData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -409,118 +406,85 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-xl shadow-lg border border-blue-100">
-                <h3 className="text-xl font-bold mb-6 flex items-center text-blue-700">
-                  <div className="bg-blue-500 p-2 rounded-lg mr-3 shadow-md">
-                    <Target className="text-white" size={24} />
-                  </div>
-                  Performance Summary
-                </h3>
+              <div className="bg-white p-6 rounded-lg card-shadow">
+                <h3 className="text-xl font-semibold mb-4">Performance Summary</h3>
                 <div className="space-y-4">
-                  <div className="bg-white rounded-xl p-5 shadow-md hover:shadow-lg transition-shadow border-l-4 border-purple-500">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="font-bold text-gray-800 text-lg">Video Delivery</div>
-                        <div className="text-sm text-gray-600 mt-1">Avg: {historicalVideoData.avgDeliveryTime}h</div>
-                        <div className="text-xs text-gray-500 mt-1">Range: {historicalVideoData.fastestDeliveryTime}h - {historicalVideoData.slowestDeliveryTime}h</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-3xl font-black text-purple-600">{historicalVideoData.overallDeliveryRate}%</div>
-                        <div className="text-sm text-gray-600 font-medium">Success</div>
-                      </div>
+                  <div className="flex justify-between items-center p-4 bg-purple-50 rounded-lg">
+                    <div>
+                      <div className="font-semibold text-gray-800">Video Delivery</div>
+                      <div className="text-sm text-gray-600">Average: {historicalVideoData.avgDeliveryTime}h</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-purple-600">{historicalVideoData.overallDeliveryRate}%</div>
+                      <div className="text-sm text-gray-600">Success Rate</div>
                     </div>
                   </div>
                   
-                  <div className="bg-white rounded-xl p-5 shadow-md hover:shadow-lg transition-shadow border-l-4 border-green-500">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="font-bold text-gray-800 text-lg">Issue Resolution</div>
-                        <div className="text-sm text-gray-600 mt-1">Avg: {generalIssuesData.avgResolutionTime}</div>
-                        <div className="text-xs text-gray-500 mt-1">Median: {generalIssuesData.medianResolutionTime}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-3xl font-black text-green-600">{generalIssuesData.resolutionRate}%</div>
-                        <div className="text-sm text-gray-600 font-medium">Resolved</div>
-                      </div>
+                  <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg">
+                    <div>
+                      <div className="font-semibold text-gray-800">Issue Resolution</div>
+                      <div className="text-sm text-gray-600">Average: {generalIssuesData.avgResolutionTime}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-green-600">{generalIssuesData.resolutionRate}%</div>
+                      <div className="text-sm text-gray-600">Resolved</div>
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-xl p-5 shadow-md hover:shadow-lg transition-shadow border-l-4 border-orange-500">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="font-bold text-gray-800 text-lg">Misalignment Fix</div>
-                        <div className="text-sm text-gray-600 mt-1">Monthly avg: {misalignmentData.avgRaisedPerMonth?.toFixed(1)}</div>
-                        <div className="text-xs text-gray-500 mt-1">Fixed: {misalignmentData.avgRectifiedPerMonth?.toFixed(1)}/month</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-3xl font-black text-orange-600">{misalignmentData.rectificationRate}%</div>
-                        <div className="text-sm text-gray-600 font-medium">Fixed</div>
-                      </div>
+                  <div className="flex justify-between items-center p-4 bg-orange-50 rounded-lg">
+                    <div>
+                      <div className="font-semibold text-gray-800">Misalignment</div>
+                      <div className="text-sm text-gray-600">Monthly Average: {misalignmentData.avgRaisedPerMonth?.toFixed(1)}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-orange-600">{misalignmentData.rectificationRate}%</div>
+                      <div className="text-sm text-gray-600">Fix Rate</div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-red-50 to-yellow-50 p-6 rounded-xl shadow-lg border border-red-100">
-                <h3 className="text-xl font-bold mb-6 flex items-center text-red-700">
-                  <div className="bg-red-500 p-2 rounded-lg mr-3 shadow-md">
-                    <WifiOff className="text-white" size={24} />
-                  </div>
-                  Device Health Overview
-                </h3>
+              <div className="bg-white p-6 rounded-lg card-shadow">
+                <h3 className="text-xl font-semibold mb-4">Device Health Status</h3>
                 <div className="space-y-4">
-                  <div className="bg-white rounded-xl p-5 shadow-md border-l-4 border-blue-500">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center space-x-3">
-                        <div className="bg-blue-100 p-3 rounded-lg">
-                          <Cpu className="text-blue-600" size={24} />
-                        </div>
-                        <div>
-                          <div className="font-bold text-gray-800">Total Deployed</div>
-                          <div className="text-xs text-gray-500">Active in field</div>
-                        </div>
+                  <div className="flex justify-between items-center p-4 bg-blue-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <Cpu className="text-blue-600" size={32} />
+                      <div>
+                        <div className="font-semibold text-gray-800">Total Deployed</div>
+                        <div className="text-xs text-gray-600">Active devices</div>
                       </div>
-                      <div className="text-3xl font-black text-blue-600">{deviceMovementData.deployedCount?.toLocaleString()}</div>
                     </div>
+                    <div className="text-3xl font-bold text-blue-600">{deviceMovementData.deployedCount?.toLocaleString()}</div>
                   </div>
 
-                  <div className="bg-white rounded-xl p-5 shadow-md border-l-4 border-red-500">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center space-x-3">
-                        <div className="bg-red-100 p-3 rounded-lg">
-                          <WifiOff className="text-red-600" size={24} />
-                        </div>
-                        <div>
-                          <div className="font-bold text-gray-800">Offline (48h+)</div>
-                          <div className="text-xs text-gray-500">Need attention</div>
-                        </div>
+                  <div className="flex justify-between items-center p-4 bg-red-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <WifiOff className="text-red-600" size={32} />
+                      <div>
+                        <div className="font-semibold text-gray-800">Offline (48h+)</div>
+                        <div className="text-xs text-red-600">Needs attention</div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-3xl font-black text-red-600">{offlineVehiclesData.totalOffline?.toLocaleString()}</div>
-                        <div className="text-xs text-red-600 font-semibold">
-                          {deviceMovementData.deployedCount > 0 ? ((offlineVehiclesData.totalOffline / deviceMovementData.deployedCount) * 100).toFixed(1) : 0}% rate
-                        </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-red-600">{offlineVehiclesData.totalOffline?.toLocaleString()}</div>
+                      <div className="text-xs text-gray-600">
+                        {deviceMovementData.deployedCount > 0 ? ((offlineVehiclesData.totalOffline / deviceMovementData.deployedCount) * 100).toFixed(1) : 0}%
                       </div>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 text-white shadow-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <XCircle size={20} />
-                        <div className="text-2xl font-black">{offlineVehiclesData.notRunningCount}</div>
-                      </div>
-                      <div className="text-xs font-semibold">Not Running</div>
-                      <div className="text-xs opacity-75 mt-1">Vehicle issue</div>
+                    <div className="bg-orange-500 rounded-lg p-4 text-white">
+                      <div className="text-2xl font-bold">{offlineVehiclesData.notRunningCount}</div>
+                      <div className="text-sm font-medium">Not Running</div>
+                      <div className="text-xs opacity-80">Vehicle off</div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl p-4 text-white shadow-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <Video size={20} />
-                        <div className="text-2xl font-black">{offlineVehiclesData.cameraIssueCount}</div>
-                      </div>
-                      <div className="text-xs font-semibold">Camera Issue</div>
-                      <div className="text-xs opacity-75 mt-1">⚠️ Critical</div>
+                    <div className="bg-yellow-500 rounded-lg p-4 text-white">
+                      <div className="text-2xl font-bold">{offlineVehiclesData.cameraIssueCount}</div>
+                      <div className="text-sm font-medium">Camera Issue</div>
+                      <div className="text-xs opacity-80">⚠️ Critical</div>
                     </div>
                   </div>
                 </div>
@@ -531,19 +495,21 @@ export default function Dashboard() {
               <h3 className="text-xl font-semibold mb-4">Top Clients by Activity</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
-                  ...alertData.clientBreakdown.slice(0, 6).map(c => ({ ...c, type: 'Alerts', value: c.count, color: 'bg-red-100 text-red-800' })),
-                  ...misalignmentData.clientBreakdown.slice(0, 6).map(c => ({ ...c, type: 'Misalignments', value: c.raised, color: 'bg-orange-100 text-orange-800' }))
+                  ...alertData.clientBreakdown.slice(0, 6).map(c => ({ ...c, type: 'Alerts', value: c.count, color: 'red' })),
+                  ...misalignmentData.clientBreakdown.slice(0, 6).map(c => ({ ...c, type: 'Misalignment', value: c.raised, color: 'orange' }))
                 ]
                   .sort((a, b) => b.value - a.value)
                   .slice(0, 9)
                   .map((client, index) => (
-                  <div key={`${client.client}-${client.type}-${index}`} className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
+                  <div key={`${client.client}-${client.type}-${index}`} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="flex justify-between items-start mb-2">
-                      <div className="font-semibold text-sm text-gray-800 flex-1">{client.client}</div>
-                      <span className={`text-xs px-2 py-1 rounded font-medium ${client.color}`}>{client.type}</span>
+                      <div className="font-semibold text-sm">{client.client}</div>
+                      <span className={`text-xs px-2 py-1 rounded ${client.color === 'red' ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800'}`}>
+                        {client.type}
+                      </span>
                     </div>
-                    <div className="flex justify-between items-end">
-                      <div className="text-2xl font-bold text-gray-900">{client.value}</div>
+                    <div className="flex justify-between items-center">
+                      <div className="text-2xl font-bold">{client.value}</div>
                       <div className="text-sm text-gray-600">{client.percentage}%</div>
                     </div>
                   </div>
@@ -977,113 +943,103 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-gradient-to-br from-red-50 to-orange-50 p-6 rounded-xl shadow-lg border border-red-100">
-                <h3 className="text-xl font-bold mb-6 flex items-center text-red-700">
-                  <div className="bg-red-500 p-2 rounded-lg mr-3 shadow-md">
-                    <WifiOff className="text-white" size={24} />
-                  </div>
-                  Top 10 Offline Clients
-                </h3>
+              <div className="bg-white p-6 rounded-lg card-shadow">
+                <h3 className="text-xl font-semibold mb-4 text-red-700">🏆 Top 10 Offline Clients</h3>
                 <div className="space-y-3">
                   {offlineVehiclesData.top10Clients?.map((client, index) => (
-                    <div key={index} className="relative overflow-hidden group">
-                      <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-xl"></div>
-                      <div className="relative flex justify-between items-center p-4 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-red-500">
-                        <div className="flex items-center space-x-4 flex-1">
-                          <div className="relative">
-                            <div className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg shadow-lg">
-                              {index + 1}
-                            </div>
-                            {index < 3 && (
-                              <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                                ⭐
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-bold text-gray-800 text-base">{client.client}</div>
-                            <div className="flex items-center space-x-3 mt-1">
-                              <span className="inline-flex items-center px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">
-                                <XCircle size={12} className="mr-1" />
-                                {client.notRunning} Not Running
-                              </span>
-                              <span className="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold">
-                                <AlertTriangle size={12} className="mr-1" />
-                                {client.cameraIssue} Camera
-                              </span>
-                            </div>
+                    <div key={index} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border-l-4 border-red-500">
+                      <div className="flex items-center space-x-4">
+                        <div className="bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <div className="font-bold text-gray-800">{client.client}</div>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full font-semibold">
+                              🚫 {client.notRunning} Not Running
+                            </span>
+                            <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full font-semibold">
+                              📹 {client.cameraIssue} Camera
+                            </span>
                           </div>
                         </div>
-                        <div className="text-right ml-4">
-                          <div className="text-3xl font-black text-red-600">{client.count}</div>
-                          <div className="text-xs text-gray-500 font-medium">{client.percentage}% share</div>
-                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-3xl font-bold text-red-600">{client.count}</div>
+                        <div className="text-xs text-gray-500">{client.percentage}%</div>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-orange-50 to-yellow-50 p-6 rounded-xl shadow-lg border border-orange-100">
-                <h3 className="text-xl font-bold mb-4 flex items-center text-orange-700">
-                  <div className="bg-gradient-to-r from-orange-500 to-yellow-500 p-2 rounded-lg mr-3 shadow-md">
-                    <BarChart3 className="text-white" size={24} />
+              <div className="bg-white p-6 rounded-lg card-shadow">
+                <h3 className="text-xl font-semibold mb-4">📊 Offline Category Split</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Not Running', value: offlineVehiclesData.notRunningCount },
+                        { name: 'Camera Issue', value: offlineVehiclesData.cameraIssueCount }
+                      ]}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      label={({name, value, percent}) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+                      labelLine={true}
+                    >
+                      <Cell fill="#FB923C" />
+                      <Cell fill="#FBBF24" />
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="bg-orange-100 border-2 border-orange-500 rounded-lg p-4 text-center">
+                    <div className="text-3xl font-bold text-orange-700">{offlineVehiclesData.notRunningCount}</div>
+                    <div className="text-sm font-semibold text-orange-600 mt-1">Not Running</div>
+                    <div className="text-xs text-gray-600">Vehicle Off</div>
                   </div>
-                  Offline Category Split
-                </h3>
-                
-                <div className="bg-white rounded-xl p-4 shadow-inner mb-4">
-                  <ResponsiveContainer width="100%" height={280}>
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: 'Not Running', value: offlineVehiclesData.notRunningCount },
-                          { name: 'Camera Issue', value: offlineVehiclesData.cameraIssueCount }
-                        ]}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={100}
-                        innerRadius={60}
-                        paddingAngle={5}
-                        label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      >
-                        <Cell fill="#F97316" />
-                        <Cell fill="#FBB040" />
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 text-white shadow-lg transform hover:scale-105 transition-transform">
-                    <div className="flex items-center justify-between mb-2">
-                      <XCircle size={24} />
-                      <div className="text-3xl font-black">{offlineVehiclesData.notRunningCount}</div>
-                    </div>
-                    <div className="text-sm font-semibold opacity-90">Not Running</div>
-                    <div className="text-xs opacity-75 mt-1">
-                      {offlineVehiclesData.totalOffline > 0 
-                        ? ((offlineVehiclesData.notRunningCount / offlineVehiclesData.totalOffline) * 100).toFixed(1) 
-                        : 0}% of offline
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-4 text-white shadow-lg transform hover:scale-105 transition-transform">
-                    <div className="flex items-center justify-between mb-2">
-                      <AlertTriangle size={24} />
-                      <div className="text-3xl font-black">{offlineVehiclesData.cameraIssueCount}</div>
-                    </div>
-                    <div className="text-sm font-semibold opacity-90">Camera Issue</div>
-                    <div className="text-xs opacity-75 mt-1">
-                      {offlineVehiclesData.totalOffline > 0 
-                        ? ((offlineVehiclesData.cameraIssueCount / offlineVehiclesData.totalOffline) * 100).toFixed(1) 
-                        : 0}% of offline
-                    </div>
+                  <div className="bg-yellow-100 border-2 border-yellow-500 rounded-lg p-4 text-center">
+                    <div className="text-3xl font-bold text-yellow-700">{offlineVehiclesData.cameraIssueCount}</div>
+                    <div className="text-sm font-semibold text-yellow-600 mt-1">Camera Issue</div>
+                    <div className="text-xs text-red-600 font-semibold">⚠️ Critical</div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg card-shadow">
+              <h3 className="text-xl font-semibold mb-4">🚫 Not Running Vehicles - Client Breakdown</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {offlineVehiclesData.notRunningBreakdown?.slice(0, 12).map((client, idx) => (
+                  <div key={idx} className="p-4 bg-orange-50 rounded-lg border-2 border-orange-200 hover:border-orange-400 transition-colors">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="font-bold text-gray-800 text-sm">{client.client}</div>
+                      <div className="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded font-semibold">{client.percentage}%</div>
+                    </div>
+                    <div className="text-3xl font-bold text-orange-600">{client.count}</div>
+                    <div className="text-xs text-gray-600 mt-1">vehicles not running</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg card-shadow">
+              <h3 className="text-xl font-semibold mb-4">📹 Camera Issue Vehicles - Client Breakdown</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {offlineVehiclesData.cameraIssueBreakdown?.slice(0, 12).map((client, idx) => (
+                  <div key={idx} className="p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200 hover:border-yellow-400 transition-colors">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="font-bold text-gray-800 text-sm">{client.client}</div>
+                      <div className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded font-semibold">{client.percentage}%</div>
+                    </div>
+                    <div className="text-3xl font-bold text-yellow-600">{client.count}</div>
+                    <div className="text-xs text-red-600 font-semibold mt-1">⚠️ Critical - Camera offline</div>
+                  </div>
+                ))}
               </div>
             </div>
 
