@@ -7,7 +7,7 @@ export const revalidate = 0
 export async function GET() {
   try {
     const API_KEY = process.env.GOOGLE_SHEETS_API_KEY
-    const SHEET_ID = process.env.NEXT_PUBLIC_SHEET3_ID || '180CqEujgBjJPjP9eU8C--xMj-VTBSrRUrM_98-S0gjo'
+    const SHEET_ID = '180CqEujgBjJPjP9eU8C--xMj-VTBSrRUrM_98-S0gjo'
     
     if (!API_KEY || !SHEET_ID) {
       throw new Error('Missing API key or Sheet ID')
@@ -118,8 +118,8 @@ export async function GET() {
       const offlineHours = parseFloat(offlineSinceHrs.toString().trim())
       if (isNaN(offlineHours)) return
       
-      // CRITICAL: Only process if offline for 48+ hours (2+ days)
-      if (offlineHours < 48) return
+      // CRITICAL: Only process if offline for 72+ hours (3+ days)
+      if (offlineHours < 72) return
       
       const client = clientName && clientName.toString().trim() ? clientName.toString().trim() : 'Unknown'
       const vehicle = vehicleNumber.toString().trim()
@@ -258,7 +258,7 @@ export async function GET() {
         totalRowsProcessed: rows.length - 1,
         headers: headers,
         columnIndices: { vehicleNumberIndex, clientIndex, offlineSinceIndex, rnIndex },
-        filterApplied: 'Only offline 48+ hours counted'
+        filterApplied: 'Only offline 72+ hours counted'
       }
     }, {
       headers: {
