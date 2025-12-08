@@ -874,58 +874,113 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white p-6 rounded-lg card-shadow">
-                <h3 className="text-xl font-semibold mb-4 flex items-center">
-                  <WifiOff className="mr-2 text-red-600" />
+              <div className="bg-gradient-to-br from-red-50 to-orange-50 p-6 rounded-xl shadow-lg border border-red-100">
+                <h3 className="text-xl font-bold mb-6 flex items-center text-red-700">
+                  <div className="bg-red-500 p-2 rounded-lg mr-3 shadow-md">
+                    <WifiOff className="text-white" size={24} />
+                  </div>
                   Top 10 Offline Clients
                 </h3>
                 <div className="space-y-3">
                   {offlineVehiclesData.top10Clients?.map((client, index) => (
-                    <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
-                          {index + 1}
-                        </div>
-                        <div>
-                          <div className="font-medium">{client.client}</div>
-                          <div className="text-xs text-gray-500">
-                            <span className="text-orange-600 font-semibold">{client.notRunning}</span> Not Running, 
-                            <span className="text-yellow-600 font-semibold ml-1">{client.cameraIssue}</span> Camera
+                    <div key={index} className="relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-xl"></div>
+                      <div className="relative flex justify-between items-center p-4 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 border-red-500">
+                        <div className="flex items-center space-x-4 flex-1">
+                          <div className="relative">
+                            <div className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg shadow-lg">
+                              {index + 1}
+                            </div>
+                            {index < 3 && (
+                              <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                                ⭐
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-bold text-gray-800 text-base">{client.client}</div>
+                            <div className="flex items-center space-x-3 mt-1">
+                              <span className="inline-flex items-center px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">
+                                <XCircle size={12} className="mr-1" />
+                                {client.notRunning} Not Running
+                              </span>
+                              <span className="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold">
+                                <AlertTriangle size={12} className="mr-1" />
+                                {client.cameraIssue} Camera
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-red-600">{client.count}</div>
-                        <div className="text-xs text-gray-600">{client.percentage}%</div>
+                        <div className="text-right ml-4">
+                          <div className="text-3xl font-black text-red-600">{client.count}</div>
+                          <div className="text-xs text-gray-500 font-medium">{client.percentage}% share</div>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-lg card-shadow">
-                <h3 className="text-xl font-semibold mb-4">Offline Category Distribution</h3>
-                <ResponsiveContainer width="100%" height={350}>
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: 'Not Running', value: offlineVehiclesData.notRunningCount },
-                        { name: 'Camera Issue', value: offlineVehiclesData.cameraIssueCount }
-                      ]}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      label
-                    >
-                      <Cell fill="#F97316" />
-                      <Cell fill="#F59E0B" />
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="bg-gradient-to-br from-orange-50 to-yellow-50 p-6 rounded-xl shadow-lg border border-orange-100">
+                <h3 className="text-xl font-bold mb-4 flex items-center text-orange-700">
+                  <div className="bg-gradient-to-r from-orange-500 to-yellow-500 p-2 rounded-lg mr-3 shadow-md">
+                    <BarChart3 className="text-white" size={24} />
+                  </div>
+                  Offline Category Split
+                </h3>
+                
+                <div className="bg-white rounded-xl p-4 shadow-inner mb-4">
+                  <ResponsiveContainer width="100%" height={280}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Not Running', value: offlineVehiclesData.notRunningCount },
+                          { name: 'Camera Issue', value: offlineVehiclesData.cameraIssueCount }
+                        ]}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        innerRadius={60}
+                        paddingAngle={5}
+                        label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      >
+                        <Cell fill="#F97316" />
+                        <Cell fill="#FBB040" />
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 text-white shadow-lg transform hover:scale-105 transition-transform">
+                    <div className="flex items-center justify-between mb-2">
+                      <XCircle size={24} />
+                      <div className="text-3xl font-black">{offlineVehiclesData.notRunningCount}</div>
+                    </div>
+                    <div className="text-sm font-semibold opacity-90">Not Running</div>
+                    <div className="text-xs opacity-75 mt-1">
+                      {offlineVehiclesData.totalOffline > 0 
+                        ? ((offlineVehiclesData.notRunningCount / offlineVehiclesData.totalOffline) * 100).toFixed(1) 
+                        : 0}% of offline
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-4 text-white shadow-lg transform hover:scale-105 transition-transform">
+                    <div className="flex items-center justify-between mb-2">
+                      <AlertTriangle size={24} />
+                      <div className="text-3xl font-black">{offlineVehiclesData.cameraIssueCount}</div>
+                    </div>
+                    <div className="text-sm font-semibold opacity-90">Camera Issue</div>
+                    <div className="text-xs opacity-75 mt-1">
+                      {offlineVehiclesData.totalOffline > 0 
+                        ? ((offlineVehiclesData.cameraIssueCount / offlineVehiclesData.totalOffline) * 100).toFixed(1) 
+                        : 0}% of offline
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
