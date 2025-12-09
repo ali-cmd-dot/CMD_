@@ -32,8 +32,32 @@ export default function Dashboard() {
   
   // Client selection state for offline tab
   const [selectedClients, setSelectedClients] = useState([])
+  const [tempSelectedClients, setTempSelectedClients] = useState([])
   const [showClientDropdown, setShowClientDropdown] = useState(false)
   const [viewMode, setViewMode] = useState('individual') // 'individual' or 'grouped'
+  
+  // Calculate filtered metrics based on selected clients
+  const getFilteredOfflineMetrics = () => {
+    if (selectedClients.length === 0) {
+      return {
+        totalOffline: offlineVehiclesData.totalOffline,
+        notRunningCount: offlineVehiclesData.notRunningCount,
+        cameraIssueCount: offlineVehiclesData.cameraIssueCount
+      }
+    }
+    
+    const filtered = offlineVehiclesData.allClients?.filter(c => 
+      selectedClients.includes(c.client)
+    ) || []
+    
+    return {
+      totalOffline: filtered.reduce((sum, c) => sum + c.count, 0),
+      notRunningCount: filtered.reduce((sum, c) => sum + c.notRunning, 0),
+      cameraIssueCount: filtered.reduce((sum, c) => sum + c.cameraIssue, 0)
+    }
+  }
+  
+  const filteredMetrics = getFilteredOfflineMetrics()
 
   useEffect(() => {
     fetchAllData()
@@ -281,6 +305,13 @@ export default function Dashboard() {
   const filterOfflineVehicles = () => {
     let filtered = offlineVehiclesData.allClients || []
     
+    // Apply client selection filter FIRST
+    if (selectedClients.length > 0) {
+      filtered = filtered.filter(client => 
+        selectedClients.includes(client.client)
+      )
+    }
+    
     // Apply text search filter
     if (offlineFilter) {
       filtered = filtered.filter(client => 
@@ -288,19 +319,12 @@ export default function Dashboard() {
       )
     }
     
-    // Apply client selection filter
-    if (selectedClients.length > 0) {
-      filtered = filtered.filter(client => 
-        selectedClients.includes(client.client)
-      )
-    }
-    
     // Group if needed
     if (viewMode === 'grouped') {
       const groups = {
-        'CF Group': ['CF'],
-        'Euro Group': ['Euro'],
-        'Shoffr Group': ['Shoffr']
+        'CF Group': ['CF', 'cf'],
+        'Euro Group': ['Euro', 'euro'],
+        'Shoffr Group': ['Shoffr', 'shoffr', 'Shoffer', 'shoffer']
       }
       
       const grouped = {}
@@ -323,7 +347,7 @@ export default function Dashboard() {
             grouped[groupName].count += client.count
             grouped[groupName].notRunning += client.notRunning
             grouped[groupName].cameraIssue += client.cameraIssue
-            grouped[groupName].vehicles.push(...(client.vehicles || []))
+            grouped[groupName].vehicles = [...grouped[groupName].vehicles, ...(client.vehicles || [])]
             added = true
             break
           }
@@ -334,12 +358,13 @@ export default function Dashboard() {
       })
       
       // Recalculate percentages
-      const total = [...Object.values(grouped), ...others].reduce((sum, c) => sum + c.count, 0)
-      Object.values(grouped).forEach(g => {
+      const allGroups = [...Object.values(grouped), ...others]
+      const total = allGroups.reduce((sum, c) => sum + c.count, 0)
+      allGroups.forEach(g => {
         g.percentage = total > 0 ? parseFloat(((g.count / total) * 100).toFixed(1)) : 0
       })
       
-      return [...Object.values(grouped), ...others]
+      return allGroups
     }
     
     return filtered
@@ -349,7 +374,7 @@ export default function Dashboard() {
   const allClients = offlineVehiclesData.allClients?.map(c => c.client) || []
   
   const toggleClientSelection = (client) => {
-    setSelectedClients(prev => 
+    setTempSelectedClients(prev => 
       prev.includes(client) 
         ? prev.filter(c => c !== client)
         : [...prev, client]
@@ -357,11 +382,21 @@ export default function Dashboard() {
   }
   
   const selectAllClients = () => {
-    setSelectedClients(allClients)
+    setTempSelectedClients(allClients)
   }
   
   const deselectAllClients = () => {
-    setSelectedClients([])
+    setTempSelectedClients([])
+  }
+  
+  const applyClientSelection = () => {
+    setSelectedClients(tempSelectedClients)
+    setShowClientDropdown(false)
+  }
+  
+  const cancelClientSelection = () => {
+    setTempSelectedClients(selectedClients)
+    setShowClientDropdown(false)
   }
 
   const filterDevices = () => {
