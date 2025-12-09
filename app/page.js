@@ -38,22 +38,30 @@ export default function Dashboard() {
   
   // Calculate filtered metrics based on selected clients
   const getFilteredOfflineMetrics = () => {
-    if (selectedClients.length === 0) {
+    if (!offlineVehiclesData || !offlineVehiclesData.allClients) {
       return {
-        totalOffline: offlineVehiclesData.totalOffline,
-        notRunningCount: offlineVehiclesData.notRunningCount,
-        cameraIssueCount: offlineVehiclesData.cameraIssueCount
+        totalOffline: 0,
+        notRunningCount: 0,
+        cameraIssueCount: 0
       }
     }
     
-    const filtered = offlineVehiclesData.allClients?.filter(c => 
+    if (selectedClients.length === 0) {
+      return {
+        totalOffline: offlineVehiclesData.totalOffline || 0,
+        notRunningCount: offlineVehiclesData.notRunningCount || 0,
+        cameraIssueCount: offlineVehiclesData.cameraIssueCount || 0
+      }
+    }
+    
+    const filtered = offlineVehiclesData.allClients.filter(c => 
       selectedClients.includes(c.client)
-    ) || []
+    )
     
     return {
-      totalOffline: filtered.reduce((sum, c) => sum + c.count, 0),
-      notRunningCount: filtered.reduce((sum, c) => sum + c.notRunning, 0),
-      cameraIssueCount: filtered.reduce((sum, c) => sum + c.cameraIssue, 0)
+      totalOffline: filtered.reduce((sum, c) => sum + (c.count || 0), 0),
+      notRunningCount: filtered.reduce((sum, c) => sum + (c.notRunning || 0), 0),
+      cameraIssueCount: filtered.reduce((sum, c) => sum + (c.cameraIssue || 0), 0)
     }
   }
   
