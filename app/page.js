@@ -395,12 +395,6 @@ export default function Dashboard() {
               <MetricCard title="General Issues" value={generalIssuesData.totalRaised?.toLocaleString() || '0'} subtitle={`${generalIssuesData.resolutionRate}% resolved`} icon={Settings} color="bg-green-500" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <MetricCard title="Total Devices" value={deviceMovementData.deployedCount?.toLocaleString() || '0'} subtitle="Deployed in field" icon={Cpu} color="bg-blue-500" />
-              <MetricCard title="Offline Devices" value={offlineVehiclesData.totalOffline?.toLocaleString() || '0'} subtitle={`${deviceMovementData.deployedCount > 0 ? ((offlineVehiclesData.totalOffline / deviceMovementData.deployedCount) * 100).toFixed(1) : 0}% of fleet (72h+)`} icon={WifiOff} color="bg-red-600" />
-              <MetricCard title="Camera Issues" value={offlineVehiclesData.cameraIssueCount?.toLocaleString() || '0'} subtitle="Critical - needs attention" icon={AlertTriangle} color="bg-yellow-600" />
-            </div>
-
             <div className="bg-white p-6 rounded-lg card-shadow">
               <h3 className="text-xl font-semibold mb-4">Monthly Trends - All Categories</h3>
               <ResponsiveContainer width="100%" height={400}>
@@ -886,16 +880,16 @@ export default function Dashboard() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <MetricCard
-                title="Total Devices"
-                value={offlineVehiclesData.totalDevices?.toLocaleString() || '0'}
-                subtitle="All devices in system"
+                title="All Devices in System"
+                value={deviceMovementData.deployedCount?.toLocaleString() || '0'}
+                subtitle="Total deployed devices"
                 icon={Cpu}
                 color="bg-blue-500"
               />
               <MetricCard
                 title="Offline (72h+)"
                 value={filteredMetrics.totalOffline?.toLocaleString() || '0'}
-                subtitle={`${offlineVehiclesData.totalDevices > 0 ? ((filteredMetrics.totalOffline / offlineVehiclesData.totalDevices) * 100).toFixed(1) : 0}% of total${selectedClients.length > 0 ? ' (filtered)' : ''}`}
+                subtitle={`${deviceMovementData.deployedCount > 0 ? ((filteredMetrics.totalOffline / deviceMovementData.deployedCount) * 100).toFixed(1) : 0}% of total${selectedClients.length > 0 ? ' (filtered)' : ''}`}
                 icon={WifiOff}
                 color="bg-red-500"
               />
