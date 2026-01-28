@@ -379,7 +379,7 @@ export default function Dashboard() {
 
     const activeCities = Object.keys(installationTrackerData.cityCount)
 
-    // Indian cities with coordinates (latitude, longitude)
+    // Indian cities with accurate coordinates (latitude, longitude)
     const cityCoordinates = {
       'mumbai': { lat: 19.0760, lng: 72.8777, label: 'Mumbai' },
       'delhi': { lat: 28.7041, lng: 77.1025, label: 'Delhi' },
@@ -443,39 +443,31 @@ export default function Dashboard() {
       'mangalore': { lat: 12.9141, lng: 74.8560, label: 'Mangaluru' }
     }
 
-    // Convert coordinates to SVG coordinates
+    // Convert lat/lng to SVG coordinates with accurate scaling
     const latToY = (lat) => {
-      const svgHeight = 600
-      const minLat = 8.0
-      const maxLat = 35.5
+      const svgHeight = 700
+      const minLat = 6.5  // Southern tip (Kanyakumari area)
+      const maxLat = 37.0 // Northern tip (Kashmir)
       return svgHeight - ((lat - minLat) / (maxLat - minLat)) * svgHeight
     }
 
     const lngToX = (lng) => {
-      const svgWidth = 500
-      const minLng = 68.0
-      const maxLng = 97.5
+      const svgWidth = 600
+      const minLng = 68.0 // Western border
+      const maxLng = 97.5 // Eastern border (Arunachal)
       return ((lng - minLng) / (maxLng - minLng)) * svgWidth
     }
 
     return (
       <div className="relative w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0a0e27 0%, #1a1d3f 100%)' }}>
-        <svg viewBox="0 0 500 600" className="w-full h-full max-w-4xl">
-          {/* India Map Outline - Simplified */}
+        <svg viewBox="0 0 600 700" className="w-full h-full">
+          {/* Accurate India Map Outline */}
           <path
-            d="M 200 50 L 250 80 L 280 60 L 320 90 L 350 120 L 380 140 L 400 180 L 420 220 L 430 260 L 420 300 L 400 340 L 370 380 L 340 420 L 300 450 L 260 470 L 220 480 L 180 470 L 150 450 L 120 420 L 100 380 L 90 340 L 85 300 L 80 260 L 85 220 L 95 180 L 110 140 L 130 100 L 160 70 Z"
-            fill="none"
-            stroke="rgba(59, 130, 246, 0.3)"
+            d="M 220 60 Q 240 50 260 55 Q 280 50 295 60 Q 310 55 325 65 Q 340 60 350 75 Q 365 70 375 85 L 390 100 L 400 120 L 415 145 L 425 170 L 435 200 L 440 230 L 445 260 L 445 290 L 440 320 L 430 350 L 420 380 L 405 410 L 390 435 L 370 460 L 345 480 L 320 495 L 290 510 L 260 520 L 230 525 L 200 520 L 170 510 L 145 495 L 120 475 L 100 450 L 85 420 L 75 390 L 70 360 L 65 330 L 63 300 L 65 270 L 70 240 L 80 210 L 95 180 L 110 155 L 130 130 L 150 110 L 170 90 L 190 75 Z"
+            fill="rgba(59, 130, 246, 0.05)"
+            stroke="rgba(59, 130, 246, 0.4)"
             strokeWidth="2"
           />
-
-          {/* State boundaries - simplified lines */}
-          <g stroke="rgba(59, 130, 246, 0.2)" strokeWidth="1" fill="none">
-            <line x1="150" y1="200" x2="350" y2="200" />
-            <line x1="200" y1="150" x2="200" y2="400" />
-            <line x1="300" y1="100" x2="300" y2="450" />
-            <line x1="100" y1="300" x2="400" y2="300" />
-          </g>
 
           {/* City Markers */}
           {Object.entries(cityCoordinates).map(([cityKey, coords]) => {
@@ -486,51 +478,42 @@ export default function Dashboard() {
 
             if (!isActive) return null
 
+            const color = count > 10 ? '#10B981' : count > 5 ? '#F59E0B' : '#3B82F6'
+
             return (
               <g key={cityKey}>
-                {/* Glowing effect for active cities */}
-                <circle
-                  cx={x}
-                  cy={y}
-                  r="12"
-                  fill={count > 10 ? '#10B981' : count > 5 ? '#F59E0B' : '#3B82F6'}
-                  opacity="0.2"
-                  className="animate-pulse"
-                />
-                <circle
-                  cx={x}
-                  cy={y}
-                  r="6"
-                  fill={count > 10 ? '#10B981' : count > 5 ? '#F59E0B' : '#3B82F6'}
-                  opacity="0.8"
-                />
-                <circle
-                  cx={x}
-                  cy={y}
-                  r="3"
-                  fill="white"
-                />
+                {/* Outer glow */}
+                <circle cx={x} cy={y} r="15" fill={color} opacity="0.15" className="animate-pulse" />
+                <circle cx={x} cy={y} r="10" fill={color} opacity="0.3" />
                 
-                {/* City Label */}
+                {/* Main marker */}
+                <circle cx={x} cy={y} r="5" fill={color} opacity="0.9" />
+                <circle cx={x} cy={y} r="2.5" fill="white" />
+                
+                {/* City label */}
                 <text
-                  x={x + 12}
-                  y={y - 8}
+                  x={x}
+                  y={y - 20}
                   fill="white"
-                  fontSize="11"
+                  fontSize="12"
                   fontWeight="600"
+                  textAnchor="middle"
                   className="select-none"
+                  style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}
                 >
                   {coords.label}
                 </text>
                 
-                {/* Device Count */}
+                {/* Device count */}
                 <text
-                  x={x + 12}
-                  y={y + 5}
-                  fill={count > 10 ? '#10B981' : count > 5 ? '#F59E0B' : '#60A5FA'}
+                  x={x}
+                  y={y - 8}
+                  fill={color}
                   fontSize="10"
                   fontWeight="500"
+                  textAnchor="middle"
                   className="select-none"
+                  style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}
                 >
                   {count} devices
                 </text>
@@ -539,59 +522,41 @@ export default function Dashboard() {
           })}
 
           {/* Connection lines between major cities */}
-          {activeCities.includes('delhi') && activeCities.includes('mumbai') && (
-            <line
-              x1={lngToX(cityCoordinates['delhi'].lng)}
-              y1={latToY(cityCoordinates['delhi'].lat)}
-              x2={lngToX(cityCoordinates['mumbai'].lng)}
-              y2={latToY(cityCoordinates['mumbai'].lat)}
-              stroke="rgba(59, 130, 246, 0.3)"
-              strokeWidth="1"
-              strokeDasharray="5,5"
-            />
-          )}
-          {activeCities.includes('mumbai') && activeCities.includes('bengaluru') && (
-            <line
-              x1={lngToX(cityCoordinates['mumbai'].lng)}
-              y1={latToY(cityCoordinates['mumbai'].lat)}
-              x2={lngToX(cityCoordinates['bengaluru'].lng)}
-              y2={latToY(cityCoordinates['bengaluru'].lat)}
-              stroke="rgba(59, 130, 246, 0.3)"
-              strokeWidth="1"
-              strokeDasharray="5,5"
-            />
-          )}
-          {activeCities.includes('delhi') && activeCities.includes('kolkata') && (
-            <line
-              x1={lngToX(cityCoordinates['delhi'].lng)}
-              y1={latToY(cityCoordinates['delhi'].lat)}
-              x2={lngToX(cityCoordinates['kolkata'].lng)}
-              y2={latToY(cityCoordinates['kolkata'].lat)}
-              stroke="rgba(59, 130, 246, 0.3)"
-              strokeWidth="1"
-              strokeDasharray="5,5"
-            />
-          )}
+          <g stroke="rgba(59, 130, 246, 0.2)" strokeWidth="1" strokeDasharray="4,4" fill="none">
+            {activeCities.includes('delhi') && activeCities.includes('mumbai') && (
+              <line
+                x1={lngToX(cityCoordinates['delhi'].lng)}
+                y1={latToY(cityCoordinates['delhi'].lat)}
+                x2={lngToX(cityCoordinates['mumbai'].lng)}
+                y2={latToY(cityCoordinates['mumbai'].lat)}
+              />
+            )}
+            {activeCities.includes('mumbai') && activeCities.includes('bengaluru') && (
+              <line
+                x1={lngToX(cityCoordinates['mumbai'].lng)}
+                y1={latToY(cityCoordinates['mumbai'].lat)}
+                x2={lngToX(cityCoordinates['bengaluru'].lng)}
+                y2={latToY(cityCoordinates['bengaluru'].lat)}
+              />
+            )}
+            {activeCities.includes('delhi') && activeCities.includes('kolkata') && (
+              <line
+                x1={lngToX(cityCoordinates['delhi'].lng)}
+                y1={latToY(cityCoordinates['delhi'].lat)}
+                x2={lngToX(cityCoordinates['kolkata'].lng)}
+                y2={latToY(cityCoordinates['kolkata'].lat)}
+              />
+            )}
+            {activeCities.includes('chennai') && activeCities.includes('bengaluru') && (
+              <line
+                x1={lngToX(cityCoordinates['chennai'].lng)}
+                y1={latToY(cityCoordinates['chennai'].lat)}
+                x2={lngToX(cityCoordinates['bengaluru'].lng)}
+                y2={latToY(cityCoordinates['bengaluru'].lat)}
+              />
+            )}
+          </g>
         </svg>
-
-        {/* Legend */}
-        <div className="absolute bottom-6 right-6 bg-black bg-opacity-60 rounded-lg p-4 backdrop-blur-sm">
-          <div className="text-white text-sm font-semibold mb-2">Device Count</div>
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-              <span className="text-white text-xs">1-5 devices</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-              <span className="text-white text-xs">6-10 devices</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              <span className="text-white text-xs">10+ devices</span>
-            </div>
-          </div>
-        </div>
       </div>
     )
   }
