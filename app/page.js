@@ -1,6 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
+
+// Import Leaflet map with no SSR (client-side only)
+const IndiaMapLeaflet = dynamic(
+  () => import('./components/IndiaMapLeaflet'),
+  { 
+    ssr: false,
+    loading: () => <div className="text-center py-20 text-white">Loading map...</div>
+  }
+)
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, ComposedChart
@@ -371,162 +381,7 @@ export default function Dashboard() {
     return filterOfflineVehicles().slice(0, 10)
   }
 
-  // India Map Component using simple approach
-  const IndiaMap = () => {
-    if (!installationTrackerData || !installationTrackerData.cityCount) {
-      return <div className="text-center py-20 text-gray-500">Loading map data...</div>
-    }
-
-    const activeCities = Object.keys(installationTrackerData.cityCount)
-
-    // Indian cities with coordinates - ONLY show cities that have data
-    const cityCoordinates = {
-      'mumbai': { x: 280, y: 420, label: 'Mumbai' },
-      'delhi': { x: 330, y: 200, label: 'Delhi' },
-      'bengaluru': { x: 340, y: 540, label: 'Bengaluru' },
-      'kolkata': { x: 520, y: 320, label: 'Kolkata' },
-      'chennai': { x: 410, y: 550, label: 'Chennai' },
-      'hyderabad': { x: 380, y: 470, label: 'Hyderabad' },
-      'pune': { x: 300, y: 450, label: 'Pune' },
-      'ahmedabad': { x: 270, y: 310, label: 'Ahmedabad' },
-      'surat': { x: 270, y: 360, label: 'Surat' },
-      'jaipur': { x: 320, y: 230, label: 'Jaipur' },
-      'lucknow': { x: 410, y: 230, label: 'Lucknow' },
-      'kanpur': { x: 410, y: 250, label: 'Kanpur' },
-      'nagpur': { x: 380, y: 370, label: 'Nagpur' },
-      'indore': { x: 320, y: 310, label: 'Indore' },
-      'thane': { x: 285, y: 425, label: 'Thane' },
-      'bhopal': { x: 350, y: 310, label: 'Bhopal' },
-      'visakhapatnam': { x: 460, y: 470, label: 'Vizag' },
-      'patna': { x: 480, y: 270, label: 'Patna' },
-      'vadodara': { x: 270, y: 330, label: 'Vadodara' },
-      'ghaziabad': { x: 335, y: 205, label: 'Ghaziabad' },
-      'ludhiana': { x: 320, y: 150, label: 'Ludhiana' },
-      'agra': { x: 380, y: 230, label: 'Agra' },
-      'nashik': { x: 295, y: 405, label: 'Nashik' },
-      'faridabad': { x: 338, y: 208, label: 'Faridabad' },
-      'meerut': { x: 348, y: 200, label: 'Meerut' },
-      'rajkot': { x: 240, y: 330, label: 'Rajkot' },
-      'varanasi': { x: 460, y: 270, label: 'Varanasi' },
-      'srinagar': { x: 320, y: 80, label: 'Srinagar' },
-      'aurangabad': { x: 325, y: 405, label: 'Aurangabad' },
-      'dhanbad': { x: 510, y: 310, label: 'Dhanbad' },
-      'amritsar': { x: 310, y: 135, label: 'Amritsar' },
-      'navi mumbai': { x: 290, y: 430, label: 'Navi Mumbai' },
-      'allahabad': { x: 450, y: 270, label: 'Prayagraj' },
-      'ranchi': { x: 500, y: 310, label: 'Ranchi' },
-      'howrah': { x: 525, y: 325, label: 'Howrah' },
-      'coimbatore': { x: 350, y: 590, label: 'Coimbatore' },
-      'jabalpur': { x: 410, y: 310, label: 'Jabalpur' },
-      'gwalior': { x: 370, y: 250, label: 'Gwalior' },
-      'vijayawada': { x: 420, y: 500, label: 'Vijayawada' },
-      'jodhpur': { x: 290, y: 250, label: 'Jodhpur' },
-      'madurai': { x: 370, y: 600, label: 'Madurai' },
-      'raipur': { x: 450, y: 370, label: 'Raipur' },
-      'kota': { x: 310, y: 270, label: 'Kota' },
-      'chandigarh': { x: 330, y: 165, label: 'Chandigarh' },
-      'guwahati': { x: 570, y: 250, label: 'Guwahati' },
-      'thiruvananthapuram': { x: 340, y: 640, label: 'Trivandrum' },
-      'solapur': { x: 330, y: 470, label: 'Solapur' },
-      'tiruchirappalli': { x: 380, y: 590, label: 'Trichy' },
-      'tiruppur': { x: 355, y: 595, label: 'Tiruppur' },
-      'bareilly': { x: 400, y: 210, label: 'Bareilly' },
-      'mysore': { x: 340, y: 560, label: 'Mysuru' },
-      'salem': { x: 370, y: 580, label: 'Salem' },
-      'gurgaon': { x: 325, y: 210, label: 'Gurugram' },
-      'aligarh': { x: 375, y: 220, label: 'Aligarh' },
-      'jalandhar': { x: 315, y: 145, label: 'Jalandhar' },
-      'bhubaneswar': { x: 500, y: 405, label: 'Bhubaneswar' },
-      'noida': { x: 340, y: 210, label: 'Noida' },
-      'moradabad': { x: 365, y: 200, label: 'Moradabad' },
-      'kochi': { x: 340, y: 620, label: 'Kochi' },
-      'mangalore': { x: 315, y: 560, label: 'Mangaluru' }
-    }
-
-    return (
-      <div className="relative w-full h-full" style={{ background: 'linear-gradient(135deg, #0a0e27 0%, #1a1d3f 100%)' }}>
-        <svg viewBox="0 0 600 700" className="w-full h-full" style={{ maxHeight: '700px' }}>
-          {/* Proper India Outline */}
-          <path
-            d="M 300 60 L 320 65 L 335 75 L 348 90 L 360 110 L 370 130 L 375 150 L 380 170 L 385 190 L 395 210 L 410 230 L 430 250 L 455 270 L 480 290 L 505 310 L 525 330 L 540 350 L 550 370 L 555 390 L 558 410 L 557 430 L 553 450 L 545 470 L 535 490 L 520 510 L 500 530 L 475 545 L 450 555 L 425 565 L 400 575 L 380 590 L 365 610 L 355 630 L 350 650 L 340 665 L 325 670 L 310 665 L 295 655 L 280 640 L 270 620 L 265 600 L 260 580 L 255 560 L 250 540 L 245 520 L 240 500 L 235 480 L 230 460 L 225 440 L 220 420 L 215 400 L 210 380 L 205 360 L 200 340 L 195 320 L 190 300 L 188 280 L 190 260 L 195 240 L 205 220 L 220 200 L 235 180 L 250 165 L 265 150 L 280 135 L 290 120 L 295 105 L 297 90 L 298 75 Z"
-            fill="rgba(30, 64, 175, 0.15)"
-            stroke="rgba(59, 130, 246, 0.6)"
-            strokeWidth="2"
-            filter="drop-shadow(0 0 10px rgba(59, 130, 246, 0.3))"
-          />
-
-          {/* City Markers - Only show active cities */}
-          {Object.entries(cityCoordinates).map(([cityKey, coords]) => {
-            const isActive = activeCities.includes(cityKey)
-            if (!isActive) return null
-
-            const count = installationTrackerData.cityCount[cityKey] || 0
-            const color = count > 10 ? '#10B981' : count > 5 ? '#FBBF24' : '#3B82F6'
-            const textColor = count > 10 ? '#D1FAE5' : count > 5 ? '#FEF3C7' : '#DBEAFE'
-
-            return (
-              <g key={cityKey}>
-                {/* Glow effect */}
-                <circle cx={coords.x} cy={coords.y} r="12" fill={color} opacity="0.2" className="animate-pulse" />
-                
-                {/* Main dot */}
-                <circle cx={coords.x} cy={coords.y} r="6" fill={color} opacity="0.9" />
-                <circle cx={coords.x} cy={coords.y} r="3" fill="white" />
-                
-                {/* City name */}
-                <text
-                  x={coords.x}
-                  y={coords.y - 16}
-                  fill="white"
-                  fontSize="11"
-                  fontWeight="700"
-                  textAnchor="middle"
-                  style={{ 
-                    textShadow: '0 2px 8px rgba(0,0,0,0.9), 0 0 4px rgba(0,0,0,0.8)',
-                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))'
-                  }}
-                >
-                  {coords.label}
-                </text>
-                
-                {/* Device count */}
-                <text
-                  x={coords.x}
-                  y={coords.y - 4}
-                  fill={textColor}
-                  fontSize="9"
-                  fontWeight="600"
-                  textAnchor="middle"
-                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
-                >
-                  {count} devices
-                </text>
-              </g>
-            )
-          })}
-        </svg>
-
-        {/* Legend */}
-        <div className="absolute bottom-8 right-8 bg-black bg-opacity-70 backdrop-blur-md rounded-xl p-4 border border-blue-500 border-opacity-30">
-          <div className="text-white text-xs font-bold mb-3 text-center">Device Distribution</div>
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-              <span className="text-white text-xs">1-5 devices</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-              <span className="text-white text-xs">6-10 devices</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              <span className="text-white text-xs">10+ devices</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // Map is now imported via dynamic import at top of file
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -1491,8 +1346,8 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              <div className="h-full">
-                <IndiaMap />
+              <div className="h-full" style={{ height: 'calc(100% - 80px)' }}>
+                <IndiaMapLeaflet installationTrackerData={installationTrackerData} />
               </div>
             </div>
 
