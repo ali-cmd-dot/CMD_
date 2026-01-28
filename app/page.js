@@ -371,7 +371,7 @@ export default function Dashboard() {
     return filterOfflineVehicles().slice(0, 10)
   }
 
-  // India Map Component
+  // India Map Component using simple approach
   const IndiaMap = () => {
     if (!installationTrackerData || !installationTrackerData.cityCount) {
       return <div className="text-center py-20 text-gray-500">Loading map data...</div>
@@ -379,184 +379,151 @@ export default function Dashboard() {
 
     const activeCities = Object.keys(installationTrackerData.cityCount)
 
-    // Indian cities with accurate coordinates (latitude, longitude)
+    // Indian cities with coordinates - ONLY show cities that have data
     const cityCoordinates = {
-      'mumbai': { lat: 19.0760, lng: 72.8777, label: 'Mumbai' },
-      'delhi': { lat: 28.7041, lng: 77.1025, label: 'Delhi' },
-      'bengaluru': { lat: 12.9716, lng: 77.5946, label: 'Bengaluru' },
-      'kolkata': { lat: 22.5726, lng: 88.3639, label: 'Kolkata' },
-      'chennai': { lat: 13.0827, lng: 80.2707, label: 'Chennai' },
-      'hyderabad': { lat: 17.3850, lng: 78.4867, label: 'Hyderabad' },
-      'pune': { lat: 18.5204, lng: 73.8567, label: 'Pune' },
-      'ahmedabad': { lat: 23.0225, lng: 72.5714, label: 'Ahmedabad' },
-      'surat': { lat: 21.1702, lng: 72.8311, label: 'Surat' },
-      'jaipur': { lat: 26.9124, lng: 75.7873, label: 'Jaipur' },
-      'lucknow': { lat: 26.8467, lng: 80.9462, label: 'Lucknow' },
-      'kanpur': { lat: 26.4499, lng: 80.3319, label: 'Kanpur' },
-      'nagpur': { lat: 21.1458, lng: 79.0882, label: 'Nagpur' },
-      'indore': { lat: 22.7196, lng: 75.8577, label: 'Indore' },
-      'thane': { lat: 19.2183, lng: 72.9781, label: 'Thane' },
-      'bhopal': { lat: 23.2599, lng: 77.4126, label: 'Bhopal' },
-      'visakhapatnam': { lat: 17.6869, lng: 83.2185, label: 'Vizag' },
-      'patna': { lat: 25.5941, lng: 85.1376, label: 'Patna' },
-      'vadodara': { lat: 22.3072, lng: 73.1812, label: 'Vadodara' },
-      'ghaziabad': { lat: 28.6692, lng: 77.4538, label: 'Ghaziabad' },
-      'ludhiana': { lat: 30.9010, lng: 75.8573, label: 'Ludhiana' },
-      'agra': { lat: 27.1767, lng: 78.0081, label: 'Agra' },
-      'nashik': { lat: 19.9975, lng: 73.7898, label: 'Nashik' },
-      'faridabad': { lat: 28.4089, lng: 77.3178, label: 'Faridabad' },
-      'meerut': { lat: 28.9845, lng: 77.7064, label: 'Meerut' },
-      'rajkot': { lat: 22.3039, lng: 70.8022, label: 'Rajkot' },
-      'varanasi': { lat: 25.3176, lng: 82.9739, label: 'Varanasi' },
-      'srinagar': { lat: 34.0837, lng: 74.7973, label: 'Srinagar' },
-      'aurangabad': { lat: 19.8762, lng: 75.3433, label: 'Aurangabad' },
-      'dhanbad': { lat: 23.7957, lng: 86.4304, label: 'Dhanbad' },
-      'amritsar': { lat: 31.6340, lng: 74.8723, label: 'Amritsar' },
-      'navi mumbai': { lat: 19.0330, lng: 73.0297, label: 'Navi Mumbai' },
-      'allahabad': { lat: 25.4358, lng: 81.8463, label: 'Prayagraj' },
-      'ranchi': { lat: 23.3441, lng: 85.3096, label: 'Ranchi' },
-      'howrah': { lat: 22.5958, lng: 88.2636, label: 'Howrah' },
-      'coimbatore': { lat: 11.0168, lng: 76.9558, label: 'Coimbatore' },
-      'jabalpur': { lat: 23.1815, lng: 79.9864, label: 'Jabalpur' },
-      'gwalior': { lat: 26.2183, lng: 78.1828, label: 'Gwalior' },
-      'vijayawada': { lat: 16.5062, lng: 80.6480, label: 'Vijayawada' },
-      'jodhpur': { lat: 26.2389, lng: 73.0243, label: 'Jodhpur' },
-      'madurai': { lat: 9.9252, lng: 78.1198, label: 'Madurai' },
-      'raipur': { lat: 21.2514, lng: 81.6296, label: 'Raipur' },
-      'kota': { lat: 25.2138, lng: 75.8648, label: 'Kota' },
-      'chandigarh': { lat: 30.7333, lng: 76.7794, label: 'Chandigarh' },
-      'guwahati': { lat: 26.1445, lng: 91.7362, label: 'Guwahati' },
-      'thiruvananthapuram': { lat: 8.5241, lng: 76.9366, label: 'Trivandrum' },
-      'solapur': { lat: 17.6599, lng: 75.9064, label: 'Solapur' },
-      'tiruchirappalli': { lat: 10.7905, lng: 78.7047, label: 'Trichy' },
-      'tiruppur': { lat: 11.1085, lng: 77.3411, label: 'Tiruppur' },
-      'bareilly': { lat: 28.3670, lng: 79.4304, label: 'Bareilly' },
-      'mysore': { lat: 12.2958, lng: 76.6394, label: 'Mysuru' },
-      'salem': { lat: 11.6643, lng: 78.1460, label: 'Salem' },
-      'gurgaon': { lat: 28.4595, lng: 77.0266, label: 'Gurugram' },
-      'aligarh': { lat: 27.8974, lng: 78.0880, label: 'Aligarh' },
-      'jalandhar': { lat: 31.3260, lng: 75.5762, label: 'Jalandhar' },
-      'bhubaneswar': { lat: 20.2961, lng: 85.8245, label: 'Bhubaneswar' },
-      'noida': { lat: 28.5355, lng: 77.3910, label: 'Noida' },
-      'moradabad': { lat: 28.8389, lng: 78.7378, label: 'Moradabad' },
-      'kochi': { lat: 9.9312, lng: 76.2673, label: 'Kochi' },
-      'mangalore': { lat: 12.9141, lng: 74.8560, label: 'Mangaluru' }
-    }
-
-    // Convert lat/lng to SVG coordinates with accurate scaling
-    const latToY = (lat) => {
-      const svgHeight = 700
-      const minLat = 6.5  // Southern tip (Kanyakumari area)
-      const maxLat = 37.0 // Northern tip (Kashmir)
-      return svgHeight - ((lat - minLat) / (maxLat - minLat)) * svgHeight
-    }
-
-    const lngToX = (lng) => {
-      const svgWidth = 600
-      const minLng = 68.0 // Western border
-      const maxLng = 97.5 // Eastern border (Arunachal)
-      return ((lng - minLng) / (maxLng - minLng)) * svgWidth
+      'mumbai': { x: 280, y: 420, label: 'Mumbai' },
+      'delhi': { x: 330, y: 200, label: 'Delhi' },
+      'bengaluru': { x: 340, y: 540, label: 'Bengaluru' },
+      'kolkata': { x: 520, y: 320, label: 'Kolkata' },
+      'chennai': { x: 410, y: 550, label: 'Chennai' },
+      'hyderabad': { x: 380, y: 470, label: 'Hyderabad' },
+      'pune': { x: 300, y: 450, label: 'Pune' },
+      'ahmedabad': { x: 270, y: 310, label: 'Ahmedabad' },
+      'surat': { x: 270, y: 360, label: 'Surat' },
+      'jaipur': { x: 320, y: 230, label: 'Jaipur' },
+      'lucknow': { x: 410, y: 230, label: 'Lucknow' },
+      'kanpur': { x: 410, y: 250, label: 'Kanpur' },
+      'nagpur': { x: 380, y: 370, label: 'Nagpur' },
+      'indore': { x: 320, y: 310, label: 'Indore' },
+      'thane': { x: 285, y: 425, label: 'Thane' },
+      'bhopal': { x: 350, y: 310, label: 'Bhopal' },
+      'visakhapatnam': { x: 460, y: 470, label: 'Vizag' },
+      'patna': { x: 480, y: 270, label: 'Patna' },
+      'vadodara': { x: 270, y: 330, label: 'Vadodara' },
+      'ghaziabad': { x: 335, y: 205, label: 'Ghaziabad' },
+      'ludhiana': { x: 320, y: 150, label: 'Ludhiana' },
+      'agra': { x: 380, y: 230, label: 'Agra' },
+      'nashik': { x: 295, y: 405, label: 'Nashik' },
+      'faridabad': { x: 338, y: 208, label: 'Faridabad' },
+      'meerut': { x: 348, y: 200, label: 'Meerut' },
+      'rajkot': { x: 240, y: 330, label: 'Rajkot' },
+      'varanasi': { x: 460, y: 270, label: 'Varanasi' },
+      'srinagar': { x: 320, y: 80, label: 'Srinagar' },
+      'aurangabad': { x: 325, y: 405, label: 'Aurangabad' },
+      'dhanbad': { x: 510, y: 310, label: 'Dhanbad' },
+      'amritsar': { x: 310, y: 135, label: 'Amritsar' },
+      'navi mumbai': { x: 290, y: 430, label: 'Navi Mumbai' },
+      'allahabad': { x: 450, y: 270, label: 'Prayagraj' },
+      'ranchi': { x: 500, y: 310, label: 'Ranchi' },
+      'howrah': { x: 525, y: 325, label: 'Howrah' },
+      'coimbatore': { x: 350, y: 590, label: 'Coimbatore' },
+      'jabalpur': { x: 410, y: 310, label: 'Jabalpur' },
+      'gwalior': { x: 370, y: 250, label: 'Gwalior' },
+      'vijayawada': { x: 420, y: 500, label: 'Vijayawada' },
+      'jodhpur': { x: 290, y: 250, label: 'Jodhpur' },
+      'madurai': { x: 370, y: 600, label: 'Madurai' },
+      'raipur': { x: 450, y: 370, label: 'Raipur' },
+      'kota': { x: 310, y: 270, label: 'Kota' },
+      'chandigarh': { x: 330, y: 165, label: 'Chandigarh' },
+      'guwahati': { x: 570, y: 250, label: 'Guwahati' },
+      'thiruvananthapuram': { x: 340, y: 640, label: 'Trivandrum' },
+      'solapur': { x: 330, y: 470, label: 'Solapur' },
+      'tiruchirappalli': { x: 380, y: 590, label: 'Trichy' },
+      'tiruppur': { x: 355, y: 595, label: 'Tiruppur' },
+      'bareilly': { x: 400, y: 210, label: 'Bareilly' },
+      'mysore': { x: 340, y: 560, label: 'Mysuru' },
+      'salem': { x: 370, y: 580, label: 'Salem' },
+      'gurgaon': { x: 325, y: 210, label: 'Gurugram' },
+      'aligarh': { x: 375, y: 220, label: 'Aligarh' },
+      'jalandhar': { x: 315, y: 145, label: 'Jalandhar' },
+      'bhubaneswar': { x: 500, y: 405, label: 'Bhubaneswar' },
+      'noida': { x: 340, y: 210, label: 'Noida' },
+      'moradabad': { x: 365, y: 200, label: 'Moradabad' },
+      'kochi': { x: 340, y: 620, label: 'Kochi' },
+      'mangalore': { x: 315, y: 560, label: 'Mangaluru' }
     }
 
     return (
-      <div className="relative w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0a0e27 0%, #1a1d3f 100%)' }}>
-        <svg viewBox="0 0 600 700" className="w-full h-full">
-          {/* Accurate India Map Outline */}
+      <div className="relative w-full h-full" style={{ background: 'linear-gradient(135deg, #0a0e27 0%, #1a1d3f 100%)' }}>
+        <svg viewBox="0 0 600 700" className="w-full h-full" style={{ maxHeight: '700px' }}>
+          {/* Proper India Outline */}
           <path
-            d="M 220 60 Q 240 50 260 55 Q 280 50 295 60 Q 310 55 325 65 Q 340 60 350 75 Q 365 70 375 85 L 390 100 L 400 120 L 415 145 L 425 170 L 435 200 L 440 230 L 445 260 L 445 290 L 440 320 L 430 350 L 420 380 L 405 410 L 390 435 L 370 460 L 345 480 L 320 495 L 290 510 L 260 520 L 230 525 L 200 520 L 170 510 L 145 495 L 120 475 L 100 450 L 85 420 L 75 390 L 70 360 L 65 330 L 63 300 L 65 270 L 70 240 L 80 210 L 95 180 L 110 155 L 130 130 L 150 110 L 170 90 L 190 75 Z"
-            fill="rgba(59, 130, 246, 0.05)"
-            stroke="rgba(59, 130, 246, 0.4)"
+            d="M 300 60 L 320 65 L 335 75 L 348 90 L 360 110 L 370 130 L 375 150 L 380 170 L 385 190 L 395 210 L 410 230 L 430 250 L 455 270 L 480 290 L 505 310 L 525 330 L 540 350 L 550 370 L 555 390 L 558 410 L 557 430 L 553 450 L 545 470 L 535 490 L 520 510 L 500 530 L 475 545 L 450 555 L 425 565 L 400 575 L 380 590 L 365 610 L 355 630 L 350 650 L 340 665 L 325 670 L 310 665 L 295 655 L 280 640 L 270 620 L 265 600 L 260 580 L 255 560 L 250 540 L 245 520 L 240 500 L 235 480 L 230 460 L 225 440 L 220 420 L 215 400 L 210 380 L 205 360 L 200 340 L 195 320 L 190 300 L 188 280 L 190 260 L 195 240 L 205 220 L 220 200 L 235 180 L 250 165 L 265 150 L 280 135 L 290 120 L 295 105 L 297 90 L 298 75 Z"
+            fill="rgba(30, 64, 175, 0.15)"
+            stroke="rgba(59, 130, 246, 0.6)"
             strokeWidth="2"
+            filter="drop-shadow(0 0 10px rgba(59, 130, 246, 0.3))"
           />
 
-          {/* City Markers */}
+          {/* City Markers - Only show active cities */}
           {Object.entries(cityCoordinates).map(([cityKey, coords]) => {
             const isActive = activeCities.includes(cityKey)
-            const count = installationTrackerData.cityCount[cityKey] || 0
-            const x = lngToX(coords.lng)
-            const y = latToY(coords.lat)
-
             if (!isActive) return null
 
-            const color = count > 10 ? '#10B981' : count > 5 ? '#F59E0B' : '#3B82F6'
+            const count = installationTrackerData.cityCount[cityKey] || 0
+            const color = count > 10 ? '#10B981' : count > 5 ? '#FBBF24' : '#3B82F6'
+            const textColor = count > 10 ? '#D1FAE5' : count > 5 ? '#FEF3C7' : '#DBEAFE'
 
             return (
               <g key={cityKey}>
-                {/* Outer glow */}
-                <circle cx={x} cy={y} r="15" fill={color} opacity="0.15" className="animate-pulse" />
-                <circle cx={x} cy={y} r="10" fill={color} opacity="0.3" />
+                {/* Glow effect */}
+                <circle cx={coords.x} cy={coords.y} r="12" fill={color} opacity="0.2" className="animate-pulse" />
                 
-                {/* Main marker */}
-                <circle cx={x} cy={y} r="5" fill={color} opacity="0.9" />
-                <circle cx={x} cy={y} r="2.5" fill="white" />
+                {/* Main dot */}
+                <circle cx={coords.x} cy={coords.y} r="6" fill={color} opacity="0.9" />
+                <circle cx={coords.x} cy={coords.y} r="3" fill="white" />
                 
-                {/* City label */}
+                {/* City name */}
                 <text
-                  x={x}
-                  y={y - 20}
+                  x={coords.x}
+                  y={coords.y - 16}
                   fill="white"
-                  fontSize="12"
-                  fontWeight="600"
+                  fontSize="11"
+                  fontWeight="700"
                   textAnchor="middle"
-                  className="select-none"
-                  style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}
+                  style={{ 
+                    textShadow: '0 2px 8px rgba(0,0,0,0.9), 0 0 4px rgba(0,0,0,0.8)',
+                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))'
+                  }}
                 >
                   {coords.label}
                 </text>
                 
                 {/* Device count */}
                 <text
-                  x={x}
-                  y={y - 8}
-                  fill={color}
-                  fontSize="10"
-                  fontWeight="500"
+                  x={coords.x}
+                  y={coords.y - 4}
+                  fill={textColor}
+                  fontSize="9"
+                  fontWeight="600"
                   textAnchor="middle"
-                  className="select-none"
-                  style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}
+                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
                 >
                   {count} devices
                 </text>
               </g>
             )
           })}
-
-          {/* Connection lines between major cities */}
-          <g stroke="rgba(59, 130, 246, 0.2)" strokeWidth="1" strokeDasharray="4,4" fill="none">
-            {activeCities.includes('delhi') && activeCities.includes('mumbai') && (
-              <line
-                x1={lngToX(cityCoordinates['delhi'].lng)}
-                y1={latToY(cityCoordinates['delhi'].lat)}
-                x2={lngToX(cityCoordinates['mumbai'].lng)}
-                y2={latToY(cityCoordinates['mumbai'].lat)}
-              />
-            )}
-            {activeCities.includes('mumbai') && activeCities.includes('bengaluru') && (
-              <line
-                x1={lngToX(cityCoordinates['mumbai'].lng)}
-                y1={latToY(cityCoordinates['mumbai'].lat)}
-                x2={lngToX(cityCoordinates['bengaluru'].lng)}
-                y2={latToY(cityCoordinates['bengaluru'].lat)}
-              />
-            )}
-            {activeCities.includes('delhi') && activeCities.includes('kolkata') && (
-              <line
-                x1={lngToX(cityCoordinates['delhi'].lng)}
-                y1={latToY(cityCoordinates['delhi'].lat)}
-                x2={lngToX(cityCoordinates['kolkata'].lng)}
-                y2={latToY(cityCoordinates['kolkata'].lat)}
-              />
-            )}
-            {activeCities.includes('chennai') && activeCities.includes('bengaluru') && (
-              <line
-                x1={lngToX(cityCoordinates['chennai'].lng)}
-                y1={latToY(cityCoordinates['chennai'].lat)}
-                x2={lngToX(cityCoordinates['bengaluru'].lng)}
-                y2={latToY(cityCoordinates['bengaluru'].lat)}
-              />
-            )}
-          </g>
         </svg>
+
+        {/* Legend */}
+        <div className="absolute bottom-8 right-8 bg-black bg-opacity-70 backdrop-blur-md rounded-xl p-4 border border-blue-500 border-opacity-30">
+          <div className="text-white text-xs font-bold mb-3 text-center">Device Distribution</div>
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              <span className="text-white text-xs">1-5 devices</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+              <span className="text-white text-xs">6-10 devices</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <span className="text-white text-xs">10+ devices</span>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
