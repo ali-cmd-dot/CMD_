@@ -406,7 +406,7 @@ export default function Dashboard() {
             { id: 'issues', label: 'Issues', icon: Settings },
             { id: 'offline', label: 'Offline', icon: WifiOff },
             { id: 'devices', label: 'Device Movement', icon: Cpu },
-            { id: 'map', label: 'India Map', icon: MapIcon }
+            { id: 'map', label: 'Installation Tracker', icon: MapIcon }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1324,10 +1324,10 @@ export default function Dashboard() {
               />
             </div>
 
-            <div className="bg-white rounded-lg card-shadow overflow-hidden" style={{ height: '700px' }}>
+            <div className="bg-white rounded-lg card-shadow overflow-hidden" style={{ height: '1000px' }}>
               <div className="p-6 border-b border-gray-200">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-semibold">India Installation Map</h3>
+                  <h3 className="text-xl font-semibold">Installation Coverage Map</h3>
                   <div className="flex items-center space-x-4">
                     <div className="text-sm text-gray-600">
                       <span className="font-semibold">{installationTrackerData?.totalInstallations || 0}</span> devices across{' '}
