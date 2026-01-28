@@ -1,7 +1,11 @@
+// Install first: npm install leaflet react-leaflet
+
 'use client'
 
-import { useEffect } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet'
+import { useEffect, useState } from 'react'
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap, Marker } from 'react-leaflet'
+import { Maximize2, Minimize2 } from 'lucide-react'
+import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 // Component to fit bounds
@@ -19,6 +23,8 @@ function FitBounds({ cities }) {
 }
 
 export default function IndiaMapLeaflet({ installationTrackerData }) {
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
   if (!installationTrackerData || !installationTrackerData.cityCount) {
     return <div className="text-center py-20 text-gray-500">Loading map data...</div>
   }
@@ -107,15 +113,48 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
 
   // Get radius based on count
   const getRadius = (count) => {
-    if (count > 50) return 20
-    if (count > 20) return 15
-    if (count > 10) return 12
-    if (count > 5) return 10
-    return 8
+    if (count > 100) return 28
+    if (count > 50) return 24
+    if (count > 20) return 20
+    if (count > 10) return 16
+    if (count > 5) return 12
+    return 10
+  }
+
+  // Create custom DivIcon with count
+  const createCustomIcon = (count, color) => {
+    const radius = getRadius(count)
+    return L.divIcon({
+      html: `
+        <div style="
+          width: ${radius * 2}px;
+          height: ${radius * 2}px;
+          background: ${color};
+          border: 3px solid white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          font-size: ${radius > 15 ? '14px' : '11px'};
+          color: white;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        ">
+          ${count}
+        </div>
+      `,
+      className: '',
+      iconSize: [radius * 2, radius * 2],
+      iconAnchor: [radius, radius]
+    })
+  }
+
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen)
   }
 
   return (
-    <div className="w-full h-full relative">
+    <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-black' : 'w-full h-full'}`}>
       <MapContainer
         center={[20.5937, 78.9629]}
         zoom={5}
@@ -125,25 +164,18 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
         {/* Dark theme map tiles */}
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          attribution='&copy; OpenStreetMap contributors'
         />
         
         {/* Fit bounds to show all cities */}
         <FitBounds cities={activeCityData} />
         
-        {/* City markers */}
+        {/* City markers with count inside */}
         {activeCityData.map((city) => (
-          <CircleMarker
+          <Marker
             key={city.key}
-            center={[city.lat, city.lng]}
-            radius={getRadius(city.count)}
-            pathOptions={{
-              fillColor: getColor(city.count),
-              fillOpacity: 0.8,
-              color: '#ffffff',
-              weight: 2,
-              opacity: 1
-            }}
+            position={[city.lat, city.lng]}
+            icon={createCustomIcon(city.count, getColor(city.count))}
           >
             <Popup>
               <div className="text-center">
@@ -151,28 +183,18 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
                 <div className="text-sm text-gray-600">{city.count} devices</div>
               </div>
             </Popup>
-          </CircleMarker>
+          </Marker>
         ))}
       </MapContainer>
 
-      {/* Legend */}
-      <div className="absolute bottom-8 right-8 bg-black bg-opacity-70 backdrop-blur-md rounded-xl p-4 border border-blue-500 border-opacity-30 z-[1000]">
-        <div className="text-white text-xs font-bold mb-3 text-center">Device Distribution</div>
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-            <span className="text-white text-xs">1-5 devices</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-            <span className="text-white text-xs">6-10 devices</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            <span className="text-white text-xs">10+ devices</span>
-          </div>
-        </div>
-      </div>
+      {/* Fullscreen toggle button */}
+      <button
+        onClick={toggleFullscreen}
+        className="absolute top-4 right-4 z-[1000] bg-white hover:bg-gray-100 text-gray-800 p-3 rounded-lg shadow-lg transition-all"
+        title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+      >
+        {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+      </button>
     </div>
   )
 }
