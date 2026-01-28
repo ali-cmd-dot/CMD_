@@ -8,7 +8,7 @@ import {
 import { 
   Activity, AlertTriangle, TrendingUp, Calendar, Users, Clock, Target,
   BarChart3, Video, Settings, CheckCircle2, XCircle, TrendingDown,
-  WifiOff, Cpu, Zap, Filter, Check, X
+  WifiOff, Cpu, Zap, Filter, Check, X, Map as MapIcon
 } from 'lucide-react'
 
 export default function Dashboard() {
@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [generalIssuesData, setGeneralIssuesData] = useState(null)
   const [offlineVehiclesData, setOfflineVehiclesData] = useState(null)
   const [deviceMovementData, setDeviceMovementData] = useState(null)
+  const [installationTrackerData, setInstallationTrackerData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   const [error, setError] = useState(null)
@@ -29,6 +30,7 @@ export default function Dashboard() {
   const [issuesFilter, setIssuesFilter] = useState('')
   const [offlineFilter, setOfflineFilter] = useState('')
   const [devicesFilter, setDevicesFilter] = useState('')
+  const [mapFilter, setMapFilter] = useState('')
   
   // Client selection for offline tab
   const [selectedClients, setSelectedClients] = useState([])
@@ -78,7 +80,8 @@ export default function Dashboard() {
         fetchHistoricalVideoData(),
         fetchGeneralIssuesData(),
         fetchOfflineVehiclesData(),
-        fetchDeviceMovementData()
+        fetchDeviceMovementData(),
+        fetchInstallationTrackerData()
       ])
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -168,6 +171,19 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Error fetching device movement data:', error)
       setDeviceMovementData({ totalDevices: 0, deployedCount: 0, availableCount: 0, underRepairCount: 0, damagedCount: 0, monthlyData: [], deviceDetails: [] })
+    }
+  }
+
+  const fetchInstallationTrackerData = async () => {
+    try {
+      const response = await fetch('/api/installation-tracker')
+      if (response.ok) {
+        const data = await response.json()
+        setInstallationTrackerData(data)
+      }
+    } catch (error) {
+      console.error('Error fetching installation tracker data:', error)
+      setInstallationTrackerData({ totalInstallations: 0, uniqueCities: 0, citiesBreakdown: [], cityCount: {} })
     }
   }
 
@@ -340,11 +356,244 @@ export default function Dashboard() {
     )
   }
 
+  const filterMapCities = () => {
+    if (!installationTrackerData || !installationTrackerData.citiesBreakdown) return []
+    if (!mapFilter) return installationTrackerData.citiesBreakdown
+    return installationTrackerData.citiesBreakdown.filter(city => 
+      city.city.toLowerCase().includes(mapFilter.toLowerCase())
+    )
+  }
+
   const getTopClientsForDisplay = () => {
     if (selectedClients.length === 0) {
       return offlineVehiclesData.top10Clients || []
     }
     return filterOfflineVehicles().slice(0, 10)
+  }
+
+  // India Map Component
+  const IndiaMap = () => {
+    if (!installationTrackerData || !installationTrackerData.cityCount) {
+      return <div className="text-center py-20 text-gray-500">Loading map data...</div>
+    }
+
+    const activeCities = Object.keys(installationTrackerData.cityCount)
+
+    // Indian cities with coordinates (latitude, longitude)
+    const cityCoordinates = {
+      'mumbai': { lat: 19.0760, lng: 72.8777, label: 'Mumbai' },
+      'delhi': { lat: 28.7041, lng: 77.1025, label: 'Delhi' },
+      'bengaluru': { lat: 12.9716, lng: 77.5946, label: 'Bengaluru' },
+      'kolkata': { lat: 22.5726, lng: 88.3639, label: 'Kolkata' },
+      'chennai': { lat: 13.0827, lng: 80.2707, label: 'Chennai' },
+      'hyderabad': { lat: 17.3850, lng: 78.4867, label: 'Hyderabad' },
+      'pune': { lat: 18.5204, lng: 73.8567, label: 'Pune' },
+      'ahmedabad': { lat: 23.0225, lng: 72.5714, label: 'Ahmedabad' },
+      'surat': { lat: 21.1702, lng: 72.8311, label: 'Surat' },
+      'jaipur': { lat: 26.9124, lng: 75.7873, label: 'Jaipur' },
+      'lucknow': { lat: 26.8467, lng: 80.9462, label: 'Lucknow' },
+      'kanpur': { lat: 26.4499, lng: 80.3319, label: 'Kanpur' },
+      'nagpur': { lat: 21.1458, lng: 79.0882, label: 'Nagpur' },
+      'indore': { lat: 22.7196, lng: 75.8577, label: 'Indore' },
+      'thane': { lat: 19.2183, lng: 72.9781, label: 'Thane' },
+      'bhopal': { lat: 23.2599, lng: 77.4126, label: 'Bhopal' },
+      'visakhapatnam': { lat: 17.6869, lng: 83.2185, label: 'Vizag' },
+      'patna': { lat: 25.5941, lng: 85.1376, label: 'Patna' },
+      'vadodara': { lat: 22.3072, lng: 73.1812, label: 'Vadodara' },
+      'ghaziabad': { lat: 28.6692, lng: 77.4538, label: 'Ghaziabad' },
+      'ludhiana': { lat: 30.9010, lng: 75.8573, label: 'Ludhiana' },
+      'agra': { lat: 27.1767, lng: 78.0081, label: 'Agra' },
+      'nashik': { lat: 19.9975, lng: 73.7898, label: 'Nashik' },
+      'faridabad': { lat: 28.4089, lng: 77.3178, label: 'Faridabad' },
+      'meerut': { lat: 28.9845, lng: 77.7064, label: 'Meerut' },
+      'rajkot': { lat: 22.3039, lng: 70.8022, label: 'Rajkot' },
+      'varanasi': { lat: 25.3176, lng: 82.9739, label: 'Varanasi' },
+      'srinagar': { lat: 34.0837, lng: 74.7973, label: 'Srinagar' },
+      'aurangabad': { lat: 19.8762, lng: 75.3433, label: 'Aurangabad' },
+      'dhanbad': { lat: 23.7957, lng: 86.4304, label: 'Dhanbad' },
+      'amritsar': { lat: 31.6340, lng: 74.8723, label: 'Amritsar' },
+      'navi mumbai': { lat: 19.0330, lng: 73.0297, label: 'Navi Mumbai' },
+      'allahabad': { lat: 25.4358, lng: 81.8463, label: 'Prayagraj' },
+      'ranchi': { lat: 23.3441, lng: 85.3096, label: 'Ranchi' },
+      'howrah': { lat: 22.5958, lng: 88.2636, label: 'Howrah' },
+      'coimbatore': { lat: 11.0168, lng: 76.9558, label: 'Coimbatore' },
+      'jabalpur': { lat: 23.1815, lng: 79.9864, label: 'Jabalpur' },
+      'gwalior': { lat: 26.2183, lng: 78.1828, label: 'Gwalior' },
+      'vijayawada': { lat: 16.5062, lng: 80.6480, label: 'Vijayawada' },
+      'jodhpur': { lat: 26.2389, lng: 73.0243, label: 'Jodhpur' },
+      'madurai': { lat: 9.9252, lng: 78.1198, label: 'Madurai' },
+      'raipur': { lat: 21.2514, lng: 81.6296, label: 'Raipur' },
+      'kota': { lat: 25.2138, lng: 75.8648, label: 'Kota' },
+      'chandigarh': { lat: 30.7333, lng: 76.7794, label: 'Chandigarh' },
+      'guwahati': { lat: 26.1445, lng: 91.7362, label: 'Guwahati' },
+      'thiruvananthapuram': { lat: 8.5241, lng: 76.9366, label: 'Trivandrum' },
+      'solapur': { lat: 17.6599, lng: 75.9064, label: 'Solapur' },
+      'tiruchirappalli': { lat: 10.7905, lng: 78.7047, label: 'Trichy' },
+      'tiruppur': { lat: 11.1085, lng: 77.3411, label: 'Tiruppur' },
+      'bareilly': { lat: 28.3670, lng: 79.4304, label: 'Bareilly' },
+      'mysore': { lat: 12.2958, lng: 76.6394, label: 'Mysuru' },
+      'salem': { lat: 11.6643, lng: 78.1460, label: 'Salem' },
+      'gurgaon': { lat: 28.4595, lng: 77.0266, label: 'Gurugram' },
+      'aligarh': { lat: 27.8974, lng: 78.0880, label: 'Aligarh' },
+      'jalandhar': { lat: 31.3260, lng: 75.5762, label: 'Jalandhar' },
+      'bhubaneswar': { lat: 20.2961, lng: 85.8245, label: 'Bhubaneswar' },
+      'noida': { lat: 28.5355, lng: 77.3910, label: 'Noida' },
+      'moradabad': { lat: 28.8389, lng: 78.7378, label: 'Moradabad' },
+      'kochi': { lat: 9.9312, lng: 76.2673, label: 'Kochi' },
+      'mangalore': { lat: 12.9141, lng: 74.8560, label: 'Mangaluru' }
+    }
+
+    // Convert coordinates to SVG coordinates
+    const latToY = (lat) => {
+      const svgHeight = 600
+      const minLat = 8.0
+      const maxLat = 35.5
+      return svgHeight - ((lat - minLat) / (maxLat - minLat)) * svgHeight
+    }
+
+    const lngToX = (lng) => {
+      const svgWidth = 500
+      const minLng = 68.0
+      const maxLng = 97.5
+      return ((lng - minLng) / (maxLng - minLng)) * svgWidth
+    }
+
+    return (
+      <div className="relative w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0a0e27 0%, #1a1d3f 100%)' }}>
+        <svg viewBox="0 0 500 600" className="w-full h-full max-w-4xl">
+          {/* India Map Outline - Simplified */}
+          <path
+            d="M 200 50 L 250 80 L 280 60 L 320 90 L 350 120 L 380 140 L 400 180 L 420 220 L 430 260 L 420 300 L 400 340 L 370 380 L 340 420 L 300 450 L 260 470 L 220 480 L 180 470 L 150 450 L 120 420 L 100 380 L 90 340 L 85 300 L 80 260 L 85 220 L 95 180 L 110 140 L 130 100 L 160 70 Z"
+            fill="none"
+            stroke="rgba(59, 130, 246, 0.3)"
+            strokeWidth="2"
+          />
+
+          {/* State boundaries - simplified lines */}
+          <g stroke="rgba(59, 130, 246, 0.2)" strokeWidth="1" fill="none">
+            <line x1="150" y1="200" x2="350" y2="200" />
+            <line x1="200" y1="150" x2="200" y2="400" />
+            <line x1="300" y1="100" x2="300" y2="450" />
+            <line x1="100" y1="300" x2="400" y2="300" />
+          </g>
+
+          {/* City Markers */}
+          {Object.entries(cityCoordinates).map(([cityKey, coords]) => {
+            const isActive = activeCities.includes(cityKey)
+            const count = installationTrackerData.cityCount[cityKey] || 0
+            const x = lngToX(coords.lng)
+            const y = latToY(coords.lat)
+
+            if (!isActive) return null
+
+            return (
+              <g key={cityKey}>
+                {/* Glowing effect for active cities */}
+                <circle
+                  cx={x}
+                  cy={y}
+                  r="12"
+                  fill={count > 10 ? '#10B981' : count > 5 ? '#F59E0B' : '#3B82F6'}
+                  opacity="0.2"
+                  className="animate-pulse"
+                />
+                <circle
+                  cx={x}
+                  cy={y}
+                  r="6"
+                  fill={count > 10 ? '#10B981' : count > 5 ? '#F59E0B' : '#3B82F6'}
+                  opacity="0.8"
+                />
+                <circle
+                  cx={x}
+                  cy={y}
+                  r="3"
+                  fill="white"
+                />
+                
+                {/* City Label */}
+                <text
+                  x={x + 12}
+                  y={y - 8}
+                  fill="white"
+                  fontSize="11"
+                  fontWeight="600"
+                  className="select-none"
+                >
+                  {coords.label}
+                </text>
+                
+                {/* Device Count */}
+                <text
+                  x={x + 12}
+                  y={y + 5}
+                  fill={count > 10 ? '#10B981' : count > 5 ? '#F59E0B' : '#60A5FA'}
+                  fontSize="10"
+                  fontWeight="500"
+                  className="select-none"
+                >
+                  {count} devices
+                </text>
+              </g>
+            )
+          })}
+
+          {/* Connection lines between major cities */}
+          {activeCities.includes('delhi') && activeCities.includes('mumbai') && (
+            <line
+              x1={lngToX(cityCoordinates['delhi'].lng)}
+              y1={latToY(cityCoordinates['delhi'].lat)}
+              x2={lngToX(cityCoordinates['mumbai'].lng)}
+              y2={latToY(cityCoordinates['mumbai'].lat)}
+              stroke="rgba(59, 130, 246, 0.3)"
+              strokeWidth="1"
+              strokeDasharray="5,5"
+            />
+          )}
+          {activeCities.includes('mumbai') && activeCities.includes('bengaluru') && (
+            <line
+              x1={lngToX(cityCoordinates['mumbai'].lng)}
+              y1={latToY(cityCoordinates['mumbai'].lat)}
+              x2={lngToX(cityCoordinates['bengaluru'].lng)}
+              y2={latToY(cityCoordinates['bengaluru'].lat)}
+              stroke="rgba(59, 130, 246, 0.3)"
+              strokeWidth="1"
+              strokeDasharray="5,5"
+            />
+          )}
+          {activeCities.includes('delhi') && activeCities.includes('kolkata') && (
+            <line
+              x1={lngToX(cityCoordinates['delhi'].lng)}
+              y1={latToY(cityCoordinates['delhi'].lat)}
+              x2={lngToX(cityCoordinates['kolkata'].lng)}
+              y2={latToY(cityCoordinates['kolkata'].lat)}
+              stroke="rgba(59, 130, 246, 0.3)"
+              strokeWidth="1"
+              strokeDasharray="5,5"
+            />
+          )}
+        </svg>
+
+        {/* Legend */}
+        <div className="absolute bottom-6 right-6 bg-black bg-opacity-60 rounded-lg p-4 backdrop-blur-sm">
+          <div className="text-white text-sm font-semibold mb-2">Device Count</div>
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              <span className="text-white text-xs">1-5 devices</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+              <span className="text-white text-xs">6-10 devices</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <span className="text-white text-xs">10+ devices</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -369,7 +618,8 @@ export default function Dashboard() {
             { id: 'videos', label: 'Videos', icon: Video },
             { id: 'issues', label: 'Issues', icon: Settings },
             { id: 'offline', label: 'Offline', icon: WifiOff },
-            { id: 'devices', label: 'Device Movement', icon: Cpu }
+            { id: 'devices', label: 'Device Movement', icon: Cpu },
+            { id: 'map', label: 'India Map', icon: MapIcon }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -680,7 +930,7 @@ export default function Dashboard() {
               <MetricCard title="Requests" value={historicalVideoData.totalRequests?.toLocaleString() || '0'} subtitle="Total" icon={Video} color="bg-purple-500" />
               <MetricCard title="Delivered" value={historicalVideoData.totalDelivered?.toLocaleString() || '0'} subtitle={`${historicalVideoData.overallDeliveryRate}%`} icon={CheckCircle2} color="bg-green-500" />
               <MetricCard title="Avg Time" value={`${historicalVideoData.avgDeliveryTime}h`} subtitle="Delivery" icon={Clock} color="bg-blue-500" />
-              <MetricCard title="Fastest" value={`${historicalVideoData.fastestDeliveryTime}h`} subtitle="Best" icon={TrendingUp} color="bg-green-600" />
+              <MetricCard title="Fastest" value={`${historicalVideoData.fastestDeliveryMinutes || 0}min`} subtitle="Best" icon={TrendingUp} color="bg-green-600" />
               <MetricCard title="Slowest" value={`${historicalVideoData.slowestDeliveryTime}h`} subtitle="Worst" icon={XCircle} color="bg-red-600" />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1249,6 +1499,115 @@ export default function Dashboard() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'map' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <MetricCard 
+                title="Total Installations" 
+                value={installationTrackerData?.totalInstallations?.toLocaleString() || '0'} 
+                subtitle="Devices installed" 
+                icon={Cpu} 
+                color="bg-blue-500" 
+              />
+              <MetricCard 
+                title="Unique Cities" 
+                value={installationTrackerData?.uniqueCities || '0'} 
+                subtitle="Locations covered" 
+                icon={MapIcon} 
+                color="bg-green-500" 
+              />
+              <MetricCard 
+                title="Top City" 
+                value={installationTrackerData?.citiesBreakdown?.[0]?.city.toUpperCase() || 'N/A'} 
+                subtitle={`${installationTrackerData?.citiesBreakdown?.[0]?.count || 0} devices`} 
+                icon={TrendingUp} 
+                color="bg-purple-500" 
+              />
+              <MetricCard 
+                title="Coverage" 
+                value={`${installationTrackerData?.uniqueCities > 20 ? '20+' : installationTrackerData?.uniqueCities || 0}`} 
+                subtitle="Cities active" 
+                icon={Target} 
+                color="bg-orange-500" 
+              />
+            </div>
+
+            <div className="bg-white rounded-lg card-shadow overflow-hidden" style={{ height: '700px' }}>
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-semibold">India Installation Map</h3>
+                  <div className="flex items-center space-x-4">
+                    <div className="text-sm text-gray-600">
+                      <span className="font-semibold">{installationTrackerData?.totalInstallations || 0}</span> devices across{' '}
+                      <span className="font-semibold">{installationTrackerData?.uniqueCities || 0}</span> cities
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Filter size={18} className="text-gray-500" />
+                      <input 
+                        type="text" 
+                        placeholder="Search city..." 
+                        value={mapFilter} 
+                        onChange={(e) => setMapFilter(e.target.value)} 
+                        className="px-3 py-1 border rounded-lg text-sm" 
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="h-full">
+                <IndiaMap />
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg card-shadow">
+              <h3 className="text-xl font-semibold mb-4">Top Cities by Installations</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={installationTrackerData?.citiesBreakdown?.slice(0, 15) || []}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="city" angle={-45} textAnchor="end" height={100} />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#3B82F6" name="Installations" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th className="px-4 py-3 text-left">#</th>
+                        <th className="px-4 py-3 text-left">City</th>
+                        <th className="px-4 py-3 text-center">Devices</th>
+                        <th className="px-4 py-3 text-center">%</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filterMapCities().map((city, idx) => (
+                        <tr key={idx} className="border-t hover:bg-gray-50">
+                          <td className="px-4 py-3">{idx + 1}</td>
+                          <td className="px-4 py-3 font-medium capitalize">{city.city}</td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`px-3 py-1 rounded-full font-semibold ${
+                              city.count > 10 ? 'bg-green-100 text-green-800' :
+                              city.count > 5 ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-blue-100 text-blue-800'
+                            }`}>
+                              {city.count}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">{city.percentage}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
