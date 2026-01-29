@@ -54,40 +54,66 @@ body {
 
 /* Pin popup styling */
 .pin-popup .leaflet-popup-content-wrapper {
-  background: white !important;
+  background: rgba(0, 0, 0, 0.95) !important;
   border-radius: 12px !important;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 8px 30px rgba(234, 67, 53, 0.4) !important;
   padding: 0 !important;
   border: 2px solid #EA4335 !important;
+  backdrop-filter: blur(10px);
 }
 
 .pin-popup .leaflet-popup-content {
   margin: 0 !important;
+  color: white !important;
+}
+
+.pin-popup .leaflet-popup-content div {
+  color: white !important;
 }
 
 .pin-popup .leaflet-popup-tip {
-  background: white !important;
+  background: rgba(0, 0, 0, 0.95) !important;
   border: 2px solid #EA4335 !important;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 3px 10px rgba(234, 67, 53, 0.3) !important;
 }
 
 .leaflet-popup-close-button {
   font-size: 24px !important;
   font-weight: 300 !important;
-  color: #64748b !important;
+  color: #ffffff !important;
   padding: 8px 12px !important;
 }
 
 .leaflet-popup-close-button:hover {
   color: #EA4335 !important;
-  background: transparent !important;
+  background: rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Remove any leaflet default shadows that might appear as lines */
+/* Leaflet container enhancements */
 .leaflet-container {
-  background: transparent !important;
+  background: #0a0e27 !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
 }
 
+/* Dark map enhancement */
 .leaflet-tile-pane {
-  filter: contrast(1.05) brightness(1.02);
+  filter: contrast(1.1) brightness(0.95) saturate(1.2);
+}
+
+/* Fullscreen fix */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Attribution styling */
+.leaflet-control-attribution {
+  background: rgba(0, 0, 0, 0.7) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 10px !important;
+}
+
+.leaflet-control-attribution a {
+  color: #EA4335 !important;
 }
