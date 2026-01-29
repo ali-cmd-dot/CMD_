@@ -99,21 +99,44 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
       key
     }))
 
-  // GOOGLE MAPS STYLE RED PIN - ALL SAME SIZE
+  // GOOGLE MAPS STYLE RED PIN - ENHANCED FOR DARK MAP
   const createRedPin = (city, count) => {
     return L.divIcon({
       html: `
         <div class="location-pin-container" style="position: relative; width: 40px; height: 50px;">
+          <!-- Glow effect for dark background -->
+          <div style="
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            top: 5px;
+            left: -10px;
+            background: radial-gradient(circle, rgba(234, 67, 53, 0.4) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pin-glow 2s ease-in-out infinite;
+          "></div>
+          
           <!-- Red Location Pin -->
-          <svg width="40" height="50" viewBox="0 0 40 50" style="filter: drop-shadow(0 3px 8px rgba(0,0,0,0.4));">
-            <!-- Pin shape -->
+          <svg width="40" height="50" viewBox="0 0 40 50" style="
+            filter: drop-shadow(0 4px 12px rgba(234, 67, 53, 0.6)) 
+                    drop-shadow(0 0 20px rgba(234, 67, 53, 0.3));
+          ">
+            <!-- Pin shape with gradient -->
+            <defs>
+              <linearGradient id="pinGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#EA4335;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            
             <path d="M20 0C11.716 0 5 6.716 5 15c0 8.284 15 35 15 35s15-26.716 15-35c0-8.284-6.716-15-15-15z" 
-                  fill="#EA4335" 
-                  stroke="#B71C1C" 
-                  stroke-width="1"/>
+                  fill="url(#pinGradient)" 
+                  stroke="#FFFFFF" 
+                  stroke-width="1.5"
+                  opacity="1"/>
             
             <!-- White circle for count -->
-            <circle cx="20" cy="15" r="11" fill="white"/>
+            <circle cx="20" cy="15" r="11" fill="white" opacity="1"/>
             
             <!-- Count text -->
             <text x="20" y="20" 
@@ -124,19 +147,27 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
                   font-family="Arial, sans-serif">${count}</text>
           </svg>
           
-          <!-- Hover effect -->
+          <!-- Enhanced Hover effect -->
           <style>
+            @keyframes pin-glow {
+              0%, 100% { opacity: 0.3; transform: scale(1); }
+              50% { opacity: 0.6; transform: scale(1.1); }
+            }
             .location-pin-container {
-              transition: all 0.2s ease;
+              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
               cursor: pointer;
             }
             .location-pin-container:hover {
-              transform: scale(1.15);
-              filter: brightness(1.1);
+              transform: scale(1.2);
               z-index: 999999 !important;
             }
             .location-pin-container:hover svg {
-              filter: drop-shadow(0 6px 16px rgba(234, 67, 53, 0.5));
+              filter: drop-shadow(0 6px 20px rgba(234, 67, 53, 0.9)) 
+                      drop-shadow(0 0 30px rgba(234, 67, 53, 0.6))
+                      drop-shadow(0 0 40px rgba(255, 107, 107, 0.4));
+            }
+            .location-pin-container:hover > div:first-child {
+              animation: pin-glow 1s ease-in-out infinite;
             }
           </style>
         </div>
@@ -153,16 +184,16 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
   // FULLSCREEN VIEW
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-[9999] bg-white">
+      <div className="fixed inset-0 z-[9999]" style={{ margin: 0, padding: 0, overflow: 'hidden' }}>
         <MapContainer
           center={[20.5937, 78.9629]}
           zoom={5}
-          style={{ height: '100%', width: '100%' }}
+          style={{ height: '100vh', width: '100vw', margin: 0, padding: 0 }}
           zoomControl={true}
         >
-          {/* CLEAR LIGHT MAP - NO GRID LINES */}
+          {/* PREMIUM DARK MAP - BEST QUALITY */}
           <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
             attribution='&copy; OpenStreetMap, CartoDB'
           />
           <FitBounds cities={activeCityData} />
@@ -174,8 +205,8 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
             >
               <Popup className="pin-popup">
                 <div className="text-center px-4 py-3">
-                  <div className="text-xl font-bold text-gray-900 mb-1">{city.label}</div>
-                  <div className="text-lg font-semibold text-red-600">{city.count} devices</div>
+                  <div className="text-xl font-bold text-white mb-1">{city.label}</div>
+                  <div className="text-lg font-semibold text-red-400">{city.count} devices</div>
                 </div>
               </Popup>
             </Marker>
@@ -203,9 +234,9 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
         className="rounded-xl shadow-2xl"
         zoomControl={true}
       >
-        {/* CLEAR LIGHT MAP - NO GRID LINES */}
+        {/* PREMIUM DARK MAP - BEST QUALITY */}
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           attribution='&copy; OpenStreetMap, CartoDB'
         />
         <FitBounds cities={activeCityData} />
@@ -217,8 +248,8 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
           >
             <Popup className="pin-popup">
               <div className="text-center px-3 py-2">
-                <div className="text-lg font-bold text-gray-900 mb-1">{city.label}</div>
-                <div className="text-base font-semibold text-red-600">{city.count} devices</div>
+                <div className="text-lg font-bold text-white mb-1">{city.label}</div>
+                <div className="text-base font-semibold text-red-400">{city.count} devices</div>
               </div>
             </Popup>
           </Marker>
