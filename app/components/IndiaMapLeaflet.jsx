@@ -1,14 +1,11 @@
-// Install first: npm install leaflet react-leaflet
-
 'use client'
 
 import { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
-import { Maximize2, Minimize2, X } from 'lucide-react'
+import { Maximize2, X } from 'lucide-react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
-// Component to fit bounds
 function FitBounds({ cities }) {
   const map = useMap()
   
@@ -31,7 +28,6 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
 
   const activeCities = Object.keys(installationTrackerData.cityCount)
 
-  // Indian cities with coordinates
   const cityCoordinates = {
     'mumbai': { lat: 19.0760, lng: 72.8777, label: 'Mumbai' },
     'delhi': { lat: 28.7041, lng: 77.1025, label: 'Delhi' },
@@ -95,7 +91,6 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'mangalore': { lat: 12.9141, lng: 74.8560, label: 'Mangaluru' }
   }
 
-  // Filter only active cities
   const activeCityData = Object.entries(cityCoordinates)
     .filter(([key]) => activeCities.includes(key))
     .map(([key, coords]) => ({
@@ -104,196 +99,142 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
       key
     }))
 
-  // IMPROVED COLORS - More vibrant and distinct
+  // BRIGHT VIBRANT COLORS
   const getColor = (count) => {
-    if (count > 100) return '#8B5CF6' // Purple for very high
-    if (count > 50) return '#06B6D4' // Cyan for high
-    if (count > 20) return '#10B981' // Green for medium-high
-    if (count > 10) return '#F59E0B' // Amber for medium
-    if (count > 5) return '#3B82F6' // Blue for low-medium
-    return '#EC4899' // Pink for low
+    if (count > 100) return '#C026D3' // Fuchsia
+    if (count > 50) return '#0EA5E9'  // Sky Blue
+    if (count > 20) return '#22C55E'  // Lime Green
+    if (count > 10) return '#F97316'  // Orange
+    if (count > 5) return '#6366F1'   // Indigo
+    return '#F43F5E'                   // Rose
   }
 
-  // MUCH BIGGER RADIUS for maximum visibility
+  // SMALLER RADIUS - Perfect size!
   const getRadius = (count) => {
-    if (count > 200) return 50  // HUGE
-    if (count > 100) return 45  // Very large
-    if (count > 50) return 38   // Large
-    if (count > 20) return 30   // Medium-large
-    if (count > 10) return 24   // Medium
-    if (count > 5) return 18    // Small-medium
-    return 15                    // Small
+    if (count > 200) return 18
+    if (count > 100) return 16
+    if (count > 50) return 14
+    if (count > 20) return 11
+    if (count > 10) return 9
+    if (count > 5) return 7
+    return 6
   }
 
-  // Create PREMIUM custom icon with glow and city name
+  // CLEAN MINIMAL MARKER - No labels, just bubbles
   const createCustomIcon = (city, count, color) => {
     const radius = getRadius(count)
-    const fontSize = radius > 35 ? '20px' : radius > 25 ? '16px' : '13px'
-    const fontWeight = '900'
+    const fontSize = radius > 14 ? '13px' : radius > 10 ? '11px' : '9px'
     
     return L.divIcon({
       html: `
-        <div style="position: relative; width: ${radius * 2}px; height: ${radius * 2}px;">
-          <!-- Outer glow rings -->
+        <div style="position: relative; width: ${radius * 2.2}px; height: ${radius * 2.2}px;">
+          <!-- Soft glow -->
           <div style="
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: ${radius * 2.4}px;
-            height: ${radius * 2.4}px;
-            background: ${color}20;
+            width: ${radius * 2.6}px;
+            height: ${radius * 2.6}px;
+            background: radial-gradient(circle, ${color}50 0%, transparent 65%);
             border-radius: 50%;
-            animation: pulse 2s infinite;
-          "></div>
-          <div style="
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: ${radius * 2.2}px;
-            height: ${radius * 2.2}px;
-            background: ${color}30;
-            border-radius: 50%;
+            animation: glow-pulse 3s ease-in-out infinite;
           "></div>
           
           <!-- Main bubble -->
-          <div style="
+          <div class="bubble-marker" style="
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             width: ${radius * 2}px;
             height: ${radius * 2}px;
-            background: linear-gradient(135deg, ${color}f0 0%, ${color} 100%);
-            border: 5px solid white;
+            background: ${color};
+            background: linear-gradient(145deg, ${color} 0%, ${color}dd 100%);
+            border: 2.5px solid rgba(255, 255, 255, 0.95);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: ${fontWeight};
+            font-weight: 800;
             font-size: ${fontSize};
             color: white;
+            letter-spacing: -0.5px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
             box-shadow: 
-              0 0 20px ${color}80,
-              0 8px 25px rgba(0,0,0,0.5),
-              inset 0 -2px 10px rgba(0,0,0,0.2);
+              0 2px 10px ${color}70,
+              0 1px 3px rgba(0,0,0,0.25),
+              inset 0 -1px 2px rgba(0,0,0,0.15);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: ${1000 + count};
           ">
             ${count}
           </div>
-          
-          <!-- City name label below -->
-          <div style="
-            position: absolute;
-            top: ${radius * 2 + 8}px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 700;
-            white-space: nowrap;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-            border: 1px solid ${color}60;
-            pointer-events: none;
-          ">
-            ${city.label}
-          </div>
         </div>
         
         <style>
-          @keyframes pulse {
-            0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
-            50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.05); }
+          @keyframes glow-pulse {
+            0%, 100% { opacity: 0.35; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.55; transform: translate(-50%, -50%) scale(1.08); }
+          }
+          .bubble-marker:hover {
+            transform: translate(-50%, -50%) scale(1.3) !important;
+            box-shadow: 
+              0 4px 18px ${color}90,
+              0 2px 6px rgba(0,0,0,0.35),
+              inset 0 -1px 2px rgba(0,0,0,0.2) !important;
+            border-width: 3px !important;
+            z-index: 999999 !important;
           }
         </style>
       `,
-      className: 'premium-marker',
-      iconSize: [radius * 2.4, radius * 2.4 + 30],
-      iconAnchor: [radius * 1.2, radius * 1.2]
+      className: 'clean-marker',
+      iconSize: [radius * 2.6, radius * 2.6],
+      iconAnchor: [radius * 1.3, radius * 1.3]
     })
   }
 
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen)
-  }
+  const toggleFullscreen = () => setIsFullscreen(!isFullscreen)
 
-  // FULLSCREEN OVERLAY
+  // FULLSCREEN
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-[9999] bg-gray-900">
-        <div className="w-full h-full relative">
-          <MapContainer
-            center={[20.5937, 78.9629]}
-            zoom={5}
-            style={{ height: '100%', width: '100%', background: '#0a0e27' }}
-          >
-            <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              attribution='&copy; OpenStreetMap'
-            />
-            <FitBounds cities={activeCityData} />
-            {activeCityData.map((city) => (
-              <Marker
-                key={city.key}
-                position={[city.lat, city.lng]}
-                icon={createCustomIcon(city, city.count, getColor(city.count))}
-              >
-                <Popup>
-                  <div className="text-center p-3">
-                    <div className="font-bold text-xl mb-2">{city.label}</div>
-                    <div className="text-base text-gray-600 font-semibold">{city.count} devices</div>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
-          
-          {/* Close fullscreen button */}
-          <button
-            onClick={toggleFullscreen}
-            className="absolute top-6 right-6 z-[10000] bg-red-500 hover:bg-red-600 text-white p-4 rounded-full shadow-2xl transition-all flex items-center space-x-2 font-semibold"
-          >
-            <X size={24} />
-            <span>Close</span>
-          </button>
-
-          {/* Legend in fullscreen */}
-          <div className="absolute bottom-8 right-8 z-[10000] bg-gradient-to-br from-gray-900 to-black bg-opacity-95 backdrop-blur-md rounded-xl p-5 border-2 border-purple-500 shadow-2xl">
-            <div className="text-white text-base font-bold mb-4 text-center border-b border-purple-500 pb-3">Device Distribution</div>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 rounded-full" style={{ background: '#EC4899', boxShadow: '0 0 12px #EC4899' }}></div>
-                <span className="text-white text-sm font-medium">1-5 devices</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-6 h-6 rounded-full" style={{ background: '#3B82F6', boxShadow: '0 0 12px #3B82F6' }}></div>
-                <span className="text-white text-sm font-medium">6-10 devices</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-7 h-7 rounded-full" style={{ background: '#F59E0B', boxShadow: '0 0 14px #F59E0B' }}></div>
-                <span className="text-white text-sm font-medium">11-20 devices</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full" style={{ background: '#10B981', boxShadow: '0 0 16px #10B981' }}></div>
-                <span className="text-white text-sm font-medium">21-50 devices</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-9 h-9 rounded-full" style={{ background: '#06B6D4', boxShadow: '0 0 18px #06B6D4' }}></div>
-                <span className="text-white text-sm font-medium">51-100 devices</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full" style={{ background: '#8B5CF6', boxShadow: '0 0 20px #8B5CF6' }}></div>
-                <span className="text-white text-sm font-bold">100+ devices</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="fixed inset-0 z-[9999]" style={{ background: 'linear-gradient(145deg, #0f172a 0%, #020617 100%)' }}>
+        <MapContainer
+          center={[20.5937, 78.9629]}
+          zoom={5}
+          style={{ height: '100%', width: '100%' }}
+          zoomControl={true}
+        >
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            attribution='&copy; OpenStreetMap, CartoDB'
+          />
+          <FitBounds cities={activeCityData} />
+          {activeCityData.map((city) => (
+            <Marker
+              key={city.key}
+              position={[city.lat, city.lng]}
+              icon={createCustomIcon(city, city.count, getColor(city.count))}
+            >
+              <Popup className="modern-popup">
+                <div className="text-center px-4 py-3">
+                  <div className="text-xl font-bold text-gray-900 mb-1">{city.label}</div>
+                  <div className="text-base font-semibold text-gray-600">{city.count} devices</div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+        
+        <button
+          onClick={toggleFullscreen}
+          className="absolute top-6 right-6 z-[10000] bg-gradient-to-r from-rose-500 via-red-500 to-red-600 hover:from-rose-600 hover:via-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl shadow-2xl transition-all duration-300 flex items-center space-x-3 font-bold text-base border border-white border-opacity-20"
+        >
+          <X size={22} />
+          <span>Close Map</span>
+        </button>
       </div>
     )
   }
@@ -304,72 +245,38 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
       <MapContainer
         center={[20.5937, 78.9629]}
         zoom={5}
-        style={{ height: '100%', width: '100%', background: '#0a0e27' }}
-        className="rounded-lg"
+        style={{ height: '100%', width: '100%' }}
+        className="rounded-xl shadow-2xl"
+        zoomControl={true}
       >
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; OpenStreetMap'
+          attribution='&copy; OpenStreetMap, CartoDB'
         />
-        
         <FitBounds cities={activeCityData} />
-        
         {activeCityData.map((city) => (
           <Marker
             key={city.key}
             position={[city.lat, city.lng]}
             icon={createCustomIcon(city, city.count, getColor(city.count))}
           >
-            <Popup>
-              <div className="text-center p-2">
-                <div className="font-bold text-lg mb-1">{city.label}</div>
-                <div className="text-sm text-gray-600">{city.count} devices</div>
+            <Popup className="modern-popup">
+              <div className="text-center px-3 py-2">
+                <div className="text-lg font-bold text-gray-900 mb-1">{city.label}</div>
+                <div className="text-sm font-semibold text-gray-600">{city.count} devices</div>
               </div>
             </Popup>
           </Marker>
         ))}
       </MapContainer>
 
-      {/* Fullscreen button */}
       <button
         onClick={toggleFullscreen}
-        className="absolute top-4 right-4 z-[1000] bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-3 rounded-lg shadow-lg transition-all flex items-center space-x-2 font-semibold"
-        title="View Fullscreen"
+        className="absolute top-4 right-4 z-[1000] bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-700 hover:via-blue-600 hover:to-indigo-700 text-white px-4 py-2.5 rounded-lg shadow-xl transition-all duration-300 flex items-center space-x-2 font-bold text-sm border border-white border-opacity-25 backdrop-blur-sm"
       >
-        <Maximize2 size={20} />
-        <span className="text-sm">Expand</span>
+        <Maximize2 size={16} />
+        <span>Expand Map</span>
       </button>
-
-      {/* Color Legend */}
-      <div className="absolute bottom-6 right-6 z-[1000] bg-gradient-to-br from-gray-900 to-black bg-opacity-95 backdrop-blur-md rounded-xl p-4 border-2 border-purple-500 shadow-2xl">
-        <div className="text-white text-sm font-bold mb-3 text-center border-b border-purple-500 pb-2">Device Distribution</div>
-        <div className="space-y-2">
-          <div className="flex items-center space-x-3">
-            <div className="w-5 h-5 rounded-full" style={{ background: '#EC4899', boxShadow: '0 0 10px #EC4899' }}></div>
-            <span className="text-white text-xs font-medium">1-5 devices</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-5 h-5 rounded-full" style={{ background: '#3B82F6', boxShadow: '0 0 10px #3B82F6' }}></div>
-            <span className="text-white text-xs font-medium">6-10 devices</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-5 h-5 rounded-full" style={{ background: '#F59E0B', boxShadow: '0 0 10px #F59E0B' }}></div>
-            <span className="text-white text-xs font-medium">11-20 devices</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-6 h-6 rounded-full" style={{ background: '#10B981', boxShadow: '0 0 12px #10B981' }}></div>
-            <span className="text-white text-xs font-medium">21-50 devices</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-7 h-7 rounded-full" style={{ background: '#06B6D4', boxShadow: '0 0 14px #06B6D4' }}></div>
-            <span className="text-white text-xs font-medium">51-100 devices</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-full" style={{ background: '#8B5CF6', boxShadow: '0 0 16px #8B5CF6' }}></div>
-            <span className="text-white text-xs font-semibold">100+ devices</span>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
