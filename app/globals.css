@@ -48,491 +48,62 @@ body {
 }
 
 /* ============================================
-   MODERN MAP STYLES - COMPLETE REDESIGN
+   NETWORK MAP BACKGROUND
    ============================================ */
 
-/* Map Container - Enhanced Background */
-.leaflet-container {
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%) !important;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-  animation: map-fade-in 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+.network-map-bg {
+  background: linear-gradient(135deg, #0a0e27 0%, #151935 50%, #0f1120 100%);
+  position: relative;
 }
 
-/* Remove Grid Lines */
-.leaflet-tile {
-  border: none !important;
-  outline: none !important;
-}
-
-.leaflet-tile-container {
-  filter: none !important;
-}
-
-.leaflet-layer,
-.leaflet-tile-pane,
-.leaflet-zoom-animated {
-  border: none !important;
-  outline: none !important;
-}
-
-/* Enhanced Tile Rendering */
-.leaflet-tile-pane {
-  filter: contrast(1.3) brightness(0.7) saturate(1.5) hue-rotate(-5deg);
-  opacity: 0.8;
-}
-
-/* Modern Zoom Controls */
-.leaflet-control-zoom {
-  border: none !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
-  border-radius: 16px !important;
-  overflow: hidden !important;
-  background: rgba(15, 23, 42, 0.85) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-}
-
-.leaflet-control-zoom a {
-  background: transparent !important;
-  color: white !important;
-  border: none !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-  font-size: 26px !important;
-  font-weight: 600 !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  width: 44px !important;
-  height: 44px !important;
-  line-height: 44px !important;
-  position: relative !important;
-}
-
-.leaflet-control-zoom a:last-child {
-  border-bottom: none !important;
-}
-
-.leaflet-control-zoom a::before {
+.network-map-bg::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0), rgba(239, 68, 68, 0));
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+  animation: pulse-glow 8s ease-in-out infinite;
 }
 
-.leaflet-control-zoom a:hover {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(249, 115, 22, 0.2)) !important;
-  transform: scale(1.08) !important;
-  box-shadow: 0 0 30px rgba(239, 68, 68, 0.4) !important;
-}
-
-.leaflet-control-zoom a:hover::before {
-  opacity: 1;
-}
-
-/* Attribution - Minimal & Modern */
-.leaflet-control-attribution {
-  background: rgba(0, 0, 0, 0.7) !important;
-  color: rgba(255, 255, 255, 0.3) !important;
-  font-size: 9px !important;
-  padding: 5px 12px !important;
-  border-radius: 10px !important;
-  backdrop-filter: blur(10px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
-  margin: 8px !important;
-}
-
-.leaflet-control-attribution a {
-  color: rgba(239, 68, 68, 0.8) !important;
-  text-decoration: none !important;
-  font-weight: 600 !important;
-  transition: color 0.2s ease;
-}
-
-.leaflet-control-attribution a:hover {
-  color: rgba(239, 68, 68, 1) !important;
-}
-
-/* ============================================
-   ANIMATED PING MARKERS
-   ============================================ */
-
-.custom-ping-marker {
-  background: transparent !important;
-  border: none !important;
-}
-
-.ping-wrapper {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Core Ping Dot */
-.ping-core {
-  position: relative;
-  border-radius: 50%;
-  z-index: 3;
-  animation: ping-bounce 2s ease-in-out infinite;
-  border: 3px solid rgba(255, 255, 255, 0.9);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.ping-core:hover {
-  transform: scale(1.3);
-  filter: brightness(1.3);
-}
-
-/* Pulse Rings */
-.ping-pulse {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  opacity: 0.6;
-  animation: ping-pulse-animation 2s ease-out infinite;
-}
-
-.ping-pulse-2 {
-  animation-delay: 1s;
-}
-
-@keyframes ping-pulse-animation {
-  0% {
-    transform: translate(-50%, -50%) scale(0.8);
-    opacity: 0.8;
-  }
-  50% {
-    opacity: 0.4;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(2.5);
-    opacity: 0;
-  }
-}
-
-@keyframes ping-bounce {
+@keyframes pulse-glow {
   0%, 100% {
-    transform: scale(1);
+    opacity: 0.3;
   }
   50% {
-    transform: scale(1.1);
+    opacity: 0.6;
   }
 }
 
 /* ============================================
-   CUSTOM POPUP STYLES
+   NETWORK STYLE CARDS
    ============================================ */
 
-.leaflet-popup-content-wrapper {
-  background: rgba(15, 23, 42, 0.95) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border-radius: 16px !important;
-  padding: 0 !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  overflow: hidden !important;
-}
-
-.leaflet-popup-content {
-  margin: 0 !important;
-  min-width: 220px !important;
-}
-
-.leaflet-popup-tip {
-  background: rgba(15, 23, 42, 0.95) !important;
-  backdrop-filter: blur(20px) !important;
-  box-shadow: none !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
-
-.popup-content {
-  padding: 20px;
-}
-
-.popup-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.popup-icon {
-  color: #ef4444;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-.popup-title {
-  color: white;
-  font-size: 18px;
-  font-weight: 700;
-  margin: 0;
-  letter-spacing: -0.02em;
-}
-
-.popup-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.stat-item svg {
-  color: #3b82f6;
-}
-
-.stat-badge {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(249, 115, 22, 0.2));
-  color: #fbbf24;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  text-align: center;
-}
-
-/* ============================================
-   GLASSMORPHIC UI COMPONENTS
-   ============================================ */
-
-.glass-card {
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-radius: 16px;
-  padding: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: slide-in 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-/* Stats Cards */
-.stat-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  animation: float 3s ease-in-out infinite;
-}
-
-.stat-label {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.stat-value {
-  color: white;
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  margin-top: 4px;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-}
-
-/* Legend Card */
-.legend-card {
-  min-width: 280px;
-  padding: 24px !important;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  transition: all 0.2s ease;
-  padding: 8px;
-  border-radius: 8px;
-}
-
-.legend-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  transform: translateX(5px);
-}
-
-.legend-dot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 20px currentColor;
-  animation: pulse 2s ease-in-out infinite;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.legend-text {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 13px;
-  font-weight: 600;
-  flex: 1;
-}
-
-.legend-badge {
-  font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.legend-badge.hot {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-.legend-badge.active {
-  background: rgba(249, 115, 22, 0.2);
-  color: #fdba74;
-  border: 1px solid rgba(249, 115, 22, 0.3);
-}
-
-.legend-badge.growing {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fcd34d;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.legend-badge.moderate {
-  background: rgba(234, 179, 8, 0.2);
-  color: #fde047;
-  border: 1px solid rgba(234, 179, 8, 0.3);
-}
-
-.legend-badge.low {
-  background: rgba(132, 204, 22, 0.2);
-  color: #bef264;
-  border: 1px solid rgba(132, 204, 22, 0.3);
-}
-
-/* Glass Buttons */
-.glass-button {
-  background: rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  padding: 12px 24px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-}
-
-.glass-button:hover {
-  background: rgba(239, 68, 68, 0.3);
-  border-color: rgba(239, 68, 68, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 15px 40px rgba(239, 68, 68, 0.4), 0 0 0 1px rgba(239, 68, 68, 0.3);
-}
-
-.glass-button-close {
-  background: rgba(239, 68, 68, 0.2);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  color: white;
-  padding: 14px 28px;
+.network-card {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   border-radius: 14px;
-  font-weight: 700;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: 0 15px 50px rgba(239, 68, 68, 0.3);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
+  padding: 16px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: card-fade-in 0.6s ease-out backwards;
 }
 
-.glass-button-close:hover {
-  background: rgba(239, 68, 68, 0.4);
-  border-color: rgba(239, 68, 68, 0.6);
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 20px 60px rgba(239, 68, 68, 0.5), 0 0 0 1px rgba(239, 68, 68, 0.5);
+.network-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(59, 130, 246, 0.2),
+    0 0 40px rgba(59, 130, 246, 0.15);
 }
 
-/* ============================================
-   HEATMAP OVERLAY EFFECTS
-   ============================================ */
-
-.leaflet-overlay-pane canvas {
-  mix-blend-mode: screen !important;
-  opacity: 0.95 !important;
-  filter: blur(0.8px);
-}
-
-/* ============================================
-   LOADING ANIMATION
-   ============================================ */
-
-.loading-spinner {
-  width: 60px;
-  height: 60px;
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #ef4444;
-  border-radius: 50%;
-  animation: spinner-rotation 1s linear infinite;
-  margin: 0 auto;
-}
-
-@keyframes spinner-rotation {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ============================================
-   ANIMATIONS
-   ============================================ */
-
-@keyframes map-fade-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes slide-in {
+@keyframes card-fade-in {
   from {
     opacity: 0;
     transform: translateY(20px);
@@ -543,50 +114,285 @@ body {
   }
 }
 
-@keyframes float {
+.network-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.network-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.network-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* ============================================
+   STATS ICONS & VALUES
+   ============================================ */
+
+.network-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  animation: icon-float 3s ease-in-out infinite;
+  transition: transform 0.3s ease;
+}
+
+.network-card:hover .network-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+@keyframes icon-float {
   0%, 100% {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-8px);
+    transform: translateY(-6px);
   }
 }
 
-@keyframes pulse {
+.network-label {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.network-value {
+  color: white;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   LEGEND STYLES
+   ============================================ */
+
+.network-legend {
+  min-width: 300px;
+  padding: 22px 24px !important;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.legend-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateX(6px);
+}
+
+.legend-ping {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  animation: legend-pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes legend-pulse {
   0%, 100% {
-    opacity: 1;
     transform: scale(1);
+    opacity: 1;
   }
   50% {
-    opacity: 0.7;
-    transform: scale(0.95);
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+.legend-label {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  font-weight: 600;
+  flex: 1;
+  letter-spacing: 0.01em;
+}
+
+.legend-tag {
+  font-size: 10px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.legend-tag.hot {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+.legend-tag.active {
+  background: rgba(249, 115, 22, 0.2);
+  color: #fdba74;
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  text-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
+}
+
+.legend-tag.growing {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+.legend-tag.moderate {
+  background: rgba(234, 179, 8, 0.2);
+  color: #fde047;
+  border: 1px solid rgba(234, 179, 8, 0.4);
+  text-shadow: 0 0 8px rgba(234, 179, 8, 0.5);
+}
+
+.legend-tag.low {
+  background: rgba(132, 204, 22, 0.2);
+  color: #bef264;
+  border: 1px solid rgba(132, 204, 22, 0.4);
+  text-shadow: 0 0 8px rgba(132, 204, 22, 0.5);
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.network-button {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 12px 22px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.network-button:hover {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-3px);
+  box-shadow: 
+    0 12px 40px rgba(59, 130, 246, 0.3),
+    0 0 0 1px rgba(59, 130, 246, 0.3);
+}
+
+.network-button:active {
+  transform: translateY(-1px);
+}
+
+.network-button-close {
+  background: rgba(239, 68, 68, 0.25);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: white;
+  padding: 14px 26px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 
+    0 12px 40px rgba(239, 68, 68, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.network-button-close:hover {
+  background: rgba(239, 68, 68, 0.4);
+  border-color: rgba(239, 68, 68, 0.7);
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 
+    0 16px 50px rgba(239, 68, 68, 0.5),
+    0 0 0 1px rgba(239, 68, 68, 0.5),
+    0 0 60px rgba(239, 68, 68, 0.3);
+}
+
+.network-button-close:active {
+  transform: translateY(-2px) scale(1.01);
+}
+
+/* ============================================
+   LOADING ANIMATION
+   ============================================ */
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(59, 130, 246, 0.2);
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spinner-rotation 1s linear infinite;
+  margin: 0 auto;
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+}
+
+@keyframes spinner-rotation {
+  to {
+    transform: rotate(360deg);
   }
 }
 
 /* ============================================
-   CUSTOM SCROLLBAR
+   SCROLLBAR
    ============================================ */
 
 ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
   background: rgba(15, 23, 42, 0.5);
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #ef4444, #f97316);
-  border-radius: 8px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-radius: 6px;
   border: 2px solid rgba(15, 23, 42, 0.5);
   transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #dc2626, #ea580c);
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
 }
 
 /* ============================================
@@ -594,34 +400,48 @@ body {
    ============================================ */
 
 @media (max-width: 768px) {
-  .glass-card {
-    padding: 14px;
+  .network-card {
+    padding: 14px 16px;
     min-width: auto;
   }
 
-  .stat-value {
-    font-size: 20px;
+  .network-value {
+    font-size: 22px;
   }
 
-  .stat-icon {
-    width: 36px;
-    height: 36px;
+  .network-icon {
+    width: 40px;
+    height: 40px;
   }
 
-  .legend-card {
-    min-width: 240px;
-    padding: 18px !important;
+  .network-legend {
+    min-width: 260px;
+    padding: 18px 20px !important;
   }
 
-  .glass-button,
-  .glass-button-close {
+  .legend-row {
+    padding: 8px;
+    gap: 12px;
+  }
+
+  .legend-label {
+    font-size: 13px;
+  }
+
+  .legend-tag {
+    font-size: 9px;
+    padding: 4px 10px;
+  }
+
+  .network-button,
+  .network-button-close {
     padding: 10px 18px;
     font-size: 13px;
   }
 }
 
 /* ============================================
-   PERFORMANCE OPTIMIZATIONS
+   PERFORMANCE & SMOOTHNESS
    ============================================ */
 
 * {
@@ -630,18 +450,29 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-.leaflet-container,
-.leaflet-pane,
-.leaflet-layer {
+canvas {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Hardware acceleration */
+.network-card,
+.network-button,
+.network-button-close,
+.network-icon,
+.legend-ping {
+  transform: translateZ(0);
+  backface-visibility: hidden;
   will-change: transform;
 }
 
-/* Smooth hardware acceleration */
-.glass-card,
-.glass-button,
-.glass-button-close,
-.ping-core,
-.legend-dot {
-  transform: translateZ(0);
-  backface-visibility: hidden;
+/* ============================================
+   GLOBAL OVERRIDES
+   ============================================ */
+
+html,
+body {
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
 }
