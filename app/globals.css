@@ -47,31 +47,28 @@ body {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
-/* Clean marker styles */
-.clean-marker {
-  transition: all 0.2s ease !important;
+/* Red pin marker styles */
+.red-pin-marker {
+  z-index: 1000 !important;
 }
 
-.clean-marker:hover {
-  filter: brightness(1.05) !important;
-}
-
-/* Modern popup styling */
-.modern-popup .leaflet-popup-content-wrapper {
+/* Pin popup styling */
+.pin-popup .leaflet-popup-content-wrapper {
   background: white !important;
   border-radius: 12px !important;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2) !important;
   padding: 0 !important;
-  border: none !important;
+  border: 2px solid #EA4335 !important;
 }
 
-.modern-popup .leaflet-popup-content {
+.pin-popup .leaflet-popup-content {
   margin: 0 !important;
 }
 
-.modern-popup .leaflet-popup-tip {
+.pin-popup .leaflet-popup-tip {
   background: white !important;
-  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.15) !important;
+  border: 2px solid #EA4335 !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15) !important;
 }
 
 .leaflet-popup-close-button {
@@ -82,6 +79,15 @@ body {
 }
 
 .leaflet-popup-close-button:hover {
-  color: #1e293b !important;
+  color: #EA4335 !important;
   background: transparent !important;
+}
+
+/* Remove any leaflet default shadows that might appear as lines */
+.leaflet-container {
+  background: transparent !important;
+}
+
+.leaflet-tile-pane {
+  filter: contrast(1.05) brightness(1.02);
 }
