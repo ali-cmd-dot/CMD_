@@ -406,7 +406,7 @@ export default function Dashboard() {
             { id: 'issues', label: 'Issues', icon: Settings },
             { id: 'offline', label: 'Offline', icon: WifiOff },
             { id: 'devices', label: 'Device Movement', icon: Cpu },
-            { id: 'map', label: 'Installation Tracker', icon: MapIcon }
+            { id: 'map', label: 'Cities', icon: MapIcon }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1293,7 +1293,7 @@ export default function Dashboard() {
 
         {activeTab === 'map' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <MetricCard 
                 title="Total Installations" 
                 value={installationTrackerData?.totalInstallations?.toLocaleString() || '0'} 
@@ -1302,7 +1302,7 @@ export default function Dashboard() {
                 color="bg-blue-500" 
               />
               <MetricCard 
-                title="Unique Cities" 
+                title="Cities Count" 
                 value={installationTrackerData?.uniqueCities || '0'} 
                 subtitle="Locations covered" 
                 icon={MapIcon} 
@@ -1315,19 +1315,12 @@ export default function Dashboard() {
                 icon={TrendingUp} 
                 color="bg-purple-500" 
               />
-              <MetricCard 
-                title="Coverage" 
-                value={`${installationTrackerData?.uniqueCities > 20 ? '20+' : installationTrackerData?.uniqueCities || 0}`} 
-                subtitle="Cities active" 
-                icon={Target} 
-                color="bg-orange-500" 
-              />
             </div>
 
             <div className="bg-white rounded-lg card-shadow overflow-hidden" style={{ height: '1000px' }}>
               <div className="p-6 border-b border-gray-200">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-semibold">Installation Coverage Map</h3>
+                  <h3 className="text-xl font-semibold">Device Installation Map</h3>
                   <div className="flex items-center space-x-4">
                     <div className="text-sm text-gray-600">
                       <span className="font-semibold">{installationTrackerData?.totalInstallations || 0}</span> devices across{' '}
