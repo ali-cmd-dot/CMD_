@@ -46,3 +46,13 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
+
+/* Custom marker hover effect */
+.custom-marker div {
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.custom-marker:hover div {
+  transform: scale(1.15) !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.6), 0 0 0 12px rgba(255,255,255,0.2) !important;
+}
