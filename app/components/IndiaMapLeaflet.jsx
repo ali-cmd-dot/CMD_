@@ -114,49 +114,108 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     return '#EC4899' // Pink for low
   }
 
-  // BIGGER RADIUS for better visibility
+  // MUCH BIGGER RADIUS for maximum visibility
   const getRadius = (count) => {
-    if (count > 200) return 35
-    if (count > 100) return 30
-    if (count > 50) return 26
-    if (count > 20) return 22
-    if (count > 10) return 18
-    if (count > 5) return 14
-    return 12
+    if (count > 200) return 50  // HUGE
+    if (count > 100) return 45  // Very large
+    if (count > 50) return 38   // Large
+    if (count > 20) return 30   // Medium-large
+    if (count > 10) return 24   // Medium
+    if (count > 5) return 18    // Small-medium
+    return 15                    // Small
   }
 
-  // Create custom DivIcon with count - IMPROVED DESIGN
-  const createCustomIcon = (count, color) => {
+  // Create PREMIUM custom icon with glow and city name
+  const createCustomIcon = (city, count, color) => {
     const radius = getRadius(count)
-    const fontSize = radius > 20 ? '16px' : radius > 15 ? '13px' : '11px'
-    const fontWeight = count > 50 ? '900' : '700'
+    const fontSize = radius > 35 ? '20px' : radius > 25 ? '16px' : '13px'
+    const fontWeight = '900'
     
     return L.divIcon({
       html: `
-        <div style="
-          width: ${radius * 2}px;
-          height: ${radius * 2}px;
-          background: ${color};
-          border: 4px solid white;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: ${fontWeight};
-          font-size: ${fontSize};
-          color: white;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 0 8px ${color}33;
-          position: relative;
-          z-index: ${1000 + count};
-          cursor: pointer;
-          transition: all 0.3s ease;
-        ">
-          ${count}
+        <div style="position: relative; width: ${radius * 2}px; height: ${radius * 2}px;">
+          <!-- Outer glow rings -->
+          <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: ${radius * 2.4}px;
+            height: ${radius * 2.4}px;
+            background: ${color}20;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+          "></div>
+          <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: ${radius * 2.2}px;
+            height: ${radius * 2.2}px;
+            background: ${color}30;
+            border-radius: 50%;
+          "></div>
+          
+          <!-- Main bubble -->
+          <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: ${radius * 2}px;
+            height: ${radius * 2}px;
+            background: linear-gradient(135deg, ${color}f0 0%, ${color} 100%);
+            border: 5px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: ${fontWeight};
+            font-size: ${fontSize};
+            color: white;
+            box-shadow: 
+              0 0 20px ${color}80,
+              0 8px 25px rgba(0,0,0,0.5),
+              inset 0 -2px 10px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: ${1000 + count};
+          ">
+            ${count}
+          </div>
+          
+          <!-- City name label below -->
+          <div style="
+            position: absolute;
+            top: ${radius * 2 + 8}px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            border: 1px solid ${color}60;
+            pointer-events: none;
+          ">
+            ${city.label}
+          </div>
         </div>
+        
+        <style>
+          @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.05); }
+          }
+        </style>
       `,
-      className: 'custom-marker',
-      iconSize: [radius * 2, radius * 2],
-      iconAnchor: [radius, radius]
+      className: 'premium-marker',
+      iconSize: [radius * 2.4, radius * 2.4 + 30],
+      iconAnchor: [radius * 1.2, radius * 1.2]
     })
   }
 
@@ -183,12 +242,12 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
               <Marker
                 key={city.key}
                 position={[city.lat, city.lng]}
-                icon={createCustomIcon(city.count, getColor(city.count))}
+                icon={createCustomIcon(city, city.count, getColor(city.count))}
               >
                 <Popup>
-                  <div className="text-center p-2">
-                    <div className="font-bold text-lg mb-1">{city.label}</div>
-                    <div className="text-sm text-gray-600">{city.count} devices</div>
+                  <div className="text-center p-3">
+                    <div className="font-bold text-xl mb-2">{city.label}</div>
+                    <div className="text-base text-gray-600 font-semibold">{city.count} devices</div>
                   </div>
                 </Popup>
               </Marker>
@@ -203,6 +262,37 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
             <X size={24} />
             <span>Close</span>
           </button>
+
+          {/* Legend in fullscreen */}
+          <div className="absolute bottom-8 right-8 z-[10000] bg-gradient-to-br from-gray-900 to-black bg-opacity-95 backdrop-blur-md rounded-xl p-5 border-2 border-purple-500 shadow-2xl">
+            <div className="text-white text-base font-bold mb-4 text-center border-b border-purple-500 pb-3">Device Distribution</div>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3">
+                <div className="w-6 h-6 rounded-full" style={{ background: '#EC4899', boxShadow: '0 0 12px #EC4899' }}></div>
+                <span className="text-white text-sm font-medium">1-5 devices</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-6 h-6 rounded-full" style={{ background: '#3B82F6', boxShadow: '0 0 12px #3B82F6' }}></div>
+                <span className="text-white text-sm font-medium">6-10 devices</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-7 h-7 rounded-full" style={{ background: '#F59E0B', boxShadow: '0 0 14px #F59E0B' }}></div>
+                <span className="text-white text-sm font-medium">11-20 devices</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-full" style={{ background: '#10B981', boxShadow: '0 0 16px #10B981' }}></div>
+                <span className="text-white text-sm font-medium">21-50 devices</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-9 h-9 rounded-full" style={{ background: '#06B6D4', boxShadow: '0 0 18px #06B6D4' }}></div>
+                <span className="text-white text-sm font-medium">51-100 devices</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full" style={{ background: '#8B5CF6', boxShadow: '0 0 20px #8B5CF6' }}></div>
+                <span className="text-white text-sm font-bold">100+ devices</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -228,7 +318,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
           <Marker
             key={city.key}
             position={[city.lat, city.lng]}
-            icon={createCustomIcon(city.count, getColor(city.count))}
+            icon={createCustomIcon(city, city.count, getColor(city.count))}
           >
             <Popup>
               <div className="text-center p-2">
@@ -249,6 +339,37 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
         <Maximize2 size={20} />
         <span className="text-sm">Expand</span>
       </button>
+
+      {/* Color Legend */}
+      <div className="absolute bottom-6 right-6 z-[1000] bg-gradient-to-br from-gray-900 to-black bg-opacity-95 backdrop-blur-md rounded-xl p-4 border-2 border-purple-500 shadow-2xl">
+        <div className="text-white text-sm font-bold mb-3 text-center border-b border-purple-500 pb-2">Device Distribution</div>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-3">
+            <div className="w-5 h-5 rounded-full" style={{ background: '#EC4899', boxShadow: '0 0 10px #EC4899' }}></div>
+            <span className="text-white text-xs font-medium">1-5 devices</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <div className="w-5 h-5 rounded-full" style={{ background: '#3B82F6', boxShadow: '0 0 10px #3B82F6' }}></div>
+            <span className="text-white text-xs font-medium">6-10 devices</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <div className="w-5 h-5 rounded-full" style={{ background: '#F59E0B', boxShadow: '0 0 10px #F59E0B' }}></div>
+            <span className="text-white text-xs font-medium">11-20 devices</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <div className="w-6 h-6 rounded-full" style={{ background: '#10B981', boxShadow: '0 0 12px #10B981' }}></div>
+            <span className="text-white text-xs font-medium">21-50 devices</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <div className="w-7 h-7 rounded-full" style={{ background: '#06B6D4', boxShadow: '0 0 14px #06B6D4' }}></div>
+            <span className="text-white text-xs font-medium">51-100 devices</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 rounded-full" style={{ background: '#8B5CF6', boxShadow: '0 0 16px #8B5CF6' }}></div>
+            <span className="text-white text-xs font-semibold">100+ devices</span>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
