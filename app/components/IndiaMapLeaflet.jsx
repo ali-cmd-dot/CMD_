@@ -2,9 +2,8 @@
 
 import { useEffect, useState, useRef } from 'react'
 import dynamic from 'next/dynamic'
-import { Maximize2, X, Flame } from 'lucide-react'
+import { Maximize2, Minimize2, MapPin, Activity, Zap, TrendingUp } from 'lucide-react'
 
-// Dynamically import Leaflet components to avoid SSR issues
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
   { ssr: false }
@@ -15,11 +14,83 @@ const TileLayer = dynamic(
   { ssr: false }
 )
 
-const useMap = dynamic(
-  () => import('react-leaflet').then((mod) => mod.useMap),
+const Marker = dynamic(
+  () => import('react-leaflet').then((mod) => mod.Marker),
   { ssr: false }
 )
 
+const Popup = dynamic(
+  () => import('react-leaflet').then((mod) => mod.Popup),
+  { ssr: false }
+)
+
+// Animated Ping Marker Component
+function AnimatedPingMarker({ position, count, label }) {
+  const [L, setL] = useState(null)
+
+  useEffect(() => {
+    import('leaflet').then((leaflet) => setL(leaflet.default))
+  }, [])
+
+  if (!L) return null
+
+  // Determine size and color based on count
+  const getMarkerSize = (count) => {
+    if (count > 500) return 28
+    if (count > 200) return 24
+    if (count > 100) return 20
+    if (count > 50) return 16
+    return 12
+  }
+
+  const getMarkerColor = (count) => {
+    if (count > 500) return '#ef4444' // red
+    if (count > 200) return '#f97316' // orange
+    if (count > 100) return '#f59e0b' // amber
+    if (count > 50) return '#eab308' // yellow
+    return '#84cc16' // lime
+  }
+
+  const size = getMarkerSize(count)
+  const color = getMarkerColor(count)
+
+  const icon = L.divIcon({
+    className: 'custom-ping-marker',
+    html: `
+      <div class="ping-wrapper">
+        <div class="ping-pulse" style="background: ${color}"></div>
+        <div class="ping-pulse ping-pulse-2" style="background: ${color}"></div>
+        <div class="ping-core" style="background: ${color}; width: ${size}px; height: ${size}px; box-shadow: 0 0 ${size * 2}px ${color}"></div>
+      </div>
+    `,
+    iconSize: [size * 3, size * 3],
+    iconAnchor: [size * 1.5, size * 1.5]
+  })
+
+  return (
+    <Marker position={position} icon={icon}>
+      <Popup className="custom-popup">
+        <div className="popup-content">
+          <div className="popup-header">
+            <MapPin className="popup-icon" />
+            <h3 className="popup-title">{label}</h3>
+          </div>
+          <div className="popup-stats">
+            <div className="stat-item">
+              <Activity size={16} />
+              <span>{count} devices</span>
+            </div>
+            <div className="stat-badge">
+              {count > 500 ? '🔥 High Density' : count > 200 ? '⚡ Active' : count > 100 ? '✨ Growing' : '📍 Active'}
+            </div>
+          </div>
+        </div>
+      </Popup>
+    </Marker>
+  )
+}
+
+// Heatmap Canvas Overlay
 function HeatmapCanvas({ data }) {
   const [L, setL] = useState(null)
   const [map, setMapInstance] = useState(null)
@@ -42,77 +113,94 @@ function HeatmapCanvas({ data }) {
     if (!map || !L || !data || data.length === 0) return
 
     const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
+    const ctx = canvas.getContext('2d', { alpha: true })
     
-    const bounds = map.getBounds()
-    const size = map.getSize()
-    
-    canvas.width = size.x
-    canvas.height = size.y
-    canvas.style.position = 'absolute'
-    canvas.style.top = '0'
-    canvas.style.left = '0'
-    canvas.style.pointerEvents = 'none'
-    canvas.style.zIndex = '400'
+    const updateHeatmap = () => {
+      const size = map.getSize()
+      canvas.width = size.x
+      canvas.height = size.y
+      canvas.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 400;
+        mix-blend-mode: screen;
+      `
 
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    // Draw heatmap
-    data.forEach(point => {
-      const latLng = L.latLng(point.lat, point.lng)
-      const pixelPoint = map.latLngToContainerPoint(latLng)
-      
-      const intensity = point.count
-      const radius = Math.sqrt(intensity) * 8 // Scale based on count
-      
-      // Create radial gradient
-      const gradient = ctx.createRadialGradient(
-        pixelPoint.x, pixelPoint.y, 0,
-        pixelPoint.x, pixelPoint.y, radius
-      )
-      
-      // Color based on intensity
-      if (intensity > 500) {
-        gradient.addColorStop(0, 'rgba(255, 0, 0, 0.8)')
-        gradient.addColorStop(0.5, 'rgba(255, 100, 0, 0.5)')
-        gradient.addColorStop(1, 'rgba(255, 150, 0, 0)')
-      } else if (intensity > 200) {
-        gradient.addColorStop(0, 'rgba(255, 69, 0, 0.7)')
-        gradient.addColorStop(0.5, 'rgba(255, 140, 0, 0.4)')
-        gradient.addColorStop(1, 'rgba(255, 180, 0, 0)')
-      } else if (intensity > 100) {
-        gradient.addColorStop(0, 'rgba(255, 140, 0, 0.6)')
-        gradient.addColorStop(0.5, 'rgba(255, 200, 0, 0.35)')
-        gradient.addColorStop(1, 'rgba(255, 220, 0, 0)')
-      } else if (intensity > 50) {
-        gradient.addColorStop(0, 'rgba(255, 165, 0, 0.5)')
-        gradient.addColorStop(0.5, 'rgba(255, 215, 0, 0.3)')
-        gradient.addColorStop(1, 'rgba(255, 235, 0, 0)')
-      } else {
-        gradient.addColorStop(0, 'rgba(255, 255, 0, 0.4)')
-        gradient.addColorStop(0.5, 'rgba(200, 255, 100, 0.25)')
-        gradient.addColorStop(1, 'rgba(150, 255, 150, 0)')
-      }
-      
-      ctx.fillStyle = gradient
-      ctx.fillRect(
-        pixelPoint.x - radius,
-        pixelPoint.y - radius,
-        radius * 2,
-        radius * 2
-      )
-    })
+      // Draw heatmap with better gradients
+      data.forEach(point => {
+        const latLng = L.latLng(point.lat, point.lng)
+        if (!map.getBounds().contains(latLng)) return
+        
+        const pixelPoint = map.latLngToContainerPoint(latLng)
+        const intensity = point.count
+        const baseRadius = Math.sqrt(intensity) * 10
+        const zoom = map.getZoom()
+        const radius = baseRadius * Math.pow(1.2, zoom - 5)
+        
+        // Multiple layers for better glow
+        for (let i = 3; i >= 1; i--) {
+          const layerRadius = radius * i * 0.5
+          const gradient = ctx.createRadialGradient(
+            pixelPoint.x, pixelPoint.y, 0,
+            pixelPoint.x, pixelPoint.y, layerRadius
+          )
+          
+          const alpha = 0.6 / i
+          
+          if (intensity > 500) {
+            gradient.addColorStop(0, `rgba(239, 68, 68, ${alpha})`)
+            gradient.addColorStop(0.4, `rgba(249, 115, 22, ${alpha * 0.7})`)
+            gradient.addColorStop(0.7, `rgba(251, 146, 60, ${alpha * 0.4})`)
+            gradient.addColorStop(1, 'rgba(255, 0, 0, 0)')
+          } else if (intensity > 200) {
+            gradient.addColorStop(0, `rgba(249, 115, 22, ${alpha})`)
+            gradient.addColorStop(0.4, `rgba(251, 146, 60, ${alpha * 0.7})`)
+            gradient.addColorStop(0.7, `rgba(252, 211, 77, ${alpha * 0.4})`)
+            gradient.addColorStop(1, 'rgba(249, 115, 22, 0)')
+          } else if (intensity > 100) {
+            gradient.addColorStop(0, `rgba(245, 158, 11, ${alpha})`)
+            gradient.addColorStop(0.4, `rgba(252, 211, 77, ${alpha * 0.7})`)
+            gradient.addColorStop(0.7, `rgba(253, 224, 71, ${alpha * 0.4})`)
+            gradient.addColorStop(1, 'rgba(245, 158, 11, 0)')
+          } else if (intensity > 50) {
+            gradient.addColorStop(0, `rgba(234, 179, 8, ${alpha})`)
+            gradient.addColorStop(0.4, `rgba(253, 224, 71, ${alpha * 0.7})`)
+            gradient.addColorStop(0.7, `rgba(190, 242, 100, ${alpha * 0.4})`)
+            gradient.addColorStop(1, 'rgba(234, 179, 8, 0)')
+          } else {
+            gradient.addColorStop(0, `rgba(132, 204, 22, ${alpha})`)
+            gradient.addColorStop(0.4, `rgba(190, 242, 100, ${alpha * 0.7})`)
+            gradient.addColorStop(0.7, `rgba(217, 249, 157, ${alpha * 0.4})`)
+            gradient.addColorStop(1, 'rgba(132, 204, 22, 0)')
+          }
+          
+          ctx.fillStyle = gradient
+          ctx.fillRect(
+            pixelPoint.x - layerRadius,
+            pixelPoint.y - layerRadius,
+            layerRadius * 2,
+            layerRadius * 2
+          )
+        }
+      })
+    }
 
-    // Add canvas to map
+    updateHeatmap()
+
     const mapPane = map.getPane('overlayPane')
     if (mapPane && !canvasRef.current) {
       mapPane.appendChild(canvas)
       canvasRef.current = canvas
     }
 
-    // Cleanup
+    map.on('move zoom', updateHeatmap)
+
     return () => {
+      map.off('move zoom', updateHeatmap)
       if (canvasRef.current && canvasRef.current.parentNode) {
         canvasRef.current.parentNode.removeChild(canvasRef.current)
         canvasRef.current = null
@@ -123,6 +211,7 @@ function HeatmapCanvas({ data }) {
   return null
 }
 
+// Map Controller
 function MapController({ data }) {
   const [map, setMap] = useState(null)
 
@@ -134,10 +223,9 @@ function MapController({ data }) {
           setMap(mapEl._leaflet_map)
           window.mapInstance = mapEl._leaflet_map
           
-          // Fit bounds
           if (data && data.length > 0) {
             const bounds = data.map(d => [d.lat, d.lng])
-            mapEl._leaflet_map.fitBounds(bounds, { padding: [50, 50] })
+            mapEl._leaflet_map.fitBounds(bounds, { padding: [80, 80] })
           }
           
           clearInterval(checkMap)
@@ -154,6 +242,7 @@ function MapController({ data }) {
 export default function IndiaMapLeaflet({ installationTrackerData }) {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
+  const [hoveredCity, setHoveredCity] = useState(null)
 
   useEffect(() => {
     setIsMounted(true)
@@ -175,13 +264,23 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
   }, [isFullscreen])
 
   if (!isMounted) {
-    return <div className="w-full h-full flex items-center justify-center bg-gray-900 rounded-xl">
-      <div className="text-white text-lg">Loading map...</div>
-    </div>
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 rounded-2xl">
+        <div className="text-center space-y-4">
+          <div className="loading-spinner"></div>
+          <div className="text-white text-lg font-medium">Loading Installation Map...</div>
+        </div>
+      </div>
+    )
   }
 
   if (!installationTrackerData || !installationTrackerData.cityCount) {
-    return <div className="text-center py-20 text-gray-500">Loading heatmap data...</div>
+    return (
+      <div className="text-center py-20 text-gray-400">
+        <Activity className="mx-auto mb-4" size={48} />
+        <p>Loading device data...</p>
+      </div>
+    )
   }
 
   const activeCities = Object.keys(installationTrackerData.cityCount)
@@ -257,6 +356,9 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
       key
     }))
 
+  const totalDevices = Object.values(installationTrackerData.cityCount).reduce((a, b) => a + b, 0)
+  const activeCitiesCount = activeCities.length
+
   const toggleFullscreen = () => setIsFullscreen(!isFullscreen)
 
   const MapView = () => (
@@ -267,55 +369,106 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
         style={{ 
           width: '100%', 
           height: '100%',
-          background: '#0a0e27'
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)'
         }}
         zoomControl={true}
         preferCanvas={true}
       >
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           attribution='&copy; OpenStreetMap'
-        />
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
+          opacity={0.6}
         />
         
         <MapController data={heatmapData} />
+        
+        {heatmapData.map((point) => (
+          <AnimatedPingMarker
+            key={point.key}
+            position={[point.lat, point.lng]}
+            count={point.count}
+            label={point.label}
+          />
+        ))}
       </MapContainer>
 
-      {/* Legend */}
-      <div className={`${isFullscreen ? 'fixed bottom-8 right-8' : 'absolute bottom-6 right-6'} z-[10000] bg-gradient-to-br from-gray-900 via-gray-800 to-black p-5 rounded-2xl border-2 border-red-500 shadow-2xl backdrop-blur-xl`}>
-        <div className="flex items-center gap-2 mb-3">
-          <Flame className="text-red-500" size={20} />
-          <div className="text-white font-bold text-sm">Device Density</div>
+      {/* Stats Overlay - Top Left */}
+      <div className={`${isFullscreen ? 'fixed top-8 left-8' : 'absolute top-6 left-6'} z-[10000] flex flex-col gap-3`}>
+        <div className="glass-card">
+          <div className="flex items-center gap-3">
+            <div className="stat-icon bg-gradient-to-br from-red-500 to-orange-500">
+              <MapPin size={20} />
+            </div>
+            <div>
+              <div className="stat-label">Active Cities</div>
+              <div className="stat-value">{activeCitiesCount}</div>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-2">
+        
+        <div className="glass-card">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-4 bg-gradient-to-r from-red-600 to-red-500 rounded"></div>
-            <span className="text-white text-xs">500+ High</span>
+            <div className="stat-icon bg-gradient-to-br from-blue-500 to-cyan-500">
+              <Activity size={20} />
+            </div>
+            <div>
+              <div className="stat-label">Total Devices</div>
+              <div className="stat-value">{totalDevices.toLocaleString()}</div>
+            </div>
           </div>
+        </div>
+
+        <div className="glass-card">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-4 bg-gradient-to-r from-orange-600 to-orange-400 rounded"></div>
-            <span className="text-white text-xs">200-500</span>
+            <div className="stat-icon bg-gradient-to-br from-purple-500 to-pink-500">
+              <TrendingUp size={20} />
+            </div>
+            <div>
+              <div className="stat-label">Coverage</div>
+              <div className="stat-value">Pan India</div>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-4 bg-gradient-to-r from-orange-400 to-yellow-400 rounded"></div>
-            <span className="text-white text-xs">100-200</span>
+        </div>
+      </div>
+
+      {/* Legend - Bottom Right */}
+      <div className={`${isFullscreen ? 'fixed bottom-8 right-8' : 'absolute bottom-6 right-6'} z-[10000] glass-card legend-card`}>
+        <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/10">
+          <Zap className="text-yellow-400" size={22} />
+          <div className="text-white font-bold text-base">Device Density</div>
+        </div>
+        <div className="flex flex-col gap-3">
+          <div className="legend-item">
+            <div className="legend-dot" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}></div>
+            <span className="legend-text">500+ devices</span>
+            <span className="legend-badge hot">🔥 Hot</span>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-4 bg-gradient-to-r from-yellow-400 to-yellow-300 rounded"></div>
-            <span className="text-white text-xs">50-100</span>
+          <div className="legend-item">
+            <div className="legend-dot" style={{ background: 'linear-gradient(135deg, #f97316, #fb923c)' }}></div>
+            <span className="legend-text">200-500</span>
+            <span className="legend-badge active">⚡ Active</span>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-4 bg-gradient-to-r from-yellow-300 to-green-300 rounded"></div>
-            <span className="text-white text-xs">1-50 Low</span>
+          <div className="legend-item">
+            <div className="legend-dot" style={{ background: 'linear-gradient(135deg, #f59e0b, #fcd34d)' }}></div>
+            <span className="legend-text">100-200</span>
+            <span className="legend-badge growing">✨ Growing</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-dot" style={{ background: 'linear-gradient(135deg, #eab308, #fde047)' }}></div>
+            <span className="legend-text">50-100</span>
+            <span className="legend-badge moderate">📊 Moderate</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-dot" style={{ background: 'linear-gradient(135deg, #84cc16, #bef264)' }}></div>
+            <span className="legend-text">1-50</span>
+            <span className="legend-badge low">📍 Low</span>
           </div>
         </div>
       </div>
     </>
   )
 
-  // FULLSCREEN
+  // FULLSCREEN VIEW
   if (isFullscreen) {
     return (
       <div 
@@ -326,33 +479,34 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
           height: '100vh',
           zIndex: 999999,
           margin: 0,
-          padding: 0
+          padding: 0,
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)'
         }}
       >
         <MapView />
         
         <button
           onClick={toggleFullscreen}
-          className="fixed top-6 right-6 z-[1000000] bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white px-6 py-3 rounded-xl shadow-2xl transition-all duration-300 flex items-center gap-3 font-bold"
+          className="fixed top-6 right-6 z-[1000000] glass-button-close"
         >
-          <X size={22} />
-          Close Heatmap
+          <Minimize2 size={20} />
+          <span>Exit Fullscreen</span>
         </button>
       </div>
     )
   }
 
-  // NORMAL
+  // NORMAL VIEW
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
       <MapView />
       
       <button
         onClick={toggleFullscreen}
-        className="absolute top-4 right-4 z-[1000] bg-gradient-to-r from-red-600 via-orange-500 to-red-500 hover:from-red-700 hover:via-orange-600 hover:to-red-600 text-white px-5 py-3 rounded-lg shadow-xl transition-all duration-300 flex items-center gap-2 font-bold text-sm"
+        className="absolute top-4 right-4 z-[1000] glass-button"
       >
         <Maximize2 size={18} />
-        Expand Heatmap
+        <span>Expand Map</span>
       </button>
     </div>
   )
