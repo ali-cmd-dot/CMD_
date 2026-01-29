@@ -47,19 +47,40 @@ body {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
+/* FULLSCREEN MAP FIX */
+.fullscreen-map-container {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: 99999 !important;
+}
+
+.fullscreen-map-container .leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 /* Red pin marker styles */
 .red-pin-marker {
   z-index: 1000 !important;
 }
 
-/* Pin popup styling */
+/* Pin popup styling - DARK THEME */
 .pin-popup .leaflet-popup-content-wrapper {
-  background: rgba(0, 0, 0, 0.95) !important;
-  border-radius: 12px !important;
-  box-shadow: 0 8px 30px rgba(234, 67, 53, 0.4) !important;
+  background: rgba(10, 14, 39, 0.98) !important;
+  border-radius: 14px !important;
+  box-shadow: 
+    0 10px 40px rgba(234, 67, 53, 0.5),
+    0 0 0 2px rgba(234, 67, 53, 0.8) !important;
   padding: 0 !important;
-  border: 2px solid #EA4335 !important;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  border: none !important;
 }
 
 .pin-popup .leaflet-popup-content {
@@ -72,48 +93,113 @@ body {
 }
 
 .pin-popup .leaflet-popup-tip {
-  background: rgba(0, 0, 0, 0.95) !important;
-  border: 2px solid #EA4335 !important;
-  box-shadow: 0 3px 10px rgba(234, 67, 53, 0.3) !important;
+  background: rgba(10, 14, 39, 0.98) !important;
+  box-shadow: 
+    0 3px 12px rgba(234, 67, 53, 0.4),
+    0 0 0 2px rgba(234, 67, 53, 0.8) !important;
+  border: none !important;
 }
 
 .leaflet-popup-close-button {
-  font-size: 24px !important;
-  font-weight: 300 !important;
+  font-size: 28px !important;
+  font-weight: 200 !important;
   color: #ffffff !important;
-  padding: 8px 12px !important;
+  padding: 8px 14px !important;
+  transition: all 0.2s ease !important;
 }
 
 .leaflet-popup-close-button:hover {
   color: #EA4335 !important;
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(234, 67, 53, 0.15) !important;
+  transform: scale(1.1) !important;
 }
 
-/* Leaflet container enhancements */
+/* Leaflet container - REMOVE GRID LINES */
 .leaflet-container {
   background: #0a0e27 !important;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 
-/* Dark map enhancement */
+/* NO GRID LINES - IMPORTANT */
+.leaflet-tile-container {
+  filter: none !important;
+}
+
+.leaflet-tile {
+  border: none !important;
+  outline: none !important;
+}
+
+/* Enhanced dark map with highlighted borders */
 .leaflet-tile-pane {
-  filter: contrast(1.1) brightness(0.95) saturate(1.2);
+  filter: 
+    contrast(1.15) 
+    brightness(0.92) 
+    saturate(1.3);
 }
 
-/* Fullscreen fix */
-html, body {
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
+/* Highlighted borders effect */
+.leaflet-overlay-pane svg path {
+  stroke: rgba(255, 255, 255, 0.3) !important;
+  stroke-width: 1.5px !important;
+}
+
+/* Country/state borders highlighting */
+.leaflet-interactive {
+  stroke: rgba(255, 255, 255, 0.25) !important;
+  stroke-width: 1px !important;
 }
 
 /* Attribution styling */
 .leaflet-control-attribution {
-  background: rgba(0, 0, 0, 0.7) !important;
-  color: rgba(255, 255, 255, 0.7) !important;
-  font-size: 10px !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 9px !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
 }
 
 .leaflet-control-attribution a {
   color: #EA4335 !important;
+  text-decoration: none !important;
+}
+
+/* Zoom controls styling */
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+.leaflet-control-zoom a {
+  background: rgba(15, 23, 42, 0.95) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  transition: all 0.2s ease !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: rgba(234, 67, 53, 0.9) !important;
+  border-color: rgba(234, 67, 53, 1) !important;
+  transform: scale(1.05) !important;
+}
+
+/* Remove any default borders/lines */
+.leaflet-layer,
+.leaflet-tile-pane,
+.leaflet-tile-container,
+.leaflet-zoom-animated {
+  border: none !important;
+  outline: none !important;
+}
+
+/* Ensure fullscreen works */
+html.fullscreen-active,
+body.fullscreen-active {
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
 }
