@@ -1,34 +1,169 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap, GeoJSON } from 'react-leaflet'
-import { Maximize2, X } from 'lucide-react'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
+import { useEffect, useState, useRef } from 'react'
+import dynamic from 'next/dynamic'
+import { Maximize2, X, Flame } from 'lucide-react'
 
-function FitBounds({ cities }) {
-  const map = useMap()
-  
+// Dynamically import Leaflet components to avoid SSR issues
+const MapContainer = dynamic(
+  () => import('react-leaflet').then((mod) => mod.MapContainer),
+  { ssr: false }
+)
+
+const TileLayer = dynamic(
+  () => import('react-leaflet').then((mod) => mod.TileLayer),
+  { ssr: false }
+)
+
+const useMap = dynamic(
+  () => import('react-leaflet').then((mod) => mod.useMap),
+  { ssr: false }
+)
+
+function HeatmapCanvas({ data }) {
+  const [L, setL] = useState(null)
+  const [map, setMapInstance] = useState(null)
+  const canvasRef = useRef(null)
+
   useEffect(() => {
-    if (cities && cities.length > 0) {
-      const bounds = cities.map(city => [city.lat, city.lng])
-      map.fitBounds(bounds, { padding: [50, 50] })
+    import('leaflet').then((leaflet) => setL(leaflet.default))
+  }, [])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const mapInstance = window.mapInstance
+      if (mapInstance) {
+        setMapInstance(mapInstance)
+      }
     }
-  }, [cities, map])
-  
+  }, [])
+
+  useEffect(() => {
+    if (!map || !L || !data || data.length === 0) return
+
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    
+    const bounds = map.getBounds()
+    const size = map.getSize()
+    
+    canvas.width = size.x
+    canvas.height = size.y
+    canvas.style.position = 'absolute'
+    canvas.style.top = '0'
+    canvas.style.left = '0'
+    canvas.style.pointerEvents = 'none'
+    canvas.style.zIndex = '400'
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    // Draw heatmap
+    data.forEach(point => {
+      const latLng = L.latLng(point.lat, point.lng)
+      const pixelPoint = map.latLngToContainerPoint(latLng)
+      
+      const intensity = point.count
+      const radius = Math.sqrt(intensity) * 8 // Scale based on count
+      
+      // Create radial gradient
+      const gradient = ctx.createRadialGradient(
+        pixelPoint.x, pixelPoint.y, 0,
+        pixelPoint.x, pixelPoint.y, radius
+      )
+      
+      // Color based on intensity
+      if (intensity > 500) {
+        gradient.addColorStop(0, 'rgba(255, 0, 0, 0.8)')
+        gradient.addColorStop(0.5, 'rgba(255, 100, 0, 0.5)')
+        gradient.addColorStop(1, 'rgba(255, 150, 0, 0)')
+      } else if (intensity > 200) {
+        gradient.addColorStop(0, 'rgba(255, 69, 0, 0.7)')
+        gradient.addColorStop(0.5, 'rgba(255, 140, 0, 0.4)')
+        gradient.addColorStop(1, 'rgba(255, 180, 0, 0)')
+      } else if (intensity > 100) {
+        gradient.addColorStop(0, 'rgba(255, 140, 0, 0.6)')
+        gradient.addColorStop(0.5, 'rgba(255, 200, 0, 0.35)')
+        gradient.addColorStop(1, 'rgba(255, 220, 0, 0)')
+      } else if (intensity > 50) {
+        gradient.addColorStop(0, 'rgba(255, 165, 0, 0.5)')
+        gradient.addColorStop(0.5, 'rgba(255, 215, 0, 0.3)')
+        gradient.addColorStop(1, 'rgba(255, 235, 0, 0)')
+      } else {
+        gradient.addColorStop(0, 'rgba(255, 255, 0, 0.4)')
+        gradient.addColorStop(0.5, 'rgba(200, 255, 100, 0.25)')
+        gradient.addColorStop(1, 'rgba(150, 255, 150, 0)')
+      }
+      
+      ctx.fillStyle = gradient
+      ctx.fillRect(
+        pixelPoint.x - radius,
+        pixelPoint.y - radius,
+        radius * 2,
+        radius * 2
+      )
+    })
+
+    // Add canvas to map
+    const mapPane = map.getPane('overlayPane')
+    if (mapPane && !canvasRef.current) {
+      mapPane.appendChild(canvas)
+      canvasRef.current = canvas
+    }
+
+    // Cleanup
+    return () => {
+      if (canvasRef.current && canvasRef.current.parentNode) {
+        canvasRef.current.parentNode.removeChild(canvasRef.current)
+        canvasRef.current = null
+      }
+    }
+  }, [map, L, data])
+
   return null
+}
+
+function MapController({ data }) {
+  const [map, setMap] = useState(null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const checkMap = setInterval(() => {
+        const mapEl = document.querySelector('.leaflet-container')
+        if (mapEl && mapEl._leaflet_map) {
+          setMap(mapEl._leaflet_map)
+          window.mapInstance = mapEl._leaflet_map
+          
+          // Fit bounds
+          if (data && data.length > 0) {
+            const bounds = data.map(d => [d.lat, d.lng])
+            mapEl._leaflet_map.fitBounds(bounds, { padding: [50, 50] })
+          }
+          
+          clearInterval(checkMap)
+        }
+      }, 100)
+
+      return () => clearInterval(checkMap)
+    }
+  }, [data])
+
+  return <HeatmapCanvas data={data} />
 }
 
 export default function IndiaMapLeaflet({ installationTrackerData }) {
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   useEffect(() => {
     if (isFullscreen) {
-      // Lock body scroll when fullscreen
       document.body.style.overflow = 'hidden'
       document.documentElement.style.overflow = 'hidden'
     } else {
-      // Restore scroll
       document.body.style.overflow = ''
       document.documentElement.style.overflow = ''
     }
@@ -39,8 +174,14 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     }
   }, [isFullscreen])
 
+  if (!isMounted) {
+    return <div className="w-full h-full flex items-center justify-center bg-gray-900 rounded-xl">
+      <div className="text-white text-lg">Loading map...</div>
+    </div>
+  }
+
   if (!installationTrackerData || !installationTrackerData.cityCount) {
-    return <div className="text-center py-20 text-gray-500">Loading map data...</div>
+    return <div className="text-center py-20 text-gray-500">Loading heatmap data...</div>
   }
 
   const activeCities = Object.keys(installationTrackerData.cityCount)
@@ -108,7 +249,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'mangalore': { lat: 12.9141, lng: 74.8560, label: 'Mangaluru' }
   }
 
-  const activeCityData = Object.entries(cityCoordinates)
+  const heatmapData = Object.entries(cityCoordinates)
     .filter(([key]) => activeCities.includes(key))
     .map(([key, coords]) => ({
       ...coords,
@@ -116,217 +257,102 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
       key
     }))
 
-  // ENHANCED RED PIN WITH GLOW
-  const createRedPin = (city, count) => {
-    return L.divIcon({
-      html: `
-        <div class="location-pin-container" style="position: relative; width: 40px; height: 50px;">
-          <!-- Glow effect -->
-          <div style="
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            top: 5px;
-            left: -10px;
-            background: radial-gradient(circle, rgba(234, 67, 53, 0.5) 0%, transparent 70%);
-            border-radius: 50%;
-            animation: pin-glow 2s ease-in-out infinite;
-          "></div>
-          
-          <!-- Red Location Pin -->
-          <svg width="40" height="50" viewBox="0 0 40 50" style="
-            filter: drop-shadow(0 4px 12px rgba(234, 67, 53, 0.7)) 
-                    drop-shadow(0 0 20px rgba(234, 67, 53, 0.4));
-          ">
-            <defs>
-              <linearGradient id="pinGradient${count}" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:1" />
-                <stop offset="100%" style="stop-color:#EA4335;stop-opacity:1" />
-              </linearGradient>
-            </defs>
-            
-            <path d="M20 0C11.716 0 5 6.716 5 15c0 8.284 15 35 15 35s15-26.716 15-35c0-8.284-6.716-15-15-15z" 
-                  fill="url(#pinGradient${count})" 
-                  stroke="#FFFFFF" 
-                  stroke-width="2"
-                  opacity="1"/>
-            
-            <circle cx="20" cy="15" r="11" fill="white" opacity="1"/>
-            
-            <text x="20" y="20" 
-                  text-anchor="middle" 
-                  font-size="${count > 999 ? '9' : count > 99 ? '10' : '12'}px" 
-                  font-weight="900" 
-                  fill="#EA4335"
-                  font-family="Arial, sans-serif">${count}</text>
-          </svg>
-          
-          <style>
-            @keyframes pin-glow {
-              0%, 100% { opacity: 0.4; transform: scale(1); }
-              50% { opacity: 0.7; transform: scale(1.1); }
-            }
-            .location-pin-container {
-              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-              cursor: pointer;
-            }
-            .location-pin-container:hover {
-              transform: scale(1.25);
-              z-index: 999999 !important;
-            }
-            .location-pin-container:hover svg {
-              filter: drop-shadow(0 6px 20px rgba(234, 67, 53, 1)) 
-                      drop-shadow(0 0 30px rgba(234, 67, 53, 0.7))
-                      drop-shadow(0 0 40px rgba(255, 107, 107, 0.5));
-            }
-          </style>
-        </div>
-      `,
-      className: 'red-pin-marker',
-      iconSize: [40, 50],
-      iconAnchor: [20, 50],
-      popupAnchor: [0, -50]
-    })
-  }
-
   const toggleFullscreen = () => setIsFullscreen(!isFullscreen)
 
-  // FULLSCREEN VIEW - PROPERLY FIXED
+  const MapView = () => (
+    <>
+      <MapContainer
+        center={[22.5, 79]}
+        zoom={5}
+        style={{ 
+          width: '100%', 
+          height: '100%',
+          background: '#0a0e27'
+        }}
+        zoomControl={true}
+        preferCanvas={true}
+      >
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
+          attribution='&copy; OpenStreetMap'
+        />
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
+        />
+        
+        <MapController data={heatmapData} />
+      </MapContainer>
+
+      {/* Legend */}
+      <div className={`${isFullscreen ? 'fixed bottom-8 right-8' : 'absolute bottom-6 right-6'} z-[10000] bg-gradient-to-br from-gray-900 via-gray-800 to-black p-5 rounded-2xl border-2 border-red-500 shadow-2xl backdrop-blur-xl`}>
+        <div className="flex items-center gap-2 mb-3">
+          <Flame className="text-red-500" size={20} />
+          <div className="text-white font-bold text-sm">Device Density</div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-4 bg-gradient-to-r from-red-600 to-red-500 rounded"></div>
+            <span className="text-white text-xs">500+ High</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-4 bg-gradient-to-r from-orange-600 to-orange-400 rounded"></div>
+            <span className="text-white text-xs">200-500</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-4 bg-gradient-to-r from-orange-400 to-yellow-400 rounded"></div>
+            <span className="text-white text-xs">100-200</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-4 bg-gradient-to-r from-yellow-400 to-yellow-300 rounded"></div>
+            <span className="text-white text-xs">50-100</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-4 bg-gradient-to-r from-yellow-300 to-green-300 rounded"></div>
+            <span className="text-white text-xs">1-50 Low</span>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+
+  // FULLSCREEN
   if (isFullscreen) {
     return (
       <div 
-        className="fullscreen-map-container"
         style={{
           position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
+          inset: 0,
           width: '100vw',
           height: '100vh',
-          zIndex: 99999,
+          zIndex: 999999,
           margin: 0,
-          padding: 0,
-          overflow: 'hidden',
-          background: '#0a0e27'
+          padding: 0
         }}
       >
-        <MapContainer
-          center={[22.5, 79]}
-          zoom={5}
-          style={{ 
-            width: '100%', 
-            height: '100%',
-            position: 'absolute',
-            top: 0,
-            left: 0
-          }}
-          zoomControl={true}
-          preferCanvas={true}
-        >
-          {/* BEST DARK MAP - NO GRID LINES */}
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
-            attribution='&copy; OpenStreetMap contributors &copy; CARTO'
-            maxZoom={19}
-          />
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
-            attribution=''
-            maxZoom={19}
-          />
-          
-          <FitBounds cities={activeCityData} />
-          {activeCityData.map((city) => (
-            <Marker
-              key={city.key}
-              position={[city.lat, city.lng]}
-              icon={createRedPin(city, city.count)}
-            >
-              <Popup className="pin-popup">
-                <div className="text-center px-4 py-3">
-                  <div className="text-xl font-bold text-white mb-1">{city.label}</div>
-                  <div className="text-lg font-semibold text-red-400">{city.count} devices</div>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
+        <MapView />
         
         <button
           onClick={toggleFullscreen}
-          style={{
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            zIndex: 100000,
-            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-            color: 'white',
-            padding: '12px 24px',
-            borderRadius: '12px',
-            border: 'none',
-            fontSize: '16px',
-            fontWeight: '700',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
-          }}
+          className="fixed top-6 right-6 z-[1000000] bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white px-6 py-3 rounded-xl shadow-2xl transition-all duration-300 flex items-center gap-3 font-bold"
         >
-          <X size={20} />
-          Close Map
+          <X size={22} />
+          Close Heatmap
         </button>
       </div>
     )
   }
 
-  // NORMAL VIEW
+  // NORMAL
   return (
     <div className="relative w-full h-full">
-      <MapContainer
-        center={[22.5, 79]}
-        zoom={5}
-        style={{ height: '100%', width: '100%' }}
-        className="rounded-xl shadow-2xl"
-        zoomControl={true}
-        preferCanvas={true}
-      >
-        {/* BEST DARK MAP - NO GRID LINES + LABELS OVERLAY */}
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
-          attribution='&copy; OpenStreetMap contributors &copy; CARTO'
-          maxZoom={19}
-        />
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
-          attribution=''
-          maxZoom={19}
-        />
-        
-        <FitBounds cities={activeCityData} />
-        {activeCityData.map((city) => (
-          <Marker
-            key={city.key}
-            position={[city.lat, city.lng]}
-            icon={createRedPin(city, city.count)}
-          >
-            <Popup className="pin-popup">
-              <div className="text-center px-3 py-2">
-                <div className="text-lg font-bold text-white mb-1">{city.label}</div>
-                <div className="text-base font-semibold text-red-400">{city.count} devices</div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
-
+      <MapView />
+      
       <button
         onClick={toggleFullscreen}
-        className="absolute top-4 right-4 z-[1000] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2.5 rounded-lg shadow-xl transition-all duration-300 flex items-center space-x-2 font-bold text-sm"
+        className="absolute top-4 right-4 z-[1000] bg-gradient-to-r from-red-600 via-orange-500 to-red-500 hover:from-red-700 hover:via-orange-600 hover:to-red-600 text-white px-5 py-3 rounded-lg shadow-xl transition-all duration-300 flex items-center gap-2 font-bold text-sm"
       >
-        <Maximize2 size={16} />
-        <span>Expand Map</span>
+        <Maximize2 size={18} />
+        Expand Heatmap
       </button>
     </div>
   )
