@@ -3,8 +3,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap, Marker } from 'react-leaflet'
-import { Maximize2, Minimize2 } from 'lucide-react'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { Maximize2, Minimize2, X } from 'lucide-react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -104,46 +104,57 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
       key
     }))
 
-  // Get color based on count
+  // IMPROVED COLORS - More vibrant and distinct
   const getColor = (count) => {
-    if (count > 10) return '#10B981' // green
-    if (count > 5) return '#FBBF24' // yellow
-    return '#3B82F6' // blue
+    if (count > 100) return '#8B5CF6' // Purple for very high
+    if (count > 50) return '#06B6D4' // Cyan for high
+    if (count > 20) return '#10B981' // Green for medium-high
+    if (count > 10) return '#F59E0B' // Amber for medium
+    if (count > 5) return '#3B82F6' // Blue for low-medium
+    return '#EC4899' // Pink for low
   }
 
-  // Get radius based on count
+  // BIGGER RADIUS for better visibility
   const getRadius = (count) => {
-    if (count > 100) return 28
-    if (count > 50) return 24
-    if (count > 20) return 20
-    if (count > 10) return 16
-    if (count > 5) return 12
-    return 10
+    if (count > 200) return 35
+    if (count > 100) return 30
+    if (count > 50) return 26
+    if (count > 20) return 22
+    if (count > 10) return 18
+    if (count > 5) return 14
+    return 12
   }
 
-  // Create custom DivIcon with count
+  // Create custom DivIcon with count - IMPROVED DESIGN
   const createCustomIcon = (count, color) => {
     const radius = getRadius(count)
+    const fontSize = radius > 20 ? '16px' : radius > 15 ? '13px' : '11px'
+    const fontWeight = count > 50 ? '900' : '700'
+    
     return L.divIcon({
       html: `
         <div style="
           width: ${radius * 2}px;
           height: ${radius * 2}px;
           background: ${color};
-          border: 3px solid white;
+          border: 4px solid white;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-weight: 700;
-          font-size: ${radius > 15 ? '14px' : '11px'};
+          font-weight: ${fontWeight};
+          font-size: ${fontSize};
           color: white;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 0 8px ${color}33;
+          position: relative;
+          z-index: ${1000 + count};
+          cursor: pointer;
+          transition: all 0.3s ease;
         ">
           ${count}
         </div>
       `,
-      className: '',
+      className: 'custom-marker',
       iconSize: [radius * 2, radius * 2],
       iconAnchor: [radius, radius]
     })
@@ -153,24 +164,66 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     setIsFullscreen(!isFullscreen)
   }
 
+  // FULLSCREEN OVERLAY
+  if (isFullscreen) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-gray-900">
+        <div className="w-full h-full relative">
+          <MapContainer
+            center={[20.5937, 78.9629]}
+            zoom={5}
+            style={{ height: '100%', width: '100%', background: '#0a0e27' }}
+          >
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              attribution='&copy; OpenStreetMap'
+            />
+            <FitBounds cities={activeCityData} />
+            {activeCityData.map((city) => (
+              <Marker
+                key={city.key}
+                position={[city.lat, city.lng]}
+                icon={createCustomIcon(city.count, getColor(city.count))}
+              >
+                <Popup>
+                  <div className="text-center p-2">
+                    <div className="font-bold text-lg mb-1">{city.label}</div>
+                    <div className="text-sm text-gray-600">{city.count} devices</div>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+          
+          {/* Close fullscreen button */}
+          <button
+            onClick={toggleFullscreen}
+            className="absolute top-6 right-6 z-[10000] bg-red-500 hover:bg-red-600 text-white p-4 rounded-full shadow-2xl transition-all flex items-center space-x-2 font-semibold"
+          >
+            <X size={24} />
+            <span>Close</span>
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // NORMAL VIEW
   return (
-    <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-black' : 'w-full h-full'}`}>
+    <div className="relative w-full h-full">
       <MapContainer
         center={[20.5937, 78.9629]}
         zoom={5}
         style={{ height: '100%', width: '100%', background: '#0a0e27' }}
         className="rounded-lg"
       >
-        {/* Dark theme map tiles */}
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; OpenStreetMap contributors'
+          attribution='&copy; OpenStreetMap'
         />
         
-        {/* Fit bounds to show all cities */}
         <FitBounds cities={activeCityData} />
         
-        {/* City markers with count inside */}
         {activeCityData.map((city) => (
           <Marker
             key={city.key}
@@ -178,8 +231,8 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
             icon={createCustomIcon(city.count, getColor(city.count))}
           >
             <Popup>
-              <div className="text-center">
-                <div className="font-bold text-base">{city.label}</div>
+              <div className="text-center p-2">
+                <div className="font-bold text-lg mb-1">{city.label}</div>
                 <div className="text-sm text-gray-600">{city.count} devices</div>
               </div>
             </Popup>
@@ -187,13 +240,14 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
         ))}
       </MapContainer>
 
-      {/* Fullscreen toggle button */}
+      {/* Fullscreen button */}
       <button
         onClick={toggleFullscreen}
-        className="absolute top-4 right-4 z-[1000] bg-white hover:bg-gray-100 text-gray-800 p-3 rounded-lg shadow-lg transition-all"
-        title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+        className="absolute top-4 right-4 z-[1000] bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-3 rounded-lg shadow-lg transition-all flex items-center space-x-2 font-semibold"
+        title="View Fullscreen"
       >
-        {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+        <Maximize2 size={20} />
+        <span className="text-sm">Expand</span>
       </button>
     </div>
   )
