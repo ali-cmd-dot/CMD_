@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMap, GeoJSON } from 'react-leaflet'
 import { Maximize2, X } from 'lucide-react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -21,6 +21,23 @@ function FitBounds({ cities }) {
 
 export default function IndiaMapLeaflet({ installationTrackerData }) {
   const [isFullscreen, setIsFullscreen] = useState(false)
+
+  useEffect(() => {
+    if (isFullscreen) {
+      // Lock body scroll when fullscreen
+      document.body.style.overflow = 'hidden'
+      document.documentElement.style.overflow = 'hidden'
+    } else {
+      // Restore scroll
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+    
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+  }, [isFullscreen])
 
   if (!installationTrackerData || !installationTrackerData.cityCount) {
     return <div className="text-center py-20 text-gray-500">Loading map data...</div>
@@ -99,46 +116,43 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
       key
     }))
 
-  // GOOGLE MAPS STYLE RED PIN - ENHANCED FOR DARK MAP
+  // ENHANCED RED PIN WITH GLOW
   const createRedPin = (city, count) => {
     return L.divIcon({
       html: `
         <div class="location-pin-container" style="position: relative; width: 40px; height: 50px;">
-          <!-- Glow effect for dark background -->
+          <!-- Glow effect -->
           <div style="
             position: absolute;
             width: 60px;
             height: 60px;
             top: 5px;
             left: -10px;
-            background: radial-gradient(circle, rgba(234, 67, 53, 0.4) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(234, 67, 53, 0.5) 0%, transparent 70%);
             border-radius: 50%;
             animation: pin-glow 2s ease-in-out infinite;
           "></div>
           
           <!-- Red Location Pin -->
           <svg width="40" height="50" viewBox="0 0 40 50" style="
-            filter: drop-shadow(0 4px 12px rgba(234, 67, 53, 0.6)) 
-                    drop-shadow(0 0 20px rgba(234, 67, 53, 0.3));
+            filter: drop-shadow(0 4px 12px rgba(234, 67, 53, 0.7)) 
+                    drop-shadow(0 0 20px rgba(234, 67, 53, 0.4));
           ">
-            <!-- Pin shape with gradient -->
             <defs>
-              <linearGradient id="pinGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <linearGradient id="pinGradient${count}" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:1" />
                 <stop offset="100%" style="stop-color:#EA4335;stop-opacity:1" />
               </linearGradient>
             </defs>
             
             <path d="M20 0C11.716 0 5 6.716 5 15c0 8.284 15 35 15 35s15-26.716 15-35c0-8.284-6.716-15-15-15z" 
-                  fill="url(#pinGradient)" 
+                  fill="url(#pinGradient${count})" 
                   stroke="#FFFFFF" 
-                  stroke-width="1.5"
+                  stroke-width="2"
                   opacity="1"/>
             
-            <!-- White circle for count -->
             <circle cx="20" cy="15" r="11" fill="white" opacity="1"/>
             
-            <!-- Count text -->
             <text x="20" y="20" 
                   text-anchor="middle" 
                   font-size="${count > 999 ? '9' : count > 99 ? '10' : '12'}px" 
@@ -147,27 +161,23 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
                   font-family="Arial, sans-serif">${count}</text>
           </svg>
           
-          <!-- Enhanced Hover effect -->
           <style>
             @keyframes pin-glow {
-              0%, 100% { opacity: 0.3; transform: scale(1); }
-              50% { opacity: 0.6; transform: scale(1.1); }
+              0%, 100% { opacity: 0.4; transform: scale(1); }
+              50% { opacity: 0.7; transform: scale(1.1); }
             }
             .location-pin-container {
               transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
               cursor: pointer;
             }
             .location-pin-container:hover {
-              transform: scale(1.2);
+              transform: scale(1.25);
               z-index: 999999 !important;
             }
             .location-pin-container:hover svg {
-              filter: drop-shadow(0 6px 20px rgba(234, 67, 53, 0.9)) 
-                      drop-shadow(0 0 30px rgba(234, 67, 53, 0.6))
-                      drop-shadow(0 0 40px rgba(255, 107, 107, 0.4));
-            }
-            .location-pin-container:hover > div:first-child {
-              animation: pin-glow 1s ease-in-out infinite;
+              filter: drop-shadow(0 6px 20px rgba(234, 67, 53, 1)) 
+                      drop-shadow(0 0 30px rgba(234, 67, 53, 0.7))
+                      drop-shadow(0 0 40px rgba(255, 107, 107, 0.5));
             }
           </style>
         </div>
@@ -181,21 +191,51 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
 
   const toggleFullscreen = () => setIsFullscreen(!isFullscreen)
 
-  // FULLSCREEN VIEW
+  // FULLSCREEN VIEW - PROPERLY FIXED
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-[9999]" style={{ margin: 0, padding: 0, overflow: 'hidden' }}>
+      <div 
+        className="fullscreen-map-container"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 99999,
+          margin: 0,
+          padding: 0,
+          overflow: 'hidden',
+          background: '#0a0e27'
+        }}
+      >
         <MapContainer
-          center={[20.5937, 78.9629]}
+          center={[22.5, 79]}
           zoom={5}
-          style={{ height: '100vh', width: '100vw', margin: 0, padding: 0 }}
+          style={{ 
+            width: '100%', 
+            height: '100%',
+            position: 'absolute',
+            top: 0,
+            left: 0
+          }}
           zoomControl={true}
+          preferCanvas={true}
         >
-          {/* PREMIUM DARK MAP - BEST QUALITY */}
+          {/* BEST DARK MAP - NO GRID LINES */}
           <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; OpenStreetMap, CartoDB'
+            url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
+            attribution='&copy; OpenStreetMap contributors &copy; CARTO'
+            maxZoom={19}
           />
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
+            attribution=''
+            maxZoom={19}
+          />
+          
           <FitBounds cities={activeCityData} />
           {activeCityData.map((city) => (
             <Marker
@@ -215,10 +255,27 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
         
         <button
           onClick={toggleFullscreen}
-          className="absolute top-6 right-6 z-[10000] bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl shadow-2xl transition-all duration-300 flex items-center space-x-3 font-bold text-base"
+          style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            zIndex: 100000,
+            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+            color: 'white',
+            padding: '12px 24px',
+            borderRadius: '12px',
+            border: 'none',
+            fontSize: '16px',
+            fontWeight: '700',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+          }}
         >
-          <X size={22} />
-          <span>Close Map</span>
+          <X size={20} />
+          Close Map
         </button>
       </div>
     )
@@ -228,17 +285,25 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
   return (
     <div className="relative w-full h-full">
       <MapContainer
-        center={[20.5937, 78.9629]}
+        center={[22.5, 79]}
         zoom={5}
         style={{ height: '100%', width: '100%' }}
         className="rounded-xl shadow-2xl"
         zoomControl={true}
+        preferCanvas={true}
       >
-        {/* PREMIUM DARK MAP - BEST QUALITY */}
+        {/* BEST DARK MAP - NO GRID LINES + LABELS OVERLAY */}
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; OpenStreetMap, CartoDB'
+          url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
+          attribution='&copy; OpenStreetMap contributors &copy; CARTO'
+          maxZoom={19}
         />
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
+          attribution=''
+          maxZoom={19}
+        />
+        
         <FitBounds cities={activeCityData} />
         {activeCityData.map((city) => (
           <Marker
