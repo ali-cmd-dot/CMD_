@@ -99,116 +99,70 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
       key
     }))
 
-  // BRIGHT VIBRANT COLORS
-  const getColor = (count) => {
-    if (count > 100) return '#C026D3' // Fuchsia
-    if (count > 50) return '#0EA5E9'  // Sky Blue
-    if (count > 20) return '#22C55E'  // Lime Green
-    if (count > 10) return '#F97316'  // Orange
-    if (count > 5) return '#6366F1'   // Indigo
-    return '#F43F5E'                   // Rose
-  }
-
-  // SMALLER RADIUS - Perfect size!
-  const getRadius = (count) => {
-    if (count > 200) return 18
-    if (count > 100) return 16
-    if (count > 50) return 14
-    if (count > 20) return 11
-    if (count > 10) return 9
-    if (count > 5) return 7
-    return 6
-  }
-
-  // CLEAN MINIMAL MARKER - No labels, just bubbles
-  const createCustomIcon = (city, count, color) => {
-    const radius = getRadius(count)
-    const fontSize = radius > 14 ? '13px' : radius > 10 ? '11px' : '9px'
-    
+  // GOOGLE MAPS STYLE RED PIN - ALL SAME SIZE
+  const createRedPin = (city, count) => {
     return L.divIcon({
       html: `
-        <div style="position: relative; width: ${radius * 2.2}px; height: ${radius * 2.2}px;">
-          <!-- Soft glow -->
-          <div style="
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: ${radius * 2.6}px;
-            height: ${radius * 2.6}px;
-            background: radial-gradient(circle, ${color}50 0%, transparent 65%);
-            border-radius: 50%;
-            animation: glow-pulse 3s ease-in-out infinite;
-          "></div>
+        <div class="location-pin-container" style="position: relative; width: 40px; height: 50px;">
+          <!-- Red Location Pin -->
+          <svg width="40" height="50" viewBox="0 0 40 50" style="filter: drop-shadow(0 3px 8px rgba(0,0,0,0.4));">
+            <!-- Pin shape -->
+            <path d="M20 0C11.716 0 5 6.716 5 15c0 8.284 15 35 15 35s15-26.716 15-35c0-8.284-6.716-15-15-15z" 
+                  fill="#EA4335" 
+                  stroke="#B71C1C" 
+                  stroke-width="1"/>
+            
+            <!-- White circle for count -->
+            <circle cx="20" cy="15" r="11" fill="white"/>
+            
+            <!-- Count text -->
+            <text x="20" y="20" 
+                  text-anchor="middle" 
+                  font-size="${count > 999 ? '9' : count > 99 ? '10' : '12'}px" 
+                  font-weight="900" 
+                  fill="#EA4335"
+                  font-family="Arial, sans-serif">${count}</text>
+          </svg>
           
-          <!-- Main bubble -->
-          <div class="bubble-marker" style="
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: ${radius * 2}px;
-            height: ${radius * 2}px;
-            background: ${color};
-            background: linear-gradient(145deg, ${color} 0%, ${color}dd 100%);
-            border: 2.5px solid rgba(255, 255, 255, 0.95);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: ${fontSize};
-            color: white;
-            letter-spacing: -0.5px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-            box-shadow: 
-              0 2px 10px ${color}70,
-              0 1px 3px rgba(0,0,0,0.25),
-              inset 0 -1px 2px rgba(0,0,0,0.15);
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: ${1000 + count};
-          ">
-            ${count}
-          </div>
+          <!-- Hover effect -->
+          <style>
+            .location-pin-container {
+              transition: all 0.2s ease;
+              cursor: pointer;
+            }
+            .location-pin-container:hover {
+              transform: scale(1.15);
+              filter: brightness(1.1);
+              z-index: 999999 !important;
+            }
+            .location-pin-container:hover svg {
+              filter: drop-shadow(0 6px 16px rgba(234, 67, 53, 0.5));
+            }
+          </style>
         </div>
-        
-        <style>
-          @keyframes glow-pulse {
-            0%, 100% { opacity: 0.35; transform: translate(-50%, -50%) scale(1); }
-            50% { opacity: 0.55; transform: translate(-50%, -50%) scale(1.08); }
-          }
-          .bubble-marker:hover {
-            transform: translate(-50%, -50%) scale(1.3) !important;
-            box-shadow: 
-              0 4px 18px ${color}90,
-              0 2px 6px rgba(0,0,0,0.35),
-              inset 0 -1px 2px rgba(0,0,0,0.2) !important;
-            border-width: 3px !important;
-            z-index: 999999 !important;
-          }
-        </style>
       `,
-      className: 'clean-marker',
-      iconSize: [radius * 2.6, radius * 2.6],
-      iconAnchor: [radius * 1.3, radius * 1.3]
+      className: 'red-pin-marker',
+      iconSize: [40, 50],
+      iconAnchor: [20, 50],
+      popupAnchor: [0, -50]
     })
   }
 
   const toggleFullscreen = () => setIsFullscreen(!isFullscreen)
 
-  // FULLSCREEN
+  // FULLSCREEN VIEW
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-[9999]" style={{ background: 'linear-gradient(145deg, #0f172a 0%, #020617 100%)' }}>
+      <div className="fixed inset-0 z-[9999] bg-white">
         <MapContainer
           center={[20.5937, 78.9629]}
           zoom={5}
           style={{ height: '100%', width: '100%' }}
           zoomControl={true}
         >
+          {/* CLEAR LIGHT MAP - NO GRID LINES */}
           <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
             attribution='&copy; OpenStreetMap, CartoDB'
           />
           <FitBounds cities={activeCityData} />
@@ -216,12 +170,12 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
             <Marker
               key={city.key}
               position={[city.lat, city.lng]}
-              icon={createCustomIcon(city, city.count, getColor(city.count))}
+              icon={createRedPin(city, city.count)}
             >
-              <Popup className="modern-popup">
+              <Popup className="pin-popup">
                 <div className="text-center px-4 py-3">
                   <div className="text-xl font-bold text-gray-900 mb-1">{city.label}</div>
-                  <div className="text-base font-semibold text-gray-600">{city.count} devices</div>
+                  <div className="text-lg font-semibold text-red-600">{city.count} devices</div>
                 </div>
               </Popup>
             </Marker>
@@ -230,7 +184,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
         
         <button
           onClick={toggleFullscreen}
-          className="absolute top-6 right-6 z-[10000] bg-gradient-to-r from-rose-500 via-red-500 to-red-600 hover:from-rose-600 hover:via-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl shadow-2xl transition-all duration-300 flex items-center space-x-3 font-bold text-base border border-white border-opacity-20"
+          className="absolute top-6 right-6 z-[10000] bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl shadow-2xl transition-all duration-300 flex items-center space-x-3 font-bold text-base"
         >
           <X size={22} />
           <span>Close Map</span>
@@ -249,8 +203,9 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
         className="rounded-xl shadow-2xl"
         zoomControl={true}
       >
+        {/* CLEAR LIGHT MAP - NO GRID LINES */}
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           attribution='&copy; OpenStreetMap, CartoDB'
         />
         <FitBounds cities={activeCityData} />
@@ -258,12 +213,12 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
           <Marker
             key={city.key}
             position={[city.lat, city.lng]}
-            icon={createCustomIcon(city, city.count, getColor(city.count))}
+            icon={createRedPin(city, city.count)}
           >
-            <Popup className="modern-popup">
+            <Popup className="pin-popup">
               <div className="text-center px-3 py-2">
                 <div className="text-lg font-bold text-gray-900 mb-1">{city.label}</div>
-                <div className="text-sm font-semibold text-gray-600">{city.count} devices</div>
+                <div className="text-base font-semibold text-red-600">{city.count} devices</div>
               </div>
             </Popup>
           </Marker>
@@ -272,7 +227,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
 
       <button
         onClick={toggleFullscreen}
-        className="absolute top-4 right-4 z-[1000] bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-700 hover:via-blue-600 hover:to-indigo-700 text-white px-4 py-2.5 rounded-lg shadow-xl transition-all duration-300 flex items-center space-x-2 font-bold text-sm border border-white border-opacity-25 backdrop-blur-sm"
+        className="absolute top-4 right-4 z-[1000] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2.5 rounded-lg shadow-xl transition-all duration-300 flex items-center space-x-2 font-bold text-sm"
       >
         <Maximize2 size={16} />
         <span>Expand Map</span>
