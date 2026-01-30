@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Popup, Tooltip } from 'react-leaflet'
-import { Maximize2, Minimize2, MapPin, Activity, TrendingUp, Zap } from 'lucide-react'
+import { Maximize2, Minimize2, MapPin, Activity, TrendingUp, Zap, AlertCircle } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
 
 export default function IndiaMapLeaflet({ installationTrackerData }) {
@@ -48,7 +48,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     )
   }
 
-  // Comprehensive city coordinates for ALL possible Indian cities
+  // COMPREHENSIVE city coordinates - covers ALL major Indian cities
   const cityCoordinates = {
     // Major metros
     'mumbai': { lat: 19.0760, lng: 72.8777, label: 'Mumbai' },
@@ -61,7 +61,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'pune': { lat: 18.5204, lng: 73.8567, label: 'Pune' },
     'ahmedabad': { lat: 23.0225, lng: 72.5714, label: 'Ahmedabad' },
     
-    // All other cities from various sources
+    // All Tier 1 & 2 cities
     'surat': { lat: 21.1702, lng: 72.8311, label: 'Surat' },
     'jaipur': { lat: 26.9124, lng: 75.7873, label: 'Jaipur' },
     'lucknow': { lat: 26.8467, lng: 80.9462, label: 'Lucknow' },
@@ -129,13 +129,10 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'mangaluru': { lat: 12.9141, lng: 74.8560, label: 'Mangaluru' },
     'warangal': { lat: 17.9689, lng: 79.5941, label: 'Warangal' },
     'tiruvallur': { lat: 13.1433, lng: 79.9074, label: 'Tiruvallur' },
-    'kalyan-dombivli': { lat: 19.2403, lng: 73.1305, label: 'Kalyan-Dombivli' },
     'kalyan': { lat: 19.2403, lng: 73.1305, label: 'Kalyan' },
     'dombivli': { lat: 19.2183, lng: 73.0868, label: 'Dombivli' },
-    'vasai-virar': { lat: 19.4614, lng: 72.7875, label: 'Vasai-Virar' },
     'vasai': { lat: 19.4614, lng: 72.7875, label: 'Vasai' },
     'virar': { lat: 19.4559, lng: 72.8111, label: 'Virar' },
-    'pimpri-chinchwad': { lat: 18.6298, lng: 73.7997, label: 'Pimpri-Chinchwad' },
     'pimpri': { lat: 18.6298, lng: 73.7997, label: 'Pimpri' },
     'chinchwad': { lat: 18.6186, lng: 73.8037, label: 'Chinchwad' },
     'bikaner': { lat: 28.0229, lng: 73.3119, label: 'Bikaner' },
@@ -256,8 +253,6 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'ichalkaranji': { lat: 16.6890, lng: 74.4606, label: 'Ichalkaranji' },
     'karnal': { lat: 29.6857, lng: 76.9905, label: 'Karnal' },
     'bathinda': { lat: 30.2110, lng: 74.9455, label: 'Bathinda' },
-    'baharampur': { lat: 24.1000, lng: 88.2500, label: 'Baharampur' },
-    'kulti': { lat: 23.7307, lng: 86.8454, label: 'Kulti' },
     'shillong': { lat: 25.5788, lng: 91.8933, label: 'Shillong' },
     'sambalpur': { lat: 21.4704, lng: 83.9701, label: 'Sambalpur' },
     'ongole': { lat: 15.5057, lng: 80.0499, label: 'Ongole' },
@@ -296,9 +291,6 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'bharuch': { lat: 21.7051, lng: 72.9959, label: 'Bharuch' },
     'naihati': { lat: 22.8934, lng: 88.4196, label: 'Naihati' },
     'barasat': { lat: 22.7237, lng: 88.4820, label: 'Barasat' },
-    'tiruppur': { lat: 11.1075, lng: 77.3398, label: 'Tiruppur' },
-    'davanagere': { lat: 14.4666, lng: 75.9236, label: 'Davanagere' },
-    'kurnool': { lat: 15.8281, lng: 78.0373, label: 'Kurnool' },
     'bally': { lat: 22.6514, lng: 88.3405, label: 'Bally' },
     'baranagar': { lat: 22.6422, lng: 88.3726, label: 'Baranagar' },
     'tiruchengode': { lat: 11.3782, lng: 77.8938, label: 'Tiruchengode' },
@@ -308,17 +300,18 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'panchkula': { lat: 30.6942, lng: 76.8534, label: 'Panchkula' },
     'burhanpur': { lat: 21.3110, lng: 76.2294, label: 'Burhanpur' },
     'raurkela': { lat: 22.2497, lng: 84.8644, label: 'Raurkela' },
-    'khammam': { lat: 17.2473, lng: 80.1436, label: 'Khammam' },
     'vizianagaram': { lat: 18.1067, lng: 83.4124, label: 'Vizianagaram' },
     'srikakulam': { lat: 18.2949, lng: 83.8938, label: 'Srikakulam' },
     'rewari': { lat: 28.1988, lng: 76.6194, label: 'Rewari' },
-    'yamunanagar': { lat: 30.1290, lng: 77.2674, label: 'Yamunanagar' }
+    'yamunanagar': { lat: 30.1290, lng: 77.2674, label: 'Yamunanagar' },
+    'baharampur': { lat: 24.1000, lng: 88.2500, label: 'Baharampur' },
+    'kulti': { lat: 23.7307, lng: 86.8454, label: 'Kulti' },
   }
 
   // Get ALL cities from data with their counts
   const citiesBreakdown = installationTrackerData.citiesBreakdown || []
   
-  // Map cities to coordinates
+  // Map cities to coordinates - IMPORTANT: Don't filter out any cities!
   const cityData = citiesBreakdown.map(cityInfo => {
     const cityKey = cityInfo.city.toLowerCase().trim()
     const coords = cityCoordinates[cityKey]
@@ -327,17 +320,29 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
       return {
         ...coords,
         count: cityInfo.count,
-        key: cityKey
+        key: cityKey,
+        hasCoordinates: true
+      }
+    } else {
+      // For cities without coordinates, place them in a default location
+      // We'll spread them around central India
+      const baseAngle = (cityKey.charCodeAt(0) + cityKey.charCodeAt(Math.floor(cityKey.length/2))) * 13.7
+      const radius = 5 + (cityInfo.count / 10)
+      
+      return {
+        lat: 23.0 + Math.sin(baseAngle) * radius,
+        lng: 79.0 + Math.cos(baseAngle) * radius,
+        label: cityInfo.city,
+        count: cityInfo.count,
+        key: cityKey,
+        hasCoordinates: false
       }
     }
-    return null
-  }).filter(Boolean)
-
-  // Count missing cities
-  const missingCities = citiesBreakdown.filter(cityInfo => {
-    const cityKey = cityInfo.city.toLowerCase().trim()
-    return !cityCoordinates[cityKey]
   })
+
+  // Separate mapped and unmapped cities for stats
+  const mappedCities = cityData.filter(c => c.hasCoordinates)
+  const unmappedCities = cityData.filter(c => !c.hasCoordinates)
 
   const totalDevices = Object.values(installationTrackerData.cityCount || {}).reduce((a, b) => a + b, 0)
 
@@ -350,18 +355,18 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
   }
 
   const getMarkerSize = (count) => {
-    if (count > 500) return 22
-    if (count > 200) return 18
-    if (count > 100) return 14
-    if (count > 50) return 11
-    return 8
+    if (count > 500) return 24
+    if (count > 200) return 20
+    if (count > 100) return 16
+    if (count > 50) return 13
+    return 10
   }
 
   const toggleFullscreen = () => setIsFullscreen(!isFullscreen)
 
   const MapView = () => (
     <div className="relative w-full h-full">
-      {/* Leaflet Map with Vibrant Colorful Theme - Esri World Street Map */}
+      {/* Leaflet Map with Vibrant Colorful Theme */}
       <MapContainer
         center={[22.5, 79.5]}
         zoom={5}
@@ -375,7 +380,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
           attribution='Tiles &copy; Esri'
         />
 
-        {/* City markers with counts */}
+        {/* City markers with counts - ALL CITIES SHOWN! */}
         {cityData.map((city, index) => (
           <CircleMarker
             key={index}
@@ -383,24 +388,37 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
             radius={getMarkerSize(city.count)}
             pathOptions={{
               fillColor: getMarkerColor(city.count),
-              fillOpacity: 0.85,
-              color: '#ffffff',
-              weight: 2.5,
+              fillOpacity: city.hasCoordinates ? 0.85 : 0.65,
+              color: city.hasCoordinates ? '#ffffff' : '#fbbf24',
+              weight: city.hasCoordinates ? 2.5 : 3,
               className: 'city-marker'
             }}
           >
             {/* Count displayed inside bubble */}
             <Tooltip permanent direction="center" className="count-tooltip" opacity={1}>
-              <span className="font-bold text-white" style={{ fontSize: '11px', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
+              <span className="font-bold text-white" style={{ 
+                fontSize: city.count > 100 ? '11px' : '10px', 
+                textShadow: '0 1px 2px rgba(0,0,0,0.8)' 
+              }}>
                 {city.count}
               </span>
             </Tooltip>
             <Popup>
               <div className="text-sm p-1">
-                <div className="font-bold text-base mb-1 text-gray-800">{city.label}</div>
+                <div className="font-bold text-base mb-1 text-gray-800">
+                  {city.label}
+                  {!city.hasCoordinates && (
+                    <span className="ml-2 text-xs text-yellow-600">📍 Approx</span>
+                  )}
+                </div>
                 <div className="text-gray-700">
                   <span className="font-semibold text-lg text-blue-600">{city.count}</span> devices
                 </div>
+                {!city.hasCoordinates && (
+                  <div className="text-xs text-yellow-600 mt-1">
+                    Coordinates not available
+                  </div>
+                )}
               </div>
             </Popup>
           </CircleMarker>
@@ -415,7 +433,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
               <MapPin size={20} />
             </div>
             <div>
-              <div className="map-label">CITIES MAPPED</div>
+              <div className="map-label">ALL CITIES</div>
               <div className="map-value">{cityData.length}</div>
             </div>
           </div>
@@ -435,26 +453,31 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
 
         <div className="map-card">
           <div className="flex items-center gap-3">
-            <div className="map-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
+            <div className="map-icon" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>
               <TrendingUp size={20} />
             </div>
             <div>
-              <div className="map-label">COVERAGE</div>
-              <div className="map-value">Pan India</div>
+              <div className="map-label">MAPPED</div>
+              <div className="map-value">{mappedCities.length}</div>
             </div>
           </div>
         </div>
 
-        {missingCities.length > 0 && (
+        {unmappedCities.length > 0 && (
           <div className="map-card bg-yellow-50 border-yellow-300">
-            <div className="text-xs text-yellow-800">
-              <div className="font-semibold mb-1">⚠️ {missingCities.length} cities not mapped</div>
-              <div className="text-yellow-700 text-[10px] max-h-20 overflow-y-auto">
-                {missingCities.slice(0, 5).map((c, i) => (
-                  <div key={i}>• {c.city} ({c.count})</div>
-                ))}
-                {missingCities.length > 5 && <div>...and {missingCities.length - 5} more</div>}
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle className="text-yellow-600" size={16} />
+              <div className="text-xs font-bold text-yellow-800">
+                {unmappedCities.length} cities approx. positioned
               </div>
+            </div>
+            <div className="text-xs text-yellow-700 max-h-24 overflow-y-auto space-y-1">
+              {unmappedCities.slice(0, 5).map((c, i) => (
+                <div key={i}>• {c.label} ({c.count})</div>
+              ))}
+              {unmappedCities.length > 5 && (
+                <div className="font-semibold">...and {unmappedCities.length - 5} more</div>
+              )}
             </div>
           </div>
         )}
@@ -468,22 +491,22 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
         </div>
         <div className="flex flex-col gap-3">
           <div className="legend-row">
-            <div className="legend-dot" style={{ background: '#ef4444', boxShadow: '0 0 10px rgba(239, 68, 68, 0.4)' }}></div>
+            <div className="legend-dot pulse-marker" style={{ background: '#ef4444', boxShadow: '0 0 10px rgba(239, 68, 68, 0.4)' }}></div>
             <span className="legend-text">500+ devices</span>
             <span className="legend-badge hot">🔥 HOT</span>
           </div>
           <div className="legend-row">
-            <div className="legend-dot" style={{ background: '#f97316', boxShadow: '0 0 10px rgba(249, 115, 22, 0.4)' }}></div>
+            <div className="legend-dot pulse-marker" style={{ background: '#f97316', boxShadow: '0 0 10px rgba(249, 115, 22, 0.4)' }}></div>
             <span className="legend-text">200-500</span>
             <span className="legend-badge active">⚡ ACTIVE</span>
           </div>
           <div className="legend-row">
-            <div className="legend-dot" style={{ background: '#f59e0b', boxShadow: '0 0 10px rgba(245, 158, 11, 0.4)' }}></div>
+            <div className="legend-dot pulse-marker" style={{ background: '#f59e0b', boxShadow: '0 0 10px rgba(245, 158, 11, 0.4)' }}></div>
             <span className="legend-text">100-200</span>
             <span className="legend-badge growing">✨ GROWING</span>
           </div>
           <div className="legend-row">
-            <div className="legend-dot" style={{ background: '#eab308', boxShadow: '0 0 10px rgba(234, 179, 8, 0.4)' }}></div>
+            <div className="legend-dot pulse-marker" style={{ background: '#eab308', boxShadow: '0 0 10px rgba(234, 179, 8, 0.4)' }}></div>
             <span className="legend-text">50-100</span>
             <span className="legend-badge moderate">📊 MODERATE</span>
           </div>
