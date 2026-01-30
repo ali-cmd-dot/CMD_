@@ -437,27 +437,27 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
           <div className="legend-row">
             <div className="legend-ping" style={{ background: '#ef4444', boxShadow: '0 0 20px #ef4444' }}></div>
             <span className="legend-label">500+ devices</span>
-            <span className="legend-tag hot">🔥 HOT</span>
+            <span className="legend-tag hot"></span>
           </div>
           <div className="legend-row">
             <div className="legend-ping" style={{ background: '#f97316', boxShadow: '0 0 20px #f97316' }}></div>
             <span className="legend-label">200-500</span>
-            <span className="legend-tag active">⚡ ACTIVE</span>
+            <span className="legend-tag active"></span>
           </div>
           <div className="legend-row">
             <div className="legend-ping" style={{ background: '#f59e0b', boxShadow: '0 0 20px #f59e0b' }}></div>
             <span className="legend-label">100-200</span>
-            <span className="legend-tag growing">✨ GROWING</span>
+            <span className="legend-tag growing"></span>
           </div>
           <div className="legend-row">
             <div className="legend-ping" style={{ background: '#eab308', boxShadow: '0 0 20px #eab308' }}></div>
             <span className="legend-label">50-100</span>
-            <span className="legend-tag moderate">📊 MODERATE</span>
+            <span className="legend-tag moderate"></span>
           </div>
           <div className="legend-row">
             <div className="legend-ping" style={{ background: '#84cc16', boxShadow: '0 0 20px #84cc16' }}></div>
             <span className="legend-label">1-50</span>
-            <span className="legend-tag low">📍 LOW</span>
+            <span className="legend-tag low"></span>
           </div>
         </div>
       </div>
