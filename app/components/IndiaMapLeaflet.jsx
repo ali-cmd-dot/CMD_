@@ -1,9 +1,225 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet'
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet'
 import { Maximize2, Minimize2, MapPin, Activity, TrendingUp, Zap } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
+
+// Canvas Overlay Component
+function CanvasOverlay({ cityData }) {
+  const canvasRef = useRef(null)
+  const animationRef = useRef(null)
+  const map = useMap()
+
+  useEffect(() => {
+    if (!canvasRef.current || !cityData.length) return
+
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    const container = map.getContainer()
+
+    // Set canvas size to match map
+    const updateSize = () => {
+      const rect = container.getBoundingClientRect()
+      canvas.width = rect.width
+      canvas.height = rect.height
+      canvas.style.width = rect.width + 'px'
+      canvas.style.height = rect.height + 'px'
+    }
+    updateSize()
+
+    // Convert lat/lng to canvas pixel coordinates
+    const latLngToPixel = (lat, lng) => {
+      const point = map.latLngToContainerPoint([lat, lng])
+      return { x: point.x, y: point.y }
+    }
+
+    // Get city positions in pixels
+    let cityPositions = []
+    const updateCityPositions = () => {
+      cityPositions = cityData.map(city => ({
+        ...city,
+        ...latLngToPixel(city.lat, city.lng)
+      }))
+    }
+    updateCityPositions()
+
+    // Create connection lines between nearby cities
+    const connections = []
+    const createConnections = () => {
+      connections.length = 0
+      for (let i = 0; i < cityPositions.length; i++) {
+        for (let j = i + 1; j < cityPositions.length; j++) {
+          const dx = cityPositions[i].x - cityPositions[j].x
+          const dy = cityPositions[i].y - cityPositions[j].y
+          const distance = Math.sqrt(dx * dx + dy * dy)
+          if (distance < 200) {
+            connections.push({ 
+              from: cityPositions[i], 
+              to: cityPositions[j], 
+              distance 
+            })
+          }
+        }
+      }
+    }
+    createConnections()
+
+    // Animation variables
+    let frame = 0
+
+    // Animation loop
+    const animate = () => {
+      const width = canvas.width
+      const height = canvas.height
+      
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height)
+
+      // Draw animated stars
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
+      for (let i = 0; i < 200; i++) {
+        const twinkle = Math.sin(frame * 0.02 + i) * 0.3 + 0.7
+        const x = (i * 127) % width
+        const y = (i * 83) % height
+        ctx.globalAlpha = twinkle * 0.4
+        ctx.fillRect(x, y, 1.5, 1.5)
+      }
+      ctx.globalAlpha = 1
+
+      // Draw connection lines with animation
+      connections.forEach((conn, i) => {
+        const flowProgress = (frame * 0.01 + i * 0.3) % 1
+        const alpha = 0.2 + Math.sin(frame * 0.03 + conn.distance) * 0.1
+        
+        // Line
+        ctx.strokeStyle = `rgba(59, 130, 246, ${alpha})`
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(conn.from.x, conn.from.y)
+        ctx.lineTo(conn.to.x, conn.to.y)
+        ctx.stroke()
+
+        // Animated dot along the line
+        const dotX = conn.from.x + (conn.to.x - conn.from.x) * flowProgress
+        const dotY = conn.from.y + (conn.to.y - conn.from.y) * flowProgress
+        ctx.beginPath()
+        ctx.arc(dotX, dotY, 2, 0, Math.PI * 2)
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.7)'
+        ctx.fill()
+      })
+
+      // Draw glowing pings for each city
+      cityPositions.forEach((city, index) => {
+        const pulsePhase = frame * 0.04 + index * 0.4
+        const pulse = Math.sin(pulsePhase) * 0.3 + 0.7
+        
+        // Determine color and size based on device count
+        let color, size
+        if (city.count > 500) {
+          color = { r: 239, g: 68, b: 68 }
+          size = 16
+        } else if (city.count > 200) {
+          color = { r: 249, g: 115, b: 22 }
+          size = 13
+        } else if (city.count > 100) {
+          color = { r: 245, g: 158, b: 11 }
+          size = 10
+        } else if (city.count > 50) {
+          color = { r: 234, g: 179, b: 8 }
+          size = 8
+        } else {
+          color = { r: 132, g: 204, b: 22 }
+          size = 6
+        }
+
+        // Outer glow
+        const outerGlow = ctx.createRadialGradient(city.x, city.y, 0, city.x, city.y, size * 6 * pulse)
+        outerGlow.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, 0.6)`)
+        outerGlow.addColorStop(0.3, `rgba(${color.r}, ${color.g}, ${color.b}, 0.4)`)
+        outerGlow.addColorStop(0.6, `rgba(${color.r}, ${color.g}, ${color.b}, 0.2)`)
+        outerGlow.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0)`)
+        ctx.fillStyle = outerGlow
+        ctx.fillRect(city.x - size * 6 * pulse, city.y - size * 6 * pulse, size * 12 * pulse, size * 12 * pulse)
+
+        // Middle ring
+        ctx.beginPath()
+        ctx.arc(city.x, city.y, size * 2.5 * pulse, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.5)`
+        ctx.fill()
+
+        // Inner glow
+        ctx.beginPath()
+        ctx.arc(city.x, city.y, size * 1.5 * pulse, 0, Math.PI * 2)
+        const innerGradient = ctx.createRadialGradient(city.x, city.y, 0, city.x, city.y, size * 1.5 * pulse)
+        innerGradient.addColorStop(0, `rgba(255, 255, 255, 1)`)
+        innerGradient.addColorStop(0.4, `rgba(${color.r}, ${color.g}, ${color.b}, 0.9)`)
+        innerGradient.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0.5)`)
+        ctx.fillStyle = innerGradient
+        ctx.fill()
+
+        // Core dot
+        ctx.beginPath()
+        ctx.arc(city.x, city.y, size * 0.6, 0, Math.PI * 2)
+        ctx.fillStyle = 'rgba(255, 255, 255, 1)'
+        ctx.shadowBlur = 20
+        ctx.shadowColor = `rgba(${color.r}, ${color.g}, ${color.b}, 1)`
+        ctx.fill()
+        ctx.shadowBlur = 0
+
+        // Ring animation
+        if (pulse > 0.9) {
+          const ringSize = size * 4 * (pulse - 0.9) * 10
+          ctx.beginPath()
+          ctx.arc(city.x, city.y, ringSize, 0, Math.PI * 2)
+          ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${0.6 * (1 - (pulse - 0.9) * 10)})`
+          ctx.lineWidth = 3
+          ctx.stroke()
+        }
+      })
+
+      frame++
+      animationRef.current = requestAnimationFrame(animate)
+    }
+
+    animate()
+
+    // Update on map move/zoom
+    const handleMapUpdate = () => {
+      updateSize()
+      updateCityPositions()
+      createConnections()
+    }
+
+    map.on('move', handleMapUpdate)
+    map.on('zoom', handleMapUpdate)
+    map.on('resize', handleMapUpdate)
+    window.addEventListener('resize', handleMapUpdate)
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current)
+      }
+      map.off('move', handleMapUpdate)
+      map.off('zoom', handleMapUpdate)
+      map.off('resize', handleMapUpdate)
+      window.removeEventListener('resize', handleMapUpdate)
+    }
+  }, [cityData, map])
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        pointerEvents: 'none',
+        zIndex: 400
+      }}
+    />
+  )
+}
 
 export default function IndiaMapLeaflet({ installationTrackerData }) {
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -126,52 +342,38 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
 
   const totalDevices = Object.values(installationTrackerData.cityCount || {}).reduce((a, b) => a + b, 0)
 
-  const getMarkerColor = (count) => {
-    if (count > 500) return '#ef4444' // red
-    if (count > 200) return '#f97316' // orange
-    if (count > 100) return '#f59e0b' // amber
-    if (count > 50) return '#eab308' // yellow
-    return '#84cc16' // lime
-  }
-
-  const getMarkerSize = (count) => {
-    if (count > 500) return 25
-    if (count > 200) return 20
-    if (count > 100) return 15
-    if (count > 50) return 12
-    return 8
-  }
-
   const toggleFullscreen = () => setIsFullscreen(!isFullscreen)
 
   const MapView = () => (
     <div className="relative w-full h-full">
       {/* Leaflet Map with Dark Theme */}
       <MapContainer
-        center={[22.5, 79.5]} // Center of India
+        center={[22.5, 79.5]}
         zoom={5}
         style={{ height: '100%', width: '100%', background: '#0a0e27' }}
-        zoomControl={false}
+        zoomControl={true}
         attributionControl={false}
       >
         {/* Dark themed map tiles */}
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
 
-        {/* City markers with pulsing effect */}
+        {/* Canvas overlay with animations */}
+        <CanvasOverlay cityData={cityData} />
+
+        {/* Invisible markers for click interaction */}
         {cityData.map((city, index) => (
           <CircleMarker
             key={index}
             center={[city.lat, city.lng]}
-            radius={getMarkerSize(city.count)}
+            radius={15}
             pathOptions={{
-              fillColor: getMarkerColor(city.count),
-              fillOpacity: 0.8,
-              color: '#ffffff',
-              weight: 2,
-              className: 'pulsing-marker'
+              fillColor: 'transparent',
+              fillOpacity: 0,
+              color: 'transparent',
+              weight: 0
             }}
           >
             <Popup>
