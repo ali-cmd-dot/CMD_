@@ -76,36 +76,36 @@ function CanvasOverlay({ cityData }) {
       // Clear canvas
       ctx.clearRect(0, 0, width, height)
 
-      // Draw animated stars
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
-      for (let i = 0; i < 200; i++) {
+      // Draw animated sparkles (light theme - darker dots)
+      ctx.fillStyle = 'rgba(100, 150, 255, 0.4)'
+      for (let i = 0; i < 150; i++) {
         const twinkle = Math.sin(frame * 0.02 + i) * 0.3 + 0.7
         const x = (i * 127) % width
         const y = (i * 83) % height
-        ctx.globalAlpha = twinkle * 0.4
+        ctx.globalAlpha = twinkle * 0.3
         ctx.fillRect(x, y, 1.5, 1.5)
       }
       ctx.globalAlpha = 1
 
-      // Draw connection lines with animation
+      // Draw connection lines with animation (darker for light theme)
       connections.forEach((conn, i) => {
         const flowProgress = (frame * 0.01 + i * 0.3) % 1
-        const alpha = 0.2 + Math.sin(frame * 0.03 + conn.distance) * 0.1
+        const alpha = 0.25 + Math.sin(frame * 0.03 + conn.distance) * 0.15
         
-        // Line
-        ctx.strokeStyle = `rgba(59, 130, 246, ${alpha})`
-        ctx.lineWidth = 1
+        // Line (darker blue for visibility on white)
+        ctx.strokeStyle = `rgba(37, 99, 235, ${alpha})`
+        ctx.lineWidth = 1.5
         ctx.beginPath()
         ctx.moveTo(conn.from.x, conn.from.y)
         ctx.lineTo(conn.to.x, conn.to.y)
         ctx.stroke()
 
-        // Animated dot along the line
+        // Animated dot along the line (brighter for contrast)
         const dotX = conn.from.x + (conn.to.x - conn.from.x) * flowProgress
         const dotY = conn.from.y + (conn.to.y - conn.from.y) * flowProgress
         ctx.beginPath()
-        ctx.arc(dotX, dotY, 2, 0, Math.PI * 2)
-        ctx.fillStyle = 'rgba(59, 130, 246, 0.7)'
+        ctx.arc(dotX, dotY, 2.5, 0, Math.PI * 2)
+        ctx.fillStyle = 'rgba(37, 99, 235, 0.9)'
         ctx.fill()
       })
 
@@ -124,20 +124,20 @@ function CanvasOverlay({ cityData }) {
           size = 11
         } else if (city.count > 100) {
           color = { r: 245, g: 158, b: 11 }
-          size = 8
+          size = 18
         } else if (city.count > 50) {
           color = { r: 234, g: 179, b: 8 }
           size = 6
         } else {
-          color = { r: 132, g: 204, b: 22 }
+          color = { r: 34, g: 197, b: 94 }
           size = 4
         }
 
         // Outer glow
         const outerGlow = ctx.createRadialGradient(city.x, city.y, 0, city.x, city.y, size * 6 * pulse)
-        outerGlow.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, 0.6)`)
-        outerGlow.addColorStop(0.3, `rgba(${color.r}, ${color.g}, ${color.b}, 0.4)`)
-        outerGlow.addColorStop(0.6, `rgba(${color.r}, ${color.g}, ${color.b}, 0.2)`)
+        outerGlow.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, 0.7)`)
+        outerGlow.addColorStop(0.3, `rgba(${color.r}, ${color.g}, ${color.b}, 0.5)`)
+        outerGlow.addColorStop(0.6, `rgba(${color.r}, ${color.g}, ${color.b}, 0.3)`)
         outerGlow.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0)`)
         ctx.fillStyle = outerGlow
         ctx.fillRect(city.x - size * 6 * pulse, city.y - size * 6 * pulse, size * 12 * pulse, size * 12 * pulse)
@@ -145,7 +145,7 @@ function CanvasOverlay({ cityData }) {
         // Middle ring
         ctx.beginPath()
         ctx.arc(city.x, city.y, size * 2.5 * pulse, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.5)`
+        ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.6)`
         ctx.fill()
 
         // Inner glow
@@ -154,16 +154,16 @@ function CanvasOverlay({ cityData }) {
         const innerGradient = ctx.createRadialGradient(city.x, city.y, 0, city.x, city.y, size * 1.5 * pulse)
         innerGradient.addColorStop(0, `rgba(255, 255, 255, 1)`)
         innerGradient.addColorStop(0.4, `rgba(${color.r}, ${color.g}, ${color.b}, 0.9)`)
-        innerGradient.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0.5)`)
+        innerGradient.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0.6)`)
         ctx.fillStyle = innerGradient
         ctx.fill()
 
         // Core dot
         ctx.beginPath()
         ctx.arc(city.x, city.y, size * 0.6, 0, Math.PI * 2)
-        ctx.fillStyle = 'rgba(255, 255, 255, 1)'
+        ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 1)`
         ctx.shadowBlur = 20
-        ctx.shadowColor = `rgba(${color.r}, ${color.g}, ${color.b}, 1)`
+        ctx.shadowColor = `rgba(${color.r}, ${color.g}, ${color.b}, 0.8)`
         ctx.fill()
         ctx.shadowBlur = 0
 
@@ -172,7 +172,7 @@ function CanvasOverlay({ cityData }) {
           const ringSize = size * 4 * (pulse - 0.9) * 10
           ctx.beginPath()
           ctx.arc(city.x, city.y, ringSize, 0, Math.PI * 2)
-          ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${0.6 * (1 - (pulse - 0.9) * 10)})`
+          ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${0.7 * (1 - (pulse - 0.9) * 10)})`
           ctx.lineWidth = 3
           ctx.stroke()
         }
@@ -246,10 +246,10 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
 
   if (!isMounted) {
     return (
-      <div className="w-full h-full flex items-center justify-center network-map-bg rounded-2xl">
+      <div className="w-full h-full flex items-center justify-center network-map-bg-light rounded-2xl">
         <div className="text-center space-y-4">
-          <div className="loading-spinner"></div>
-          <div className="text-white text-lg font-medium">Loading Network Map...</div>
+          <div className="loading-spinner-light"></div>
+          <div className="text-gray-700 text-lg font-medium">Loading Network Map...</div>
         </div>
       </div>
     )
@@ -257,7 +257,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
 
   if (!installationTrackerData || !installationTrackerData.cityCount) {
     return (
-      <div className="text-center py-20 text-gray-400">
+      <div className="text-center py-20 text-gray-600">
         <Activity className="mx-auto mb-4" size={48} />
         <p>Loading device data...</p>
       </div>
@@ -346,17 +346,17 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
 
   const MapView = () => (
     <div className="relative w-full h-full">
-      {/* Leaflet Map with Dark Theme */}
+      {/* Leaflet Map with Light Theme */}
       <MapContainer
         center={[22.5, 79.5]}
         zoom={5}
-        style={{ height: '100%', width: '100%', background: '#0a0e27' }}
+        style={{ height: '100%', width: '100%', background: '#f8fafc' }}
         zoomControl={true}
         attributionControl={false}
       >
-        {/* Dark themed map tiles */}
+        {/* Light themed map tiles - CartoDB Positron */}
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
 
@@ -390,74 +390,74 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
 
       {/* Stats Overlay - Top Left */}
       <div className={`${isFullscreen ? 'fixed top-8 left-8' : 'absolute top-6 left-6'} z-[10000] flex flex-col gap-3`}>
-        <div className="network-card">
+        <div className="network-card-light">
           <div className="flex items-center gap-3">
-            <div className="network-icon" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>
+            <div className="network-icon-light" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>
               <MapPin size={20} />
             </div>
             <div>
-              <div className="network-label">ACTIVE CITIES</div>
-              <div className="network-value">{activeCities.length}</div>
+              <div className="network-label-light">ACTIVE CITIES</div>
+              <div className="network-value-light">{activeCities.length}</div>
             </div>
           </div>
         </div>
         
-        <div className="network-card">
+        <div className="network-card-light">
           <div className="flex items-center gap-3">
-            <div className="network-icon" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)' }}>
+            <div className="network-icon-light" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)' }}>
               <Activity size={20} />
             </div>
             <div>
-              <div className="network-label">TOTAL DEVICES</div>
-              <div className="network-value">{totalDevices.toLocaleString()}</div>
+              <div className="network-label-light">TOTAL DEVICES</div>
+              <div className="network-value-light">{totalDevices.toLocaleString()}</div>
             </div>
           </div>
         </div>
 
-        <div className="network-card">
+        <div className="network-card-light">
           <div className="flex items-center gap-3">
-            <div className="network-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
+            <div className="network-icon-light" style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
               <TrendingUp size={20} />
             </div>
             <div>
-              <div className="network-label">COVERAGE</div>
-              <div className="network-value">Pan India</div>
+              <div className="network-label-light">COVERAGE</div>
+              <div className="network-value-light">Pan India</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Legend - Bottom Right */}
-      <div className={`${isFullscreen ? 'fixed bottom-8 right-8' : 'absolute bottom-6 right-6'} z-[10000] network-card network-legend`}>
-        <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/10">
-          <Zap className="text-cyan-400" size={22} />
-          <div className="text-white font-bold text-base">Device Density</div>
+      <div className={`${isFullscreen ? 'fixed bottom-8 right-8' : 'absolute bottom-6 right-6'} z-[10000] network-card-light network-legend-light`}>
+        <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-300">
+          <Zap className="text-blue-600" size={22} />
+          <div className="text-gray-800 font-bold text-base">Device Density</div>
         </div>
         <div className="flex flex-col gap-3">
-          <div className="legend-row">
-            <div className="legend-ping" style={{ background: '#ef4444', boxShadow: '0 0 20px #ef4444' }}></div>
-            <span className="legend-label">500+ devices</span>
-            <span className="legend-tag hot"></span>
+          <div className="legend-row-light">
+            <div className="legend-ping-light" style={{ background: '#ef4444', boxShadow: '0 0 15px rgba(239, 68, 68, 0.4)' }}></div>
+            <span className="legend-label-light">500+ devices</span>
+            <span className="legend-tag-light hot"></span>
           </div>
-          <div className="legend-row">
-            <div className="legend-ping" style={{ background: '#f97316', boxShadow: '0 0 20px #f97316' }}></div>
-            <span className="legend-label">200-500</span>
-            <span className="legend-tag active"></span>
+          <div className="legend-row-light">
+            <div className="legend-ping-light" style={{ background: '#f97316', boxShadow: '0 0 15px rgba(249, 115, 22, 0.4)' }}></div>
+            <span className="legend-label-light">200-500</span>
+            <span className="legend-tag-light active"></span>
           </div>
-          <div className="legend-row">
-            <div className="legend-ping" style={{ background: '#f59e0b', boxShadow: '0 0 20px #f59e0b' }}></div>
-            <span className="legend-label">100-200</span>
-            <span className="legend-tag growing"></span>
+          <div className="legend-row-light">
+            <div className="legend-ping-light" style={{ background: '#f59e0b', boxShadow: '0 0 15px rgba(245, 158, 11, 0.4)' }}></div>
+            <span className="legend-label-light">100-200</span>
+            <span className="legend-tag-light growing"></span>
           </div>
-          <div className="legend-row">
-            <div className="legend-ping" style={{ background: '#eab308', boxShadow: '0 0 20px #eab308' }}></div>
-            <span className="legend-label">50-100</span>
-            <span className="legend-tag moderate"></span>
+          <div className="legend-row-light">
+            <div className="legend-ping-light" style={{ background: '#eab308', boxShadow: '0 0 15px rgba(234, 179, 8, 0.4)' }}></div>
+            <span className="legend-label-light">50-100</span>
+            <span className="legend-tag-light moderate"></span>
           </div>
-          <div className="legend-row">
-            <div className="legend-ping" style={{ background: '#84cc16', boxShadow: '0 0 20px #84cc16' }}></div>
-            <span className="legend-label">1-50</span>
-            <span className="legend-tag low"></span>
+          <div className="legend-row-light">
+            <div className="legend-ping-light" style={{ background: '#22c55e', boxShadow: '0 0 15px rgba(34, 197, 94, 0.4)' }}></div>
+            <span className="legend-label-light">1-50</span>
+            <span className="legend-tag-light low"></span>
           </div>
         </div>
       </div>
@@ -477,13 +477,13 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
           margin: 0,
           padding: 0
         }}
-        className="network-map-bg"
+        className="network-map-bg-light"
       >
         <MapView />
         
         <button
           onClick={toggleFullscreen}
-          className="fixed top-6 right-6 z-[1000000] network-button-close"
+          className="fixed top-6 right-6 z-[1000000] network-button-close-light"
         >
           <Minimize2 size={20} />
           <span>Exit Fullscreen</span>
@@ -494,12 +494,12 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
 
   // NORMAL VIEW
   return (
-    <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl network-map-bg">
+    <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl network-map-bg-light">
       <MapView />
       
       <button
         onClick={toggleFullscreen}
-        className="absolute top-4 right-4 z-[1000] network-button"
+        className="absolute top-4 right-4 z-[1000] network-button-light"
       >
         <Maximize2 size={18} />
         <span>Expand Map</span>
