@@ -210,13 +210,14 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
       }
       ctx.globalAlpha = 1
 
-      // Draw India border with glowing effect
-      ctx.shadowBlur = 20
-      ctx.shadowColor = 'rgba(59, 130, 246, 0.8)'
-      ctx.strokeStyle = 'rgba(59, 130, 246, 0.7)'
-      ctx.lineWidth = 2.5
-      ctx.beginPath()
+      // Draw India border with multiple layers for better visibility
       
+      // Layer 1: Outer glow (strongest)
+      ctx.shadowBlur = 30
+      ctx.shadowColor = 'rgba(59, 130, 246, 1)'
+      ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)'
+      ctx.lineWidth = 6
+      ctx.beginPath()
       indiaBorder.forEach((point, i) => {
         const { x, y } = project(point[0], point[1])
         if (i === 0) ctx.moveTo(x, y)
@@ -224,7 +225,80 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
       })
       ctx.closePath()
       ctx.stroke()
+      
+      // Layer 2: Medium glow
+      ctx.shadowBlur = 20
+      ctx.shadowColor = 'rgba(59, 130, 246, 0.9)'
+      ctx.strokeStyle = 'rgba(59, 130, 246, 0.6)'
+      ctx.lineWidth = 4
+      ctx.beginPath()
+      indiaBorder.forEach((point, i) => {
+        const { x, y } = project(point[0], point[1])
+        if (i === 0) ctx.moveTo(x, y)
+        else ctx.lineTo(x, y)
+      })
+      ctx.closePath()
+      ctx.stroke()
+      
+      // Layer 3: Main line (brightest)
+      ctx.shadowBlur = 15
+      ctx.shadowColor = 'rgba(59, 130, 246, 1)'
+      ctx.strokeStyle = 'rgba(59, 130, 246, 0.9)'
+      ctx.lineWidth = 2.5
+      ctx.beginPath()
+      indiaBorder.forEach((point, i) => {
+        const { x, y } = project(point[0], point[1])
+        if (i === 0) ctx.moveTo(x, y)
+        else ctx.lineTo(x, y)
+      })
+      ctx.closePath()
+      ctx.stroke()
+      
+      // Layer 4: Inner fill (very subtle)
       ctx.shadowBlur = 0
+      ctx.fillStyle = 'rgba(59, 130, 246, 0.05)'
+      ctx.beginPath()
+      indiaBorder.forEach((point, i) => {
+        const { x, y } = project(point[0], point[1])
+        if (i === 0) ctx.moveTo(x, y)
+        else ctx.lineTo(x, y)
+      })
+      ctx.closePath()
+      ctx.fill()
+      
+      ctx.shadowBlur = 0
+
+      // Draw state boundaries (subtle lines for better geography visualization)
+      ctx.strokeStyle = 'rgba(59, 130, 246, 0.15)'
+      ctx.lineWidth = 1
+      
+      // Major state boundaries (simplified)
+      const stateBoundaries = [
+        // Rajasthan-Gujarat border
+        [[70.5, 21.5], [71.0, 23.0], [71.5, 24.5], [72.0, 25.5]],
+        // Gujarat-Maharashtra border
+        [[72.5, 20.0], [73.5, 21.0], [74.0, 21.5]],
+        // Maharashtra-Karnataka border
+        [[73.5, 15.5], [74.5, 16.0], [76.0, 16.5], [77.5, 17.5]],
+        // Karnataka-Tamil Nadu border
+        [[76.5, 12.0], [77.5, 11.5], [78.0, 11.0], [78.5, 10.5]],
+        // Odisha-West Bengal border
+        [[85.5, 21.0], [86.0, 21.5], [87.0, 22.5], [87.5, 23.5]],
+        // Uttar Pradesh-Madhya Pradesh border
+        [[78.0, 24.5], [79.5, 24.0], [81.0, 24.5], [82.5, 24.5]],
+        // Bihar-Jharkhand border
+        [[84.0, 24.0], [85.5, 23.5], [87.0, 24.0]],
+      ]
+      
+      stateBoundaries.forEach(boundary => {
+        ctx.beginPath()
+        boundary.forEach((point, i) => {
+          const { x, y } = project(point[0], point[1])
+          if (i === 0) ctx.moveTo(x, y)
+          else ctx.lineTo(x, y)
+        })
+        ctx.stroke()
+      })
 
       // Draw connection lines with animation
       connections.forEach((conn, i) => {
