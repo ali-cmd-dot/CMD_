@@ -48,353 +48,220 @@ body {
 }
 
 /* ============================================
-   LIGHT NETWORK MAP BACKGROUND
+   MAP CARDS & UI ELEMENTS
    ============================================ */
 
-.network-map-bg-light {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
-  position: relative;
-}
-
-.network-map-bg-light::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: 
-    radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
-  animation: pulse-glow-light 8s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 0;
-}
-
-@keyframes pulse-glow-light {
-  0%, 100% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-/* ============================================
-   PULSING MARKER ANIMATION FOR LEAFLET
-   ============================================ */
-
-@keyframes marker-pulse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.3);
-    opacity: 0.7;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.pulsing-marker {
-  animation: marker-pulse 2s ease-in-out infinite;
-}
-
-/* Leaflet popup customization for light theme */
-.leaflet-popup-content-wrapper {
-  background: rgba(255, 255, 255, 0.98) !important;
+.map-card {
+  background: rgba(255, 255, 255, 0.97);
   backdrop-filter: blur(10px);
-  border-radius: 12px !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
-  border: 1px solid rgba(203, 213, 225, 0.5) !important;
-}
-
-.leaflet-popup-tip {
-  background: rgba(255, 255, 255, 0.98) !important;
-}
-
-/* ============================================
-   LIGHT NETWORK STYLE CARDS
-   ============================================ */
-
-.network-card-light {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px);
   border-radius: 14px;
-  padding: 16px 20px;
-  border: 1px solid rgba(203, 213, 225, 0.6);
+  padding: 14px 18px;
+  border: 1px solid rgba(203, 213, 225, 0.5);
   box-shadow: 
-    0 10px 40px rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(203, 213, 225, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: card-fade-in 0.6s ease-out backwards;
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(203, 213, 225, 0.2);
+  transition: all 0.3s ease;
 }
 
-.network-card-light:hover {
-  transform: translateY(-4px) scale(1.02);
-  border-color: rgba(59, 130, 246, 0.4);
+.map-card:hover {
+  transform: translateY(-2px);
   box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(59, 130, 246, 0.3),
-    0 0 40px rgba(59, 130, 246, 0.1);
+    0 12px 40px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
-@keyframes card-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.network-card-light:nth-child(1) {
-  animation-delay: 0.1s;
-}
-
-.network-card-light:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.network-card-light:nth-child(3) {
-  animation-delay: 0.3s;
-}
-
-/* ============================================
-   LIGHT STATS ICONS & VALUES
-   ============================================ */
-
-.network-icon-light {
-  width: 48px;
-  height: 48px;
+.map-icon {
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  box-shadow: 
-    0 8px 24px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  animation: icon-float 3s ease-in-out infinite;
-  transition: transform 0.3s ease;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
 }
 
-.network-card-light:hover .network-icon-light {
-  transform: scale(1.1) rotate(5deg);
+.map-card:hover .map-icon {
+  transform: scale(1.05);
 }
 
-@keyframes icon-float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
-.network-label-light {
-  color: rgba(71, 85, 105, 0.8);
-  font-size: 11px;
+.map-label {
+  color: rgba(71, 85, 105, 0.85);
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
-.network-value-light {
+.map-value {
   color: #1e293b;
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 900;
   letter-spacing: -0.02em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  background: linear-gradient(180deg, #0f172a 0%, #334155 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* ============================================
-   LIGHT LEGEND STYLES
+   LEGEND STYLES
    ============================================ */
 
-.network-legend-light {
-  min-width: 300px;
-  padding: 22px 24px !important;
+.map-legend {
+  min-width: 280px;
+  padding: 20px 22px !important;
 }
 
-.legend-row-light {
+.legend-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 10px;
-  border-radius: 10px;
-  transition: all 0.3s ease;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
   cursor: default;
 }
 
-.legend-row-light:hover {
-  background: rgba(226, 232, 240, 0.5);
-  transform: translateX(6px);
+.legend-row:hover {
+  background: rgba(226, 232, 240, 0.4);
+  transform: translateX(4px);
 }
 
-.legend-ping-light {
-  width: 18px;
-  height: 18px;
+.legend-dot {
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  border: 2px solid rgba(100, 116, 139, 0.4);
-  animation: legend-pulse 2s ease-in-out infinite;
+  border: 2px solid rgba(255, 255, 255, 0.8);
   flex-shrink: 0;
 }
 
-@keyframes legend-pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 0.8;
-  }
-}
-
-.legend-label-light {
+.legend-text {
   color: rgba(51, 65, 85, 0.9);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   flex: 1;
   letter-spacing: 0.01em;
 }
 
-.legend-tag-light {
-  font-size: 10px;
-  padding: 5px 12px;
-  border-radius: 8px;
+.legend-badge {
+  font-size: 9px;
+  padding: 4px 10px;
+  border-radius: 6px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
-.legend-tag-light.hot {
-  background: rgba(239, 68, 68, 0.15);
+.legend-badge.hot {
+  background: rgba(239, 68, 68, 0.12);
   color: #b91c1c;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
-.legend-tag-light.active {
-  background: rgba(249, 115, 22, 0.15);
+.legend-badge.active {
+  background: rgba(249, 115, 22, 0.12);
   color: #c2410c;
-  border: 1px solid rgba(249, 115, 22, 0.3);
+  border: 1px solid rgba(249, 115, 22, 0.25);
 }
 
-.legend-tag-light.growing {
-  background: rgba(245, 158, 11, 0.15);
+.legend-badge.growing {
+  background: rgba(245, 158, 11, 0.12);
   color: #b45309;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  border: 1px solid rgba(245, 158, 11, 0.25);
 }
 
-.legend-tag-light.moderate {
-  background: rgba(234, 179, 8, 0.15);
+.legend-badge.moderate {
+  background: rgba(234, 179, 8, 0.12);
   color: #a16207;
-  border: 1px solid rgba(234, 179, 8, 0.3);
+  border: 1px solid rgba(234, 179, 8, 0.25);
 }
 
-.legend-tag-light.low {
-  background: rgba(34, 197, 94, 0.15);
+.legend-badge.low {
+  background: rgba(34, 197, 94, 0.12);
   color: #15803d;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  border: 1px solid rgba(34, 197, 94, 0.25);
 }
 
 /* ============================================
-   LIGHT BUTTONS
+   BUTTONS
    ============================================ */
 
-.network-button-light {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(203, 213, 225, 0.6);
+.map-button {
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(203, 213, 225, 0.5);
   color: #1e293b;
-  padding: 12px 22px;
+  padding: 10px 20px;
   border-radius: 12px;
   font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.map-button:hover {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #1e40af;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+}
+
+.map-button:active {
+  transform: translateY(-1px);
+}
+
+.map-button-close {
+  background: rgba(254, 226, 226, 0.97);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #991b1b;
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-weight: 800;
   font-size: 14px;
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 32px rgba(239, 68, 68, 0.2);
+  transition: all 0.3s ease;
   cursor: pointer;
-  text-shadow: none;
 }
 
-.network-button-light:hover {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(59, 130, 246, 0.5);
-  color: #1e40af;
+.map-button-close:hover {
+  background: rgba(254, 202, 202, 0.97);
+  border-color: rgba(239, 68, 68, 0.5);
   transform: translateY(-3px);
-  box-shadow: 
-    0 12px 40px rgba(59, 130, 246, 0.2),
-    0 0 0 1px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 14px 45px rgba(239, 68, 68, 0.25);
 }
 
-.network-button-light:active {
-  transform: translateY(-1px);
-}
-
-.network-button-close-light {
-  background: rgba(254, 226, 226, 0.95);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  color: #991b1b;
-  padding: 14px 26px;
-  border-radius: 14px;
-  font-weight: 800;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: 
-    0 12px 40px rgba(239, 68, 68, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-  text-shadow: none;
-}
-
-.network-button-close-light:hover {
-  background: rgba(254, 202, 202, 0.95);
-  border-color: rgba(239, 68, 68, 0.6);
-  transform: translateY(-4px) scale(1.03);
-  box-shadow: 
-    0 16px 50px rgba(239, 68, 68, 0.3),
-    0 0 0 1px rgba(239, 68, 68, 0.4),
-    0 0 60px rgba(239, 68, 68, 0.15);
-}
-
-.network-button-close-light:active {
-  transform: translateY(-2px) scale(1.01);
+.map-button-close:active {
+  transform: translateY(-2px);
 }
 
 /* ============================================
-   LIGHT LOADING ANIMATION
+   LOADING SPINNER
    ============================================ */
 
-.loading-spinner-light {
-  width: 60px;
-  height: 60px;
+.loading-spinner-clean {
+  width: 56px;
+  height: 56px;
   border: 4px solid rgba(203, 213, 225, 0.3);
   border-top-color: #3b82f6;
   border-radius: 50%;
   animation: spinner-rotation 1s linear infinite;
   margin: 0 auto;
-  box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 25px rgba(59, 130, 246, 0.15);
 }
 
 @keyframes spinner-rotation {
@@ -404,29 +271,98 @@ body {
 }
 
 /* ============================================
+   LEAFLET CUSTOMIZATION
+   ============================================ */
+
+.leaflet-container {
+  font-family: inherit !important;
+}
+
+/* Tooltip with count inside bubbles */
+.leaflet-tooltip.count-tooltip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  pointer-events: none !important;
+}
+
+.leaflet-tooltip.count-tooltip::before {
+  display: none !important;
+}
+
+/* Popup styling */
+.leaflet-popup-content-wrapper {
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(10px);
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+  border: 1px solid rgba(203, 213, 225, 0.4) !important;
+  padding: 4px !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(255, 255, 255, 0.98) !important;
+}
+
+/* Zoom controls */
+.leaflet-control-zoom {
+  border: 1px solid rgba(203, 213, 225, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+  background: rgba(255, 255, 255, 0.97) !important;
+  color: #1e293b !important;
+  border-bottom: 1px solid rgba(203, 213, 225, 0.4) !important;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: rgba(59, 130, 246, 0.1) !important;
+  color: #1e40af !important;
+}
+
+.leaflet-control-zoom a:last-child {
+  border-bottom: none !important;
+}
+
+/* City markers pulse effect */
+.city-marker {
+  transition: all 0.3s ease;
+}
+
+/* ============================================
    SCROLLBAR
    ============================================ */
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(226, 232, 240, 0.5);
-  border-radius: 6px;
+  background: rgba(226, 232, 240, 0.4);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: linear-gradient(135deg, #3b82f6, #2563eb);
-  border-radius: 6px;
-  border: 2px solid rgba(226, 232, 240, 0.5);
+  border-radius: 4px;
+  border: 2px solid rgba(226, 232, 240, 0.4);
   transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
 }
 
 /* ============================================
@@ -434,70 +370,44 @@ body {
    ============================================ */
 
 @media (max-width: 768px) {
-  .network-card-light {
-    padding: 14px 16px;
+  .map-card {
+    padding: 12px 14px;
     min-width: auto;
   }
 
-  .network-value-light {
-    font-size: 22px;
+  .map-value {
+    font-size: 20px;
   }
 
-  .network-icon-light {
-    width: 40px;
-    height: 40px;
+  .map-icon {
+    width: 38px;
+    height: 38px;
   }
 
-  .network-legend-light {
-    min-width: 260px;
-    padding: 18px 20px !important;
+  .map-legend {
+    min-width: 240px;
+    padding: 16px 18px !important;
   }
 
-  .legend-row-light {
-    padding: 8px;
-    gap: 12px;
+  .legend-row {
+    padding: 6px;
+    gap: 10px;
   }
 
-  .legend-label-light {
-    font-size: 13px;
+  .legend-text {
+    font-size: 12px;
   }
 
-  .legend-tag-light {
-    font-size: 9px;
-    padding: 4px 10px;
+  .legend-badge {
+    font-size: 8px;
+    padding: 3px 8px;
   }
 
-  .network-button-light,
-  .network-button-close-light {
-    padding: 10px 18px;
-    font-size: 13px;
+  .map-button,
+  .map-button-close {
+    padding: 8px 16px;
+    font-size: 12px;
   }
-}
-
-/* ============================================
-   PERFORMANCE & SMOOTHNESS
-   ============================================ */
-
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
-
-canvas {
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-}
-
-/* Hardware acceleration */
-.network-card-light,
-.network-button-light,
-.network-button-close-light,
-.network-icon-light,
-.legend-ping-light {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  will-change: transform;
 }
 
 /* ============================================
@@ -511,30 +421,8 @@ body {
   overflow-x: hidden !important;
 }
 
-/* ============================================
-   LEAFLET MAP CONTAINER FIXES
-   ============================================ */
-
-.leaflet-container {
-  font-family: inherit !important;
-}
-
-.leaflet-control-zoom {
-  border: 1px solid rgba(203, 213, 225, 0.5) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-}
-
-.leaflet-control-zoom a {
-  background: rgba(255, 255, 255, 0.95) !important;
-  color: #1e293b !important;
-  border-bottom: 1px solid rgba(203, 213, 225, 0.5) !important;
-}
-
-.leaflet-control-zoom a:hover {
-  background: rgba(59, 130, 246, 0.1) !important;
-  color: #1e40af !important;
-}
-
-.leaflet-control-attribution {
-  display: none !important;
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
