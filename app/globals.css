@@ -137,6 +137,32 @@ body {
   flex-shrink: 0;
 }
 
+/* Pulsing animation for legend dots */
+.legend-dot.pulse-marker {
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  
+  50% {
+    transform: scale(1);
+  }
+  
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
 .legend-text {
   color: rgba(51, 65, 85, 0.9);
   font-size: 13px;
@@ -334,9 +360,28 @@ body {
   border-bottom: none !important;
 }
 
-/* City markers pulse effect */
+/* City markers with enhanced pulsing effect */
 .city-marker {
   transition: all 0.3s ease;
+  animation: marker-pulse 3s ease-in-out infinite;
+}
+
+@keyframes marker-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* Hover effect for markers */
+.leaflet-interactive:hover {
+  transform: scale(1.2) !important;
+  filter: brightness(1.1);
+  z-index: 1000 !important;
 }
 
 /* ============================================
