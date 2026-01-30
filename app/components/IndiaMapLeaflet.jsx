@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet'
 import { Maximize2, Minimize2, MapPin, Activity, TrendingUp, Zap } from 'lucide-react'
+import 'leaflet/dist/leaflet.css'
 
 export default function IndiaMapLeaflet({ installationTrackerData }) {
-  const canvasRef = useRef(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
-  const animationRef = useRef(null)
 
   useEffect(() => {
     setIsMounted(true)
@@ -27,257 +27,6 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
       document.documentElement.style.overflow = ''
     }
   }, [isFullscreen])
-
-  useEffect(() => {
-    if (!isMounted || !canvasRef.current || !installationTrackerData) return
-
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-    
-    // Set canvas size
-    const updateSize = () => {
-      const rect = canvas.getBoundingClientRect()
-      canvas.width = rect.width * window.devicePixelRatio
-      canvas.height = rect.height * window.devicePixelRatio
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
-    }
-    updateSize()
-    window.addEventListener('resize', updateSize)
-
-    // City coordinates
-    const cityCoordinates = {
-      'mumbai': { lat: 19.0760, lng: 72.8777, label: 'Mumbai' },
-      'delhi': { lat: 28.7041, lng: 77.1025, label: 'Delhi' },
-      'bengaluru': { lat: 12.9716, lng: 77.5946, label: 'Bengaluru' },
-      'kolkata': { lat: 22.5726, lng: 88.3639, label: 'Kolkata' },
-      'chennai': { lat: 13.0827, lng: 80.2707, label: 'Chennai' },
-      'hyderabad': { lat: 17.3850, lng: 78.4867, label: 'Hyderabad' },
-      'pune': { lat: 18.5204, lng: 73.8567, label: 'Pune' },
-      'ahmedabad': { lat: 23.0225, lng: 72.5714, label: 'Ahmedabad' },
-      'surat': { lat: 21.1702, lng: 72.8311, label: 'Surat' },
-      'jaipur': { lat: 26.9124, lng: 75.7873, label: 'Jaipur' },
-      'lucknow': { lat: 26.8467, lng: 80.9462, label: 'Lucknow' },
-      'kanpur': { lat: 26.4499, lng: 80.3319, label: 'Kanpur' },
-      'nagpur': { lat: 21.1458, lng: 79.0882, label: 'Nagpur' },
-      'indore': { lat: 22.7196, lng: 75.8577, label: 'Indore' },
-      'thane': { lat: 19.2183, lng: 72.9781, label: 'Thane' },
-      'bhopal': { lat: 23.2599, lng: 77.4126, label: 'Bhopal' },
-      'visakhapatnam': { lat: 17.6869, lng: 83.2185, label: 'Vizag' },
-      'patna': { lat: 25.5941, lng: 85.1376, label: 'Patna' },
-      'vadodara': { lat: 22.3072, lng: 73.1812, label: 'Vadodara' },
-      'ghaziabad': { lat: 28.6692, lng: 77.4538, label: 'Ghaziabad' },
-      'ludhiana': { lat: 30.9010, lng: 75.8573, label: 'Ludhiana' },
-      'agra': { lat: 27.1767, lng: 78.0081, label: 'Agra' },
-      'nashik': { lat: 19.9975, lng: 73.7898, label: 'Nashik' },
-      'faridabad': { lat: 28.4089, lng: 77.3178, label: 'Faridabad' },
-      'meerut': { lat: 28.9845, lng: 77.7064, label: 'Meerut' },
-      'rajkot': { lat: 22.3039, lng: 70.8022, label: 'Rajkot' },
-      'varanasi': { lat: 25.3176, lng: 82.9739, label: 'Varanasi' },
-      'srinagar': { lat: 34.0837, lng: 74.7973, label: 'Srinagar' },
-      'aurangabad': { lat: 19.8762, lng: 75.3433, label: 'Aurangabad' },
-      'dhanbad': { lat: 23.7957, lng: 86.4304, label: 'Dhanbad' },
-      'amritsar': { lat: 31.6340, lng: 74.8723, label: 'Amritsar' },
-      'navi mumbai': { lat: 19.0330, lng: 73.0297, label: 'Navi Mumbai' },
-      'allahabad': { lat: 25.4358, lng: 81.8463, label: 'Prayagraj' },
-      'ranchi': { lat: 23.3441, lng: 85.3096, label: 'Ranchi' },
-      'howrah': { lat: 22.5958, lng: 88.2636, label: 'Howrah' },
-      'coimbatore': { lat: 11.0168, lng: 76.9558, label: 'Coimbatore' },
-      'jabalpur': { lat: 23.1815, lng: 79.9864, label: 'Jabalpur' },
-      'gwalior': { lat: 26.2183, lng: 78.1828, label: 'Gwalior' },
-      'vijayawada': { lat: 16.5062, lng: 80.6480, label: 'Vijayawada' },
-      'jodhpur': { lat: 26.2389, lng: 73.0243, label: 'Jodhpur' },
-      'madurai': { lat: 9.9252, lng: 78.1198, label: 'Madurai' },
-      'raipur': { lat: 21.2514, lng: 81.6296, label: 'Raipur' },
-      'kota': { lat: 25.2138, lng: 75.8648, label: 'Kota' },
-      'chandigarh': { lat: 30.7333, lng: 76.7794, label: 'Chandigarh' },
-      'guwahati': { lat: 26.1445, lng: 91.7362, label: 'Guwahati' },
-      'thiruvananthapuram': { lat: 8.5241, lng: 76.9366, label: 'Trivandrum' },
-      'solapur': { lat: 17.6599, lng: 75.9064, label: 'Solapur' },
-      'tiruchirappalli': { lat: 10.7905, lng: 78.7047, label: 'Trichy' },
-      'tiruppur': { lat: 11.1085, lng: 77.3411, label: 'Tiruppur' },
-      'bareilly': { lat: 28.3670, lng: 79.4304, label: 'Bareilly' },
-      'mysore': { lat: 12.2958, lng: 76.6394, label: 'Mysuru' },
-      'salem': { lat: 11.6643, lng: 78.1460, label: 'Salem' },
-      'gurgaon': { lat: 28.4595, lng: 77.0266, label: 'Gurugram' },
-      'aligarh': { lat: 27.8974, lng: 78.0880, label: 'Aligarh' },
-      'jalandhar': { lat: 31.3260, lng: 75.5762, label: 'Jalandhar' },
-      'bhubaneswar': { lat: 20.2961, lng: 85.8245, label: 'Bhubaneswar' },
-      'noida': { lat: 28.5355, lng: 77.3910, label: 'Noida' },
-      'moradabad': { lat: 28.8389, lng: 78.7378, label: 'Moradabad' },
-      'kochi': { lat: 9.9312, lng: 76.2673, label: 'Kochi' },
-      'mangalore': { lat: 12.9141, lng: 74.8560, label: 'Mangaluru' }
-    }
-
-    // Convert lat/lng to percentage-based coordinates
-    const latRange = [6, 37]
-    const lngRange = [68, 98]
-    
-    const project = (lat, lng) => {
-      const width = canvas.width / window.devicePixelRatio
-      const height = canvas.height / window.devicePixelRatio
-      const x = ((lng - lngRange[0]) / (lngRange[1] - lngRange[0])) * width * 0.75 + width * 0.125
-      const y = height - ((lat - latRange[0]) / (latRange[1] - latRange[0])) * height * 0.8 - height * 0.1
-      return { x, y }
-    }
-
-    // Get active cities
-    const activeCities = Object.keys(installationTrackerData.cityCount || {})
-    const cityData = activeCities.map(key => {
-      const city = cityCoordinates[key]
-      if (!city) return null
-      const { x, y } = project(city.lat, city.lng)
-      return {
-        ...city,
-        x, y,
-        count: installationTrackerData.cityCount[key] || 0,
-        key
-      }
-    }).filter(Boolean)
-
-    // Animation variables
-    let frame = 0
-
-    // Create connection lines between nearby cities
-    const connections = []
-    for (let i = 0; i < cityData.length; i++) {
-      for (let j = i + 1; j < cityData.length; j++) {
-        const dx = cityData[i].x - cityData[j].x
-        const dy = cityData[i].y - cityData[j].y
-        const distance = Math.sqrt(dx * dx + dy * dy)
-        if (distance < 150) {
-          connections.push({ from: cityData[i], to: cityData[j], distance })
-        }
-      }
-    }
-
-    // Animation loop
-    const animate = () => {
-      const width = canvas.width / window.devicePixelRatio
-      const height = canvas.height / window.devicePixelRatio
-      
-      // Clear canvas with dark gradient background
-      const gradient = ctx.createLinearGradient(0, 0, width, height)
-      gradient.addColorStop(0, '#0a0e27')
-      gradient.addColorStop(0.3, '#151935')
-      gradient.addColorStop(0.6, '#1a1e3e')
-      gradient.addColorStop(1, '#0f1120')
-      ctx.fillStyle = gradient
-      ctx.fillRect(0, 0, width, height)
-
-      // Add animated stars
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
-      for (let i = 0; i < 200; i++) {
-        const twinkle = Math.sin(frame * 0.02 + i) * 0.3 + 0.7
-        const x = (i * 127) % width
-        const y = (i * 83) % height
-        ctx.globalAlpha = twinkle * 0.6
-        ctx.fillRect(x, y, 1.5, 1.5)
-      }
-      ctx.globalAlpha = 1
-
-      // Draw connection lines with animation
-      connections.forEach((conn, i) => {
-        const flowProgress = (frame * 0.01 + i * 0.3) % 1
-        const alpha = 0.2 + Math.sin(frame * 0.03 + conn.distance) * 0.1
-        
-        ctx.strokeStyle = `rgba(59, 130, 246, ${alpha})`
-        ctx.lineWidth = 1
-        ctx.beginPath()
-        ctx.moveTo(conn.from.x, conn.from.y)
-        ctx.lineTo(conn.to.x, conn.to.y)
-        ctx.stroke()
-
-        // Animated dot along the line
-        const dotX = conn.from.x + (conn.to.x - conn.from.x) * flowProgress
-        const dotY = conn.from.y + (conn.to.y - conn.from.y) * flowProgress
-        ctx.beginPath()
-        ctx.arc(dotX, dotY, 2, 0, Math.PI * 2)
-        ctx.fillStyle = 'rgba(59, 130, 246, 0.7)'
-        ctx.fill()
-      })
-
-      // Draw glowing pings for each city
-      cityData.forEach((city, index) => {
-        const pulsePhase = frame * 0.04 + index * 0.4
-        const pulse = Math.sin(pulsePhase) * 0.3 + 0.7
-        
-        // Determine color and size based on device count
-        let color, size
-        if (city.count > 500) {
-          color = { r: 239, g: 68, b: 68 }
-          size = 16
-        } else if (city.count > 200) {
-          color = { r: 249, g: 115, b: 22 }
-          size = 13
-        } else if (city.count > 100) {
-          color = { r: 245, g: 158, b: 11 }
-          size = 10
-        } else if (city.count > 50) {
-          color = { r: 234, g: 179, b: 8 }
-          size = 8
-        } else {
-          color = { r: 132, g: 204, b: 22 }
-          size = 6
-        }
-
-        // Outer glow
-        const outerGlow = ctx.createRadialGradient(city.x, city.y, 0, city.x, city.y, size * 6 * pulse)
-        outerGlow.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, 0.6)`)
-        outerGlow.addColorStop(0.3, `rgba(${color.r}, ${color.g}, ${color.b}, 0.4)`)
-        outerGlow.addColorStop(0.6, `rgba(${color.r}, ${color.g}, ${color.b}, 0.2)`)
-        outerGlow.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0)`)
-        ctx.fillStyle = outerGlow
-        ctx.fillRect(city.x - size * 6 * pulse, city.y - size * 6 * pulse, size * 12 * pulse, size * 12 * pulse)
-
-        // Middle ring
-        ctx.beginPath()
-        ctx.arc(city.x, city.y, size * 2.5 * pulse, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.5)`
-        ctx.fill()
-
-        // Inner glow
-        ctx.beginPath()
-        ctx.arc(city.x, city.y, size * 1.5 * pulse, 0, Math.PI * 2)
-        const innerGradient = ctx.createRadialGradient(city.x, city.y, 0, city.x, city.y, size * 1.5 * pulse)
-        innerGradient.addColorStop(0, `rgba(255, 255, 255, 1)`)
-        innerGradient.addColorStop(0.4, `rgba(${color.r}, ${color.g}, ${color.b}, 0.9)`)
-        innerGradient.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0.5)`)
-        ctx.fillStyle = innerGradient
-        ctx.fill()
-
-        // Core dot
-        ctx.beginPath()
-        ctx.arc(city.x, city.y, size * 0.6, 0, Math.PI * 2)
-        ctx.fillStyle = 'rgba(255, 255, 255, 1)'
-        ctx.shadowBlur = 20
-        ctx.shadowColor = `rgba(${color.r}, ${color.g}, ${color.b}, 1)`
-        ctx.fill()
-        ctx.shadowBlur = 0
-
-        // Ring animation
-        if (pulse > 0.9) {
-          const ringSize = size * 4 * (pulse - 0.9) * 10
-          ctx.beginPath()
-          ctx.arc(city.x, city.y, ringSize, 0, Math.PI * 2)
-          ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${0.6 * (1 - (pulse - 0.9) * 10)})`
-          ctx.lineWidth = 3
-          ctx.stroke()
-        }
-      })
-
-      frame++
-      animationRef.current = requestAnimationFrame(animate)
-    }
-
-    animate()
-
-    return () => {
-      window.removeEventListener('resize', updateSize)
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-      }
-    }
-  }, [isMounted, installationTrackerData])
 
   if (!isMounted) {
     return (
@@ -299,44 +48,143 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     )
   }
 
-  const activeCities = Object.keys(installationTrackerData.cityCount)
-  const totalDevices = Object.values(installationTrackerData.cityCount).reduce((a, b) => a + b, 0)
+  // City coordinates
+  const cityCoordinates = {
+    'mumbai': { lat: 19.0760, lng: 72.8777, label: 'Mumbai' },
+    'delhi': { lat: 28.7041, lng: 77.1025, label: 'Delhi' },
+    'bengaluru': { lat: 12.9716, lng: 77.5946, label: 'Bengaluru' },
+    'kolkata': { lat: 22.5726, lng: 88.3639, label: 'Kolkata' },
+    'chennai': { lat: 13.0827, lng: 80.2707, label: 'Chennai' },
+    'hyderabad': { lat: 17.3850, lng: 78.4867, label: 'Hyderabad' },
+    'pune': { lat: 18.5204, lng: 73.8567, label: 'Pune' },
+    'ahmedabad': { lat: 23.0225, lng: 72.5714, label: 'Ahmedabad' },
+    'surat': { lat: 21.1702, lng: 72.8311, label: 'Surat' },
+    'jaipur': { lat: 26.9124, lng: 75.7873, label: 'Jaipur' },
+    'lucknow': { lat: 26.8467, lng: 80.9462, label: 'Lucknow' },
+    'kanpur': { lat: 26.4499, lng: 80.3319, label: 'Kanpur' },
+    'nagpur': { lat: 21.1458, lng: 79.0882, label: 'Nagpur' },
+    'indore': { lat: 22.7196, lng: 75.8577, label: 'Indore' },
+    'thane': { lat: 19.2183, lng: 72.9781, label: 'Thane' },
+    'bhopal': { lat: 23.2599, lng: 77.4126, label: 'Bhopal' },
+    'visakhapatnam': { lat: 17.6869, lng: 83.2185, label: 'Vizag' },
+    'patna': { lat: 25.5941, lng: 85.1376, label: 'Patna' },
+    'vadodara': { lat: 22.3072, lng: 73.1812, label: 'Vadodara' },
+    'ghaziabad': { lat: 28.6692, lng: 77.4538, label: 'Ghaziabad' },
+    'ludhiana': { lat: 30.9010, lng: 75.8573, label: 'Ludhiana' },
+    'agra': { lat: 27.1767, lng: 78.0081, label: 'Agra' },
+    'nashik': { lat: 19.9975, lng: 73.7898, label: 'Nashik' },
+    'faridabad': { lat: 28.4089, lng: 77.3178, label: 'Faridabad' },
+    'meerut': { lat: 28.9845, lng: 77.7064, label: 'Meerut' },
+    'rajkot': { lat: 22.3039, lng: 70.8022, label: 'Rajkot' },
+    'varanasi': { lat: 25.3176, lng: 82.9739, label: 'Varanasi' },
+    'srinagar': { lat: 34.0837, lng: 74.7973, label: 'Srinagar' },
+    'aurangabad': { lat: 19.8762, lng: 75.3433, label: 'Aurangabad' },
+    'dhanbad': { lat: 23.7957, lng: 86.4304, label: 'Dhanbad' },
+    'amritsar': { lat: 31.6340, lng: 74.8723, label: 'Amritsar' },
+    'navi mumbai': { lat: 19.0330, lng: 73.0297, label: 'Navi Mumbai' },
+    'allahabad': { lat: 25.4358, lng: 81.8463, label: 'Prayagraj' },
+    'ranchi': { lat: 23.3441, lng: 85.3096, label: 'Ranchi' },
+    'howrah': { lat: 22.5958, lng: 88.2636, label: 'Howrah' },
+    'coimbatore': { lat: 11.0168, lng: 76.9558, label: 'Coimbatore' },
+    'jabalpur': { lat: 23.1815, lng: 79.9864, label: 'Jabalpur' },
+    'gwalior': { lat: 26.2183, lng: 78.1828, label: 'Gwalior' },
+    'vijayawada': { lat: 16.5062, lng: 80.6480, label: 'Vijayawada' },
+    'jodhpur': { lat: 26.2389, lng: 73.0243, label: 'Jodhpur' },
+    'madurai': { lat: 9.9252, lng: 78.1198, label: 'Madurai' },
+    'raipur': { lat: 21.2514, lng: 81.6296, label: 'Raipur' },
+    'kota': { lat: 25.2138, lng: 75.8648, label: 'Kota' },
+    'chandigarh': { lat: 30.7333, lng: 76.7794, label: 'Chandigarh' },
+    'guwahati': { lat: 26.1445, lng: 91.7362, label: 'Guwahati' },
+    'thiruvananthapuram': { lat: 8.5241, lng: 76.9366, label: 'Trivandrum' },
+    'solapur': { lat: 17.6599, lng: 75.9064, label: 'Solapur' },
+    'tiruchirappalli': { lat: 10.7905, lng: 78.7047, label: 'Trichy' },
+    'tiruppur': { lat: 11.1085, lng: 77.3411, label: 'Tiruppur' },
+    'bareilly': { lat: 28.3670, lng: 79.4304, label: 'Bareilly' },
+    'mysore': { lat: 12.2958, lng: 76.6394, label: 'Mysuru' },
+    'salem': { lat: 11.6643, lng: 78.1460, label: 'Salem' },
+    'gurgaon': { lat: 28.4595, lng: 77.0266, label: 'Gurugram' },
+    'aligarh': { lat: 27.8974, lng: 78.0880, label: 'Aligarh' },
+    'jalandhar': { lat: 31.3260, lng: 75.5762, label: 'Jalandhar' },
+    'bhubaneswar': { lat: 20.2961, lng: 85.8245, label: 'Bhubaneswar' },
+    'noida': { lat: 28.5355, lng: 77.3910, label: 'Noida' },
+    'moradabad': { lat: 28.8389, lng: 78.7378, label: 'Moradabad' },
+    'kochi': { lat: 9.9312, lng: 76.2673, label: 'Kochi' },
+    'mangalore': { lat: 12.9141, lng: 74.8560, label: 'Mangaluru' }
+  }
+
+  // Get active cities with data
+  const activeCities = Object.keys(installationTrackerData.cityCount || {})
+  const cityData = activeCities.map(key => {
+    const city = cityCoordinates[key]
+    if (!city) return null
+    return {
+      ...city,
+      count: installationTrackerData.cityCount[key] || 0,
+      key
+    }
+  }).filter(Boolean)
+
+  const totalDevices = Object.values(installationTrackerData.cityCount || {}).reduce((a, b) => a + b, 0)
+
+  const getMarkerColor = (count) => {
+    if (count > 500) return '#ef4444' // red
+    if (count > 200) return '#f97316' // orange
+    if (count > 100) return '#f59e0b' // amber
+    if (count > 50) return '#eab308' // yellow
+    return '#84cc16' // lime
+  }
+
+  const getMarkerSize = (count) => {
+    if (count > 500) return 25
+    if (count > 200) return 20
+    if (count > 100) return 15
+    if (count > 50) return 12
+    return 8
+  }
 
   const toggleFullscreen = () => setIsFullscreen(!isFullscreen)
 
   const MapView = () => (
     <div className="relative w-full h-full">
-      {/* SVG India Map Outline */}
-      <svg 
-        className="absolute inset-0 w-full h-full pointer-events-none z-10"
-        viewBox="0 0 100 120"
-        preserveAspectRatio="xMidYMid meet"
+      {/* Leaflet Map with Dark Theme */}
+      <MapContainer
+        center={[22.5, 79.5]} // Center of India
+        zoom={5}
+        style={{ height: '100%', width: '100%', background: '#0a0e27' }}
+        zoomControl={false}
+        attributionControl={false}
       >
-        <defs>
-          <filter id="mapGlow">
-            <feGaussianBlur stdDeviation="0.5" result="coloredBlur"/>
-            <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-        
-        <path
-          d="M 12,80 L 13,75 L 15,70 L 17,65 L 19,60 L 22,55 L 25,50 L 28,45 L 30,40 L 32,35 L 33,30 L 34,25 L 35,20 L 37,16 L 38,13 L 40,11 L 42,9.5 L 44,8.5 L 48,8 L 51,8.5 L 54,9.5 L 56,11 L 58,13 L 60,15.5 L 61,18 L 62,21 L 61.7,23 L 61,25.5 L 60.5,28 L 60.2,30.5 L 60.5,33 L 61.2,35.5 L 62.5,38 L 64.2,40.5 L 66.2,42.5 L 68.5,44 L 71,45 L 73.5,45.5 L 76,45.3 L 78,44.5 L 79.5,43.3 L 80.7,42 L 81.7,40.5 L 82.7,39 L 83.7,37.5 L 85,36.5 L 86.5,36 L 88.2,36 L 89.8,36.5 L 91,37.5 L 91.8,39 L 92.2,40.7 L 92,42.5 L 91.2,44.3 L 90,45.8 L 88.5,47 L 86.8,48 L 85,48.7 L 83.2,49.2 L 81.5,49.5 L 79.8,50 L 78.2,50.8 L 76.8,52 L 75.8,53.5 L 75.2,55.5 L 75,57.5 L 75.2,59.5 L 75.8,61.5 L 76.8,63.3 L 78.2,64.8 L 79.8,66 L 81.5,66.8 L 83.2,67.3 L 84.8,67.5 L 86.3,67.3 L 87.6,66.7 L 88.7,65.7 L 89.5,64.5 L 90,63 L 90.3,61.5 L 90.5,60.2 L 90.7,59 L 91,58 L 91.5,57.2 L 92.2,56.6 L 93.2,56.3 L 94.5,56 L 95.8,56.3 L 96.8,57 L 97.5,58 L 97.8,59.2 L 97.8,60.5 L 97.5,61.8 L 97,63 L 96.3,64.1 L 95.4,65 L 94.3,65.7 L 93,66.2 L 91.6,66.5 L 90.1,66.6 L 88.6,66.6 L 87.1,66.7 L 85.7,67 L 84.4,67.5 L 83.2,68.3 L 82.3,69.3 L 81.6,70.5 L 81.2,71.8 L 81,73.2 L 81,74.6 L 81.2,76 L 81.6,77.3 L 82.2,78.5 L 83,79.6 L 83.9,80.5 L 84.9,81.2 L 86,81.7 L 87.1,82 L 88.2,82.1 L 89.3,82 L 90.3,81.6 L 91.2,81 L 91.9,80.2 L 92.4,79.2 L 92.7,78.1 L 92.8,77 L 92.7,75.9 L 92.4,74.9 L 91.9,74 L 91.3,73.2 L 90.5,72.5 L 89.6,72 L 88.6,71.7 L 87.5,71.6 L 86.4,71.7 L 85.3,72 L 84.3,72.5 L 83.4,73.2 L 82.7,74 L 82.2,74.9 L 81.9,75.9 L 81.8,77 L 81.9,78.1 L 82.2,79.2 L 82.7,80.2 L 83.4,81 L 84.2,81.6 L 85.1,82 L 86.1,82.1 L 87.1,82 L 88.1,81.7 L 89,81.2 L 89.8,80.5 L 90.5,79.6 L 91,78.5 L 91.3,77.3 L 91.4,76 L 91.3,74.6 L 91,73.2 L 90.5,72 L 89.8,70.9 L 89,70 L 88.1,69.2 L 87.1,68.7 L 86.1,68.4 L 85.1,68.3 L 84.1,68.4 L 83.2,68.7 L 82.3,69.2 L 81.6,69.9 L 81,70.8 L 80.6,71.8 L 80.4,72.9 L 80.4,74 L 80.6,75.1 L 81,76.1 L 81.6,77 L 82.3,77.8 L 83.1,78.4 L 84,78.8 L 85,79 L 86,79 L 87,78.8 L 87.9,78.4 L 88.7,77.8 L 89.4,77 L 89.9,76.1 L 90.2,75.1 L 90.3,74 L 90.2,72.9 L 89.9,71.9 L 89.4,71 L 88.7,70.2 L 87.9,69.6 L 87,69.2 L 86,69 L 85,69 L 84,69.2 L 83.1,69.6 L 82.3,70.2 L 81.6,71 L 81.1,71.9 L 80.8,72.9 L 80.7,74 L 80.8,75.1 L 81.1,76.1 L 81.6,77 L 82.3,77.7 L 83.1,78.3 L 84,78.7 L 85,78.9 L 86,78.9 L 87,78.7 L 87.9,78.3 L 88.7,77.7 L 89.4,77 L 89.9,76.1 L 90.2,75.1 L 90.3,74 L 90.2,72.9 L 89.9,71.9 L 89.4,71.1 L 88.7,70.3 L 87.9,69.7 L 87,69.3 L 86,69.1 L 85,69.1 L 84,69.3 L 83.1,69.7 L 82.3,70.3 L 81.6,71.1 L 81.2,71.9 L 80.9,72.9 L 80.8,73.9 L 80.9,75 L 81.2,76 L 81.7,76.9 L 82.4,77.7 L 83.2,78.3 L 84.1,78.7 L 85.1,78.9 L 86.1,78.9 L 87.1,78.7 L 88,78.3 L 88.8,77.7 L 89.5,76.9 L 90,76 L 90.3,75 L 90.4,73.9 L 90.3,72.9 L 90,71.9 L 89.5,71.1 L 88.8,70.4 L 88,69.8 L 87.1,69.4 L 86.1,69.2 L 85.1,69.2 L 84.1,69.4 L 83.2,69.8 L 82.4,70.4 L 81.7,71.1 L 81.2,72 L 80.9,73 L 80.8,74 L 80.9,75.1 L 81.2,76.1 L 81.7,77 L 82.4,77.8 L 83.2,78.4 L 84.1,78.8 L 85.1,79 L 86.1,79 L 87.1,78.8 L 88,78.4 L 88.8,77.8 L 89.5,77 L 90,76.1 L 90.3,75.1 L 90.4,74 L 90.3,73 L 90,72 L 89.5,71.2 L 88.8,70.5 L 88,69.9 L 87.1,69.5 L 86.1,69.3 L 85.1,69.3 L 84.1,69.5 L 83.2,69.9 L 82.4,70.5 L 81.7,71.2 L 81.2,72 L 80.9,73 L 80.8,74 L 80.9,75.1 L 81.2,76.1 L 81.7,77 L 82.4,77.7 L 83.2,78.3 L 84.1,78.7 L 85.1,78.9 L 86.1,78.9 L 87.1,78.7 L 88,78.3 L 88.8,77.7 L 89.5,77 L 90,76.1 L 90.3,75.1 L 90.4,74 L 90.3,73 L 90,72 L 89.5,71.2 L 88.8,70.5 L 88,69.9 L 87.1,69.5 L 86.1,69.3 L 85.1,69.3 L 84.1,69.5 L 83.2,69.9 L 82.4,70.5 L 81.7,71.2 L 81.2,72 L 80.9,73 L 80.8,74.1 L 80.9,75.2 L 81.2,76.2 L 81.7,77.1 L 82.4,77.9 L 83.2,78.5 L 84.1,78.9 L 85.1,79.1 L 86.1,79.1 L 87.1,78.9 L 88,78.5 L 88.8,77.9 L 89.5,77.1 L 90,76.2 L 90.3,75.2 L 90.4,74.1 L 90.3,73 L 90,72.1 L 89.5,71.3 L 88.8,70.6 L 88,70 L 87.1,69.6 L 86.1,69.4 L 85.1,69.4 L 84.1,69.6 L 83.2,70 L 82.4,70.6 L 81.7,71.3 L 81.2,72.1 L 80.9,73.1 L 80.8,74.1 L 80.9,75.2 L 81.2,76.2 L 81.7,77.1 L 82.4,77.9 L 83.2,78.5 L 84.1,78.9 L 85.1,79.1 L 86.1,79.1 L 87.1,78.9 L 88,78.5 L 88.8,77.9 L 89.5,77.1 L 90,76.2 L 90.3,75.2 L 90.4,74.1 L 90.3,73.1 L 90,72.1 L 89.5,71.3 L 88.8,70.6 L 88,70 L 87.1,69.6 L 86.1,69.4 L 85.1,69.4 L 84.1,69.6 L 83.2,70 L 82.4,70.6 L 81.7,71.3 L 81.2,72.1 L 80.9,73.1 L 80.8,74.2 L 80.9,75.3 L 81.2,76.3 L 81.7,77.2 L 82.4,78 L 83.2,78.6 L 84.1,79 L 85.1,79.2 L 86.1,79.2 L 87.1,79 L 88,78.6 L 88.8,78 L 89.5,77.2 L 90,76.3 L 90.3,75.3 L 90.4,74.2 L 90.3,73.1 L 90,72.2 L 89.5,71.4 L 88.8,70.7 L 88,70.1 L 87.1,69.7 L 86.1,69.5 L 85.1,69.5 L 84.1,69.7 L 83.2,70.1 L 82.4,70.7 L 81.7,71.4 L 81.2,72.2 L 80.9,73.2 L 80.8,74.2 L 80.9,75.3 L 81.2,76.3 L 81.7,77.2 L 82.4,78 L 83.2,78.6 L 84.1,79 L 85.1,79.2 L 86.1,79.2 L 87.1,79 L 88,78.6 L 88.8,78 L 89.5,77.2 L 90,76.3 L 90.3,75.3 L 90.4,74.2 L 90.3,73.2 L 90,72.2 L 89.5,71.4 L 88.8,70.7 L 88,70.1 L 87.1,69.7 L 86.1,69.5 L 85.1,69.5 L 84.1,69.7 L 83.2,70.1 L 82.4,70.7 L 81.7,71.4 L 81.2,72.2 L 80.9,73.2 L 80.8,74.3 L 80.9,75.4 L 81.2,76.4 L 81.7,77.3 L 82.4,78.1 L 83.2,78.7 L 84.1,79.1 L 85.1,79.3 L 86.1,79.3 L 87.1,79.1 L 88,78.7 L 88.8,78.1 L 89.5,77.3 L 90,76.4 L 90.3,75.4 L 90.4,74.3 L 90.3,73.2 L 90,72.3 L 89.5,71.5 L 88.8,70.8 L 88,70.2 L 87.1,69.8 L 86.1,69.6 L 85.1,69.6 L 84.1,69.8 L 83.2,70.2 L 82.4,70.8 L 81.7,71.5 L 81.2,72.3 L 80.9,73.3 L 80.8,74.3 L 80.9,75.4 L 81.2,76.4 L 81.7,77.3 L 82.4,78.1 L 83.2,78.7 L 84.1,79.1 L 85.1,79.3 L 86.1,79.3 L 87.1,79.1 L 88,78.7 L 88.8,78.1 L 89.5,77.3 L 90,76.4 L 90.3,75.4 L 90.4,74.3 L 90.3,73.3 L 90,72.3 L 89.5,71.5 L 88.8,70.8 L 88,70.2 L 87.1,69.8 L 86.1,69.6 L 85.1,69.6 L 84.1,69.8 L 83.2,70.2 L 82.4,70.8 L 81.7,71.5 L 81.2,72.3 L 80.9,73.3 L 80.8,74.4 L 80.9,75.5 L 81.2,76.5 L 81.7,77.4 L 82.4,78.2 L 83.2,78.8 L 84.1,79.2 L 85.1,79.4 L 86.1,79.4 L 87.1,79.2 L 88,78.8 L 88.8,78.2 L 89.5,77.4 L 90,76.5 L 90.3,75.5 L 90.4,74.4 L 90.3,73.3 L 90,72.4 L 89.5,71.6 L 88.8,70.9 L 88,70.3 L 87.1,69.9 L 86.1,69.7 L 85.1,69.7 L 84.1,69.9 L 83.2,70.3 L 82.4,70.9 L 81.7,71.6 L 81.2,72.4 L 80.9,73.4 L 80.8,74.4 L 80.9,75.5 L 81.2,76.5 L 81.7,77.4 L 82.4,78.2 L 83.2,78.8 L 84.1,79.2 L 85.1,79.4 L 86.1,79.4 L 87.1,79.2 L 88,78.8 L 88.8,78.2 L 89.5,77.4 L 90,76.5 L 90.3,75.5 L 90.4,74.4 L 90.3,73.4 L 90,72.4 L 89.5,71.6 L 88.8,70.9 L 88,70.3 L 87.1,69.9 L 86.1,69.7 L 85.1,69.7 L 84.1,69.9 L 83.2,70.3 L 82.4,70.9 L 81.7,71.6 L 81.2,72.4 L 80.9,73.4 L 80.8,74.5 L 80.9,75.6 L 81.2,76.6 L 81.7,77.5 L 82.4,78.3 L 83.2,78.9 L 84.1,79.3 L 85.1,79.5 L 86.1,79.5 L 87.1,79.3 L 88,78.9 L 88.8,78.3 L 89.5,77.5 L 90,76.6 L 90.3,75.6 L 90.4,74.5 L 90.3,73.4 L 90,72.5 L 89.5,71.7 L 88.8,71 L 88,70.4 L 87.1,70 L 86.1,69.8 L 85.1,69.8 L 84.1,70 L 83.2,70.4 L 82.4,71 L 81.7,71.7 L 81.2,72.5 L 80.9,73.5 L 80.8,74.5 L 80.9,75.6 L 81.2,76.6 L 81.7,77.5 L 82.4,78.3 L 83.2,78.9 L 84.1,79.3 L 85.1,79.5 L 86.1,79.5 L 87.1,79.3 L 88,78.9 L 88.8,78.3 L 89.5,77.5 L 90,76.6 L 90.3,75.6 L 90.4,74.5 L 90.3,73.5 L 90,72.5 L 89.5,71.7 L 88.8,71 L 88,70.4 L 87.1,70 L 86.1,69.8 L 85.1,69.8 L 84.1,70 L 83.2,70.4 L 82.4,71 L 81.7,71.7 L 81.2,72.5 L 80.9,73.5 L 80.8,74.6 L 80.9,75.7 L 81.2,76.7 L 81.7,77.6 L 82.4,78.4 L 83.2,79 L 84.1,79.4 L 85.1,79.6 L 86.1,79.6 L 87.1,79.4 L 88,79 L 88.8,78.4 L 89.5,77.6 L 90,76.7 L 90.3,75.7 L 90.4,74.6 L 90.3,73.5 L 90,72.6 L 89.5,71.8 L 88.8,71.1 L 88,70.5 L 87.1,70.1 L 86.1,69.9 L 85.1,69.9 L 84.1,70.1 L 83.2,70.5 L 82.4,71.1 L 81.7,71.8 L 81.2,72.6 L 80.9,73.6 L 80.8,74.6 L 80.9,75.7 L 81.2,76.7 L 81.7,77.6 L 82.4,78.4 L 83.2,79 L 84.1,79.4 L 85.1,79.6 L 86.1,79.6 L 87.1,79.4 L 88,79 L 88.8,78.4 L 89.5,77.6 L 90,76.7 L 90.3,75.7 L 90.4,74.6 L 90.3,73.6 L 90,72.6 L 89.5,71.8 L 88.8,71.1 L 88,70.5 L 87.1,70.1 L 86.1,69.9 L 85.1,69.9 L 84.1,70.1 L 83.2,70.5 L 82.4,71.1 L 81.7,71.8 L 81.2,72.6 L 80.9,73.6 L 80.8,74.7 L 80.9,75.8 L 81.2,76.8 L 81.7,77.7 L 82.4,78.5 L 83.2,79.1 L 84.1,79.5 L 85.1,79.7 L 86.1,79.7 L 87.1,79.5 L 88,79.1 L 88.8,78.5 L 89.5,77.7 L 90,76.8 L 90.3,75.8 L 90.4,74.7 L 90.3,73.6 L 90,72.7 L 89.5,71.9 L 88.8,71.2 L 88,70.6 L 87.1,70.2 L 86.1,70 L 85.1,70 L 84.1,70.2 L 83.2,70.6 L 82.4,71.2 L 81.7,71.9 L 81.2,72.7 L 80.9,73.7 L 80.8,74.7 L 80.9,75.8 L 81.2,76.8 L 81.7,77.7 L 82.4,78.5 L 83.2,79.1 L 84.1,79.5 L 85.1,79.7 L 86.1,79.7 L 87.1,79.5 L 88,79.1 L 88.8,78.5 L 89.5,77.7 L 90,76.8 L 90.3,75.8 L 90.4,74.7 L 90.3,73.7 L 90,72.7 L 89.5,71.9 L 88.8,71.2 L 88,70.6 L 87.1,70.2 L 86.1,70 L 85.1,70 L 84.1,70.2 L 83.2,70.6 L 82.4,71.2 L 81.7,71.9 L 81.2,72.7 L 80.9,73.7 L 80.8,74.8 L 80.9,75.9 L 81.2,76.9 L 81.7,77.8 L 82.4,78.6 L 83.2,79.2 L 84.1,79.6 L 85.1,79.8 L 86.1,79.8 L 87.1,79.6 L 88,79.2 L 88.8,78.6 L 89.5,77.8 L 90,76.9 L 90.3,75.9 L 90.4,74.8 L 90.3,73.7 L 90,72.8 L 89.5,72 L 88.8,71.3 L 88,70.7 L 87.1,70.3 L 86.1,70.1 L 85.1,70.1 L 84.1,70.3 L 83.2,70.7 L 82.4,71.3 L 81.7,72 L 81.2,72.8 L 80.9,73.8 L 80.8,74.8 L 80.9,75.9 L 81.2,76.9 L 81.7,77.8 L 82.4,78.6 L 83.2,79.2 L 84.1,79.6 L 85.1,79.8 L 86.1,79.8 L 87.1,79.6 L 88,79.2 L 88.8,78.6 L 89.5,77.8 L 90,76.9 L 90.3,75.9 L 90.4,74.8 L 90.3,73.8 L 90,72.8 L 89.5,72 L 88.8,71.3 L 88,70.7 L 87.1,70.3 L 86.1,70.1 L 85.1,70.1 L 84.1,70.3 L 83.2,70.7 L 82.4,71.3 L 81.7,72 L 81.2,72.8 L 80.9,73.8 L 80.8,74.9 L 80.9,76 L 81.2,77 L 81.7,77.9 L 82.4,78.7 L 83.2,79.3 L 84.1,79.7 L 85.1,79.9 L 86.1,79.9 L 87.1,79.7 L 88,79.3 L 88.8,78.7 L 89.5,77.9 L 90,77 L 90.3,76 L 90.4,74.9 L 90.3,73.8 L 90,72.9 L 89.5,72.1 L 88.8,71.4 L 88,70.8 L 87.1,70.4 L 86.1,70.2 L 85.1,70.2 L 84.1,70.4 L 83.2,70.8 L 82.4,71.4 L 81.7,72.1 L 81.2,72.9 L 80.9,73.9 L 80.8,74.9 L 80.9,76 L 81.2,77 L 81.7,77.9 L 82.4,78.7 L 83.2,79.3 L 84.1,79.7 L 85.1,79.9 L 86.1,79.9 L 87.1,79.7 L 88,79.3 L 88.8,78.7 L 89.5,77.9 L 90,77 L 90.3,76 L 90.4,74.9 L 90.3,73.9 L 90,72.9 L 89.5,72.1 L 88.8,71.4 L 88,70.8 L 87.1,70.4 L 86.1,70.2 L 85.1,70.2 L 84.1,70.4 L 83.2,70.8 L 82.4,71.4 L 81.7,72.1 L 81.2,72.9 L 80.9,73.9 L 80.8,75 L 80.9,76.1 L 81.2,77.1 L 81.7,78 L 82.4,78.8 L 83.2,79.4 L 84.1,79.8 L 85.1,80 L 86.1,80 L 87.1,79.8 L 88,79.4 L 88.8,78.8 L 89.5,78 L 90,77.1 L 90.3,76.1 L 90.4,75 L 90.3,73.9 L 90,73 L 89.5,72.2 L 88.8,71.5 L 88,70.9 L 87.1,70.5 L 86.1,70.3 L 85.1,70.3 L 84.1,70.5 L 83.2,70.9 L 82.4,71.5 L 81.7,72.2 L 81.2,73 L 80.9,74 L 80.8,75 L 80.9,76.1 L 81.2,77.1 L 81.7,78 L 82.4,78.8 L 83.2,79.4 L 84.1,79.8 L 85.1,80 L 86.1,80 L 87.1,79.8 L 88,79.4 L 88.8,78.8 L 89.5,78 L 90,77.1 L 90.3,76.1 L 90.4,75 L 90.3,74 L 90,73 L 89.5,72.2 L 88.8,71.5 L 88,70.9 L 87.1,70.5 L 86.1,70.3 L 85.1,70.3 L 84.1,70.5 L 83.2,70.9 L 82.4,71.5 L 81.7,72.2 L 81.2,73 L 80.9,74 L 80.8,75.1 L 80.9,76.2 L 81.2,77.2 L 81.7,78.1 L 82.4,78.9 L 83.2,79.5 L 84.1,79.9 L 85.1,80.1 L 86.1,80.1 L 87.1,79.9 L 88,79.5 L 88.8,78.9 L 89.5,78.1 L 90,77.2 L 90.3,76.2 L 90.4,75.1 L 90.3,74 L 90,73.1 L 89.5,72.3 L 88.8,71.6 L 88,71 L 87.1,70.6 L 86.1,70.4 L 85.1,70.4 L 84.1,70.6 L 83.2,71 L 82.4,71.6 L 81.7,72.3 L 81.2,73.1 L 80.9,74.1 L 80.8,75.1 L 80.9,76.2 L 81.2,77.2 L 81.7,78.1 L 82.4,78.9 L 83.2,79.5 L 84.1,79.9 L 85.1,80.1 L 86.1,80.1 L 87.1,79.9 L 88,79.5 L 88.8,78.9 L 89.5,78.1 L 90,77.2 L 90.3,76.2 L 90.4,75.1 L 90.3,74.1 L 90,73.1 L 89.5,72.3 L 88.8,71.6 L 88,71 L 87.1,70.6 L 86.1,70.4 L 85.1,70.4 L 84.1,70.6 L 83.2,71 L 82.4,71.6 L 81.7,72.3 L 81.2,73.1 L 80.9,74.1 L 80.8,75.2 L 80.9,76.3 L 81.2,77.3 L 81.7,78.2 L 82.4,79 L 83.2,79.6 L 84.1,80 L 85.1,80.2 L 86.1,80.2 L 87.1,80 L 88,79.6 L 88.8,79 L 89.5,78.2 L 90,77.3 L 90.3,76.3 L 90.4,75.2 L 90.3,74.1 L 90,73.2 L 89.5,72.4 L 88.8,71.7 L 88,71.1 L 87.1,70.7 L 86.1,70.5 L 85.1,70.5 L 84.1,70.7 L 83.2,71.1 L 82.4,71.7 L 81.7,72.4 L 81.2,73.2 L 80.9,74.2 L 80.8,75.2 L 80.9,76.3 L 81.2,77.3 L 81.7,78.2 L 82.4,79 L 83.2,79.6 L 84.1,80 L 85.1,80.2 L 86.1,80.2 L 87.1,80 L 88,79.6 L 88.8,79 L 89.5,78.2 L 90,77.3 L 90.3,76.3 L 90.4,75.2 L 90.3,74.2 L 90,73.2 L 89.5,72.4 L 88.8,71.7 L 88,71.1 L 87.1,70.7 L 86.1,70.5 L 85.1,70.5 L 84.1,70.7 L 83.2,71.1 L 82.4,71.7 L 81.7,72.4 L 81.2,73.2 L 80.9,74.2 L 80.8,75.3 L 80.9,76.4 L 81.2,77.4 L 81.7,78.3 L 82.4,79.1 L 83.2,79.7 L 84.1,80.1 L 85.1,80.3 L 86.1,80.3 L 87.1,80.1 L 88,79.7 L 88.8,79.1 L 89.5,78.3 L 90,77.4 L 90.3,76.4 L 90.4,75.3 L 90.3,74.2 L 90,73.3 L 89.5,72.5 L 88.8,71.8 L 88,71.2 L 87.1,70.8 L 86.1,70.6 L 85.1,70.6 L 84.1,70.8 L 83.2,71.2 L 82.4,71.8 L 81.7,72.5 L 81.2,73.3 L 80.9,74.3 L 80.8,75.3 L 80.9,76.4 L 81.2,77.4 L 81.7,78.3 L 82.4,79.1 L 83.2,79.7 L 84.1,80.1 L 85.1,80.3 L 86.1,80.3 L 87.1,80.1 L 88,79.7 L 88.8,79.1 L 89.5,78.3 L 90,77.4 L 90.3,76.4 L 90.4,75.3 L 90.3,74.3 L 90,73.3 L 89.5,72.5 L 88.8,71.8 L 88,71.2 L 87.1,70.8 L 86.1,70.6 L 85.1,70.6 L 84.1,70.8 L 83.2,71.2 L 82.4,71.8 L 81.7,72.5 L 81.2,73.3 L 80.9,74.3 L 80.8,75.4 L 80.9,76.5 L 81.2,77.5 L 81.7,78.4 L 82.4,79.2 L 83.2,79.8 L 84.1,80.2 L 85.1,80.4 L 86.1,80.4 L 87.1,80.2 L 88,79.8 L 88.8,79.2 L 89.5,78.4 L 90,77.5 L 90.3,76.5 L 90.4,75.4 L 90.3,74.3 L 90,73.4 L 89.5,72.6 L 88.8,71.9 L 88,71.3 L 87.1,70.9 L 86.1,70.7 L 85.1,70.7 L 84.1,70.9 L 83.2,71.3 L 82.4,71.9 L 81.7,72.6 L 81.2,73.4 L 80.9,74.4 L 80.8,75.4 L 80.9,76.5 L 81.2,77.5 L 81.7,78.4 L 82.4,79.2 L 83.2,79.8 L 84.1,80.2 L 85.1,80.4 L 86.1,80.4 L 87.1,80.2 L 88,79.8 L 88.8,79.2 L 89.5,78.4 L 90,77.5 L 90.3,76.5 L 90.4,75.4 L 90.3,74.4 L 90,73.4 L 89.5,72.6 L 88.8,71.9 L 88,71.3 L 87.1,70.9 L 86.1,70.7 L 85.1,70.7 L 84.1,70.9 L 83.2,71.3 L 82.4,71.9 L 81.7,72.6 L 81.2,73.4 L 80.9,74.4 L 80.8,75.5 L 80.9,76.6 L 81.2,77.6 L 81.7,78.5 L 82.4,79.3 L 83.2,79.9 L 84.1,80.3 L 85.1,80.5 L 86.1,80.5 L 87.1,80.3 L 88,79.9 L 88.8,79.3 L 89.5,78.5 L 90,77.6 L 90.3,76.6 L 90.4,75.5 L 90.3,74.4 L 90,73.5 L 89.5,72.7 L 88.8,72 L 88,71.4 L 87.1,71 L 86.1,70.8 L 85.1,70.8 L 84.1,71 L 83.2,71.4 L 82.4,72 L 81.7,72.7 L 81.2,73.5 L 80.9,74.5 L 80.8,75.5 L 80.9,76.6 L 81.2,77.6 L 81.7,78.5 L 82.4,79.3 L 83.2,79.9 L 84.1,80.3 L 85.1,80.5 L 86.1,80.5 L 87.1,80.3 L 88,79.9 L 88.8,79.3 L 89.5,78.5 L 90,77.6 L 90.3,76.6 L 90.4,75.5 L 90.3,74.5 L 90,73.5 L 89.5,72.7 L 88.8,72 L 88,71.4 L 87.1,71 L 86.1,70.8 L 85.1,70.8 L 84.1,71 L 83.2,71.4 L 82.4,72 L 81.7,72.7 L 81.2,73.5 L 80.9,74.5 L 80.8,75.6 L 80.9,76.7 L 81.2,77.7 L 81.7,78.6 L 82.4,79.4 L 83.2,80 L 84.1,80.4 L 85.1,80.6 L 86.1,80.6 L 87.1,80.4 L 88,80 L 88.8,79.4 L 89.5,78.6 L 90,77.7 L 90.3,76.7 L 90.4,75.6 L 90.3,74.5 L 90,73.6 L 89.5,72.8 L 88.8,72.1 L 88,71.5 L 87.1,71.1 L 86.1,70.9 L 85.1,70.9 L 84.1,71.1 L 83.2,71.5 L 82.4,72.1 L 81.7,72.8 L 81.2,73.6 L 80.9,74.6 L 80.8,75.6 L 80.9,76.7 L 81.2,77.7 L 81.7,78.6 L 82.4,79.4 L 83.2,80 L 84.1,80.4 L 85.1,80.6 L 86.1,80.6 L 87.1,80.4 L 88,80 L 88.8,79.4 L 89.5,78.6 L 90,77.7 L 90.3,76.7 L 90.4,75.6 L 90.3,74.6 L 90,73.6 L 89.5,72.8 L 88.8,72.1 L 88,71.5 L 87.1,71.1 L 86.1,70.9 L 85.1,70.9 L 84.1,71.1 L 83.2,71.5 L 82.4,72.1 L 81.7,72.8 L 81.2,73.6 L 80.9,74.6 L 80.8,75.7 L 80.9,76.8 L 81.2,77.8 L 81.7,78.7 L 82.4,79.5 L 83.2,80.1 L 84.1,80.5 L 85.1,80.7 L 86.1,80.7 L 87.1,80.5 L 88,80.1 L 88.8,79.5 L 89.5,78.7 L 90,77.8 L 90.3,76.8 L 90.4,75.7 L 90.3,74.6 L 90,73.7 L 89.5,72.9 L 88.8,72.2 L 88,71.6 L 87.1,71.2 L 86.1,71 L 85.1,71 L 84.1,71.2 L 83.2,71.6 L 82.4,72.2 L 81.7,72.9 L 81.2,73.7 L 80.9,74.7 L 80.8,75.7 L 80.9,76.8 L 81.2,77.8 L 81.7,78.7 L 82.4,79.5 L 83.2,80.1 L 84.1,80.5 L 85.1,80.7 L 86.1,80.7 L 87.1,80.5 L 88,80.1 L 88.8,79.5 L 89.5,78.7 L 90,77.8 L 90.3,76.8 L 90.4,75.7 L 90.3,74.7 L 90,73.7 L 89.5,72.9 L 88.8,72.2 L 88,71.6 L 87.1,71.2 L 86.1,71 L 85.1,71 L 84.1,71.2 L 83.2,71.6 L 82.4,72.2 L 81.7,72.9 L 81.2,73.7 L 80.9,74.7 L 80.8,75.8 L 80.9,76.9 L 81.2,77.9 L 81.7,78.8 L 82.4,79.6 L 83.2,80.2 L 84.1,80.6 L 85.1,80.8 L 86.1,80.8 L 87.1,80.6 L 88,80.2 L 88.8,79.6 L 89.5,78.8 L 90,77.9 L 90.3,76.9 L 90.4,75.8 L 90.3,74.7 L 90,73.8 L 89.5,73 L 88.8,72.3 L 88,71.7 L 87.1,71.3 L 86.1,71.1 L 85.1,71.1 L 84.1,71.3 L 83.2,71.7 L 82.4,72.3 L 81.7,73 L 81.2,73.8 L 80.9,74.8 L 80.8,75.8 L 80.9,76.9 L 81.2,77.9 L 81.7,78.8 L 82.4,79.6 L 83.2,80.2 L 84.1,80.6 L 85.1,80.8 L 86.1,80.8 L 87.1,80.6 L 88,80.2 L 88.8,79.6 L 89.5,78.8 L 90,77.9 L 90.3,76.9 L 90.4,75.8 L 90.3,74.8 L 90,73.8 L 89.5,73 L 88.8,72.3 L 88,71.7 L 87.1,71.3 L 86.1,71.1 L 85.1,71.1 L 84.1,71.3 L 83.2,71.7 L 82.4,72.3 L 81.7,73 L 81.2,73.8 L 80.9,74.8 L 80.8,75.9 L 80.9,77 L 81.2,78 L 81.7,78.9 L 82.4,79.7 L 83.2,80.3 L 84.1,80.7 L 85.1,80.9 L 86.1,80.9 L 87.1,80.7 L 88,80.3 L 88.8,79.7 L 89.5,78.9 L 90,78 L 90.3,77 L 90.4,75.9 L 90.3,74.8 L 90,73.9 L 89.5,73.1 L 88.8,72.4 L 88,71.8 L 87.1,71.4 L 86.1,71.2 L 85.1,71.2 L 84.1,71.4 L 83.2,71.8 L 82.4,72.4 L 81.7,73.1 L 81.2,73.9 L 80.9,74.9 L 80.8,75.9 L 80.9,77 L 81.2,78 L 81.7,78.9 L 82.4,79.7 L 83.2,80.3 L 84.1,80.7 L 85.1,80.9 L 86.1,80.9 L 87.1,80.7 L 88,80.3 L 88.8,79.7 L 89.5,78.9 L 90,78 L 90.3,77 L 90.4,75.9 L 90.3,74.9 L 90,73.9 L 89.5,73.1 L 88.8,72.4 L 88,71.8 L 87.1,71.4 L 86.1,71.2 L 85.1,71.2 L 84.1,71.4 L 83.2,71.8 L 82.4,72.4 L 81.7,73.1 L 81.2,73.9 L 80.9,74.9 L 80.8,76 L 80.9,77.1 L 81.2,78.1 L 81.7,79 L 82.4,79.8 L 83.2,80.4 L 84.1,80.8 L 85.1,81 L 86.1,81 L 87.1,80.8 L 88,80.4 L 88.8,79.8 L 89.5,79 L 90,78.1 L 90.3,77.1 L 90.4,76 L 90.3,74.9 L 90,74 L 89.5,73.2 L 88.8,72.5 L 88,71.9 L 87.1,71.5 L 86.1,71.3 L 85.1,71.3 L 84.1,71.5 L 83.2,71.9 L 82.4,72.5 L 81.7,73.2 L 81.2,74 L 80.9,75 L 80.8,76 L 80.9,77.1 L 81.2,78.1 L 81.7,79 L 82.4,79.8 L 83.2,80.4 L 84.1,80.8 L 85.1,81 L 86.1,81 L 87.1,80.8 L 88,80.4 L 88.8,79.8 L 89.5,79 L 90,78.1 L 90.3,77.1 L 90.4,76 L 90.3,75 L 90,74 L 89.5,73.2 L 88.8,72.5 L 88,71.9 L 87.1,71.5 L 86.1,71.3 L 85.1,71.3 L 84.1,71.5 L 83.2,71.9 L 82.4,72.5 L 81.7,73.2 L 81.2,74 L 80.9,75 L 80.8,76.1 L 80.9,77.2 L 81.2,78.2 L 81.7,79.1 L 82.4,79.9 L 83.2,80.5 L 84.1,80.9 L 85.1,81.1 L 86.1,81.1 L 87.1,80.9 L 88,80.5 L 88.8,79.9 L 89.5,79.1 L 90,78.2 L 90.3,77.2 L 90.4,76.1 L 90.3,75 L 90,74.1 L 89.5,73.3 L 88.8,72.6 L 88,72 L 87.1,71.6 L 86.1,71.4 L 85.1,71.4 L 84.1,71.6 L 83.2,72 L 82.4,72.6 L 81.7,73.3 L 81.2,74.1 L 80.9,75.1 L 80.8,76.1 L 80.9,77.2 L 81.2,78.2 L 81.7,79.1 L 82.4,79.9 L 83.2,80.5 L 84.1,80.9 L 85.1,81.1 L 86.1,81.1 L 87.1,80.9 L 88,80.5 L 88.8,79.9 L 89.5,79.1 L 90,78.2 L 90.3,77.2 L 90.4,76.1 L 90.3,75.1 L 90,74.1 L 89.5,73.3 L 88.8,72.6 L 88,72 L 87.1,71.6 L 86.1,71.4 L 85.1,71.4 L 84.1,71.6 L 83.2,72 L 82.4,72.6 L 81.7,73.3 L 81.2,74.1 L 80.9,75.1 L 80.8,76.2 L 80.9,77.3 L 81.2,78.3 L 81.7,79.2 L 82.4,80 L 83.2,80.6 L 84.1,81 L 85.1,81.2 L 86.1,81.2 L 87.1,81 L 88,80.6 L 88.8,80 L 89.5,79.2 L 90,78.3 L 90.3,77.3 L 90.4,76.2 L 90.3,75.1 L 90,74.2 L 89.5,73.4 L 88.8,72.7 L 88,72.1 L 87.1,71.7 L 86.1,71.5 L 85.1,71.5 L 84.1,71.7 L 83.2,72.1 L 82.4,72.7 L 81.7,73.4 L 81.2,74.2 L 80.9,75.2 L 80.8,76.2 L 80.9,77.3 L 81.2,78.3 L 81.7,79.2 L 82.4,80 L 83.2,80.6 L 84.1,81 L 85.1,81.2 L 86.1,81.2 L 87.1,81 L 88,80.6 L 88.8,80 L 89.5,79.2 L 90,78.3 L 90.3,77.3 L 90.4,76.2 L 90.3,75.2 L 90,74.2 L 89.5,73.4 L 88.8,72.7 L 88,72.1 L 87.1,71.7 L 86.1,71.5 L 85.1,71.5 L 84.1,71.7 L 83.2,72.1 L 82.4,72.7 L 81.7,73.4 L 81.2,74.2 L 80.9,75.2 L 80.8,76.3 L 80.9,77.4 L 81.2,78.4 L 81.7,79.3 L 82.4,80.1 L 83.2,80.7 L 84.1,81.1 L 85.1,81.3 L 86.1,81.3 L 87.1,81.1 L 88,80.7 L 88.8,80.1 L 89.5,79.3 L 90,78.4 L 90.3,77.4 L 90.4,76.3 L 90.3,75.2 L 90,74.3 L 89.5,73.5 L 88.8,72.8 L 88,72.2 L 87.1,71.8 L 86.1,71.6 L 85.1,71.6 L 84.1,71.8 L 83.2,72.2 L 82.4,72.8 L 81.7,73.5 L 81.2,74.3 L 80.9,75.3 L 80.8,76.3 L 80.9,77.4 L 81.2,78.4 L 81.7,79.3 L 82.4,80.1 L 83.2,80.7 L 84.1,81.1 L 85.1,81.3 L 86.1,81.3 L 87.1,81.1 L 88,80.7 L 88.8,80.1 L 89.5,79.3 L 90,78.4 L 90.3,77.4 L 90.4,76.3 L 90.3,75.3 L 90,74.3 L 89.5,73.5 L 88.8,72.8 L 88,72.2 L 87.1,71.8 L 86.1,71.6 L 85.1,71.6 L 84.1,71.8 L 83.2,72.2 L 82.4,72.8 L 81.7,73.5 L 81.2,74.3 L 80.9,75.3 L 80.8,76.4 L 80.9,77.5 L 81.2,78.5 L 81.7,79.4 L 82.4,80.2 L 83.2,80.8 L 84.1,81.2 L 85.1,81.4 L 86.1,81.4 L 87.1,81.2 L 88,80.8 L 88.8,80.2 L 89.5,79.4 L 90,78.5 L 90.3,77.5 L 90.4,76.4 L 90.3,75.3 L 90,74.4 L 89.5,73.6 L 88.8,72.9 L 88,72.3 L 87.1,71.9 L 86.1,71.7 L 85.1,71.7 L 84.1,71.9 L 83.2,72.3 L 82.4,72.9 L 81.7,73.6 L 81.2,74.4 L 80.9,75.4 L 80.8,76.4 L 80.9,77.5 L 81.2,78.5 L 81.7,79.4 L 82.4,80.2 L 83.2,80.8 L 84.1,81.2 L 85.1,81.4 L 86.1,81.4 L 87.1,81.2 L 88,80.8 L 88.8,80.2 L 89.5,79.4 L 90,78.5 L 90.3,77.5 L 90.4,76.4 L 90.3,75.4 L 90,74.4 L 89.5,73.6 L 88.8,72.9 L 88,72.3 L 87.1,71.9 L 86.1,71.7 L 85.1,71.7 L 84.1,71.9 L 83.2,72.3 L 82.4,72.9 L 81.7,73.6 L 81.2,74.4 L 80.9,75.4 L 80.8,76.5 L 80.9,77.6 L 81.2,78.6 L 81.7,79.5 L 82.4,80.3 L 83.2,80.9 L 84.1,81.3 L 85.1,81.5 L 86.1,81.5 L 87.1,81.3 L 88,80.9 L 88.8,80.3 L 89.5,79.5 L 90,78.6 L 90.3,77.6 L 90.4,76.5 L 90.3,75.4 L 90,74.5 L 89.5,73.7 L 88.8,73 L 88,72.4 L 87.1,72 L 86.1,71.8 L 85.1,71.8 L 84.1,72 L 83.2,72.4 L 82.4,73 L 81.7,73.7 L 81.2,74.5 L 80.9,75.5 L 80.8,76.5 L 80.9,77.6 L 81.2,78.6 L 81.7,79.5 L 82.4,80.3 L 83.2,80.9 L 84.1,81.3 L 85.1,81.5 L 86.1,81.5 L 87.1,81.3 L 88,80.9 L 88.8,80.3 L 89.5,79.5 L 90,78.6 L 90.3,77.6 L 90.4,76.5 L 90.3,75.5 L 90,74.5 L 89.5,73.7 L 88.8,73 L 88,72.4 L 87.1,72 L 86.1,71.8 L 85.1,71.8 L 84.1,72 L 83.2,72.4 L 82.4,73 L 81.7,73.7 L 81.2,74.5 L 80.9,75.5 L 80.8,76.6 L 80.9,77.7 L 81.2,78.7 L 81.7,79.6 L 82.4,80.4 L 83.2,81 L 84.1,81.4 L 85.1,81.6 L 86.1,81.6 L 87.1,81.4 L 88,81 L 88.8,80.4 L 89.5,79.6 L 90,78.7 L 90.3,77.7 L 90.4,76.6 L 90.3,75.5 L 90,74.6 L 89.5,73.8 L 88.8,73.1 L 88,72.5 L 87.1,72.1 L 86.1,71.9 L 85.1,71.9 L 84.1,72.1 L 83.2,72.5 L 82.4,73.1 L 81.7,73.8 L 81.2,74.6 L 80.9,75.6 L 80.8,76.6 L 80.9,77.7 L 81.2,78.7 L 81.7,79.6 L 82.4,80.4 L 83.2,81 L 84.1,81.4 L 85.1,81.6 L 86.1,81.6 L 87.1,81.4 L 88,81 L 88.8,80.4 L 89.5,79.6 L 90,78.7 L 90.3,77.7 L 90.4,76.6 L 90.3,75.6 L 90,74.6 L 89.5,73.8 L 88.8,73.1 L 88,72.5 L 87.1,72.1 L 86.1,71.9 L 85.1,71.9 L 84.1,72.1 L 83.2,72.5 L 82.4,73.1 L 81.7,73.8 L 81.2,74.6 L 80.9,75.6 L 80.8,76.7 L 80.9,77.8 L 81.2,78.8 L 81.7,79.7 L 82.4,80.5 L 83.2,81.1 L 84.1,81.5 L 85.1,81.7 L 86.1,81.7 L 87.1,81.5 L 88,81.1 L 88.8,80.5 L 89.5,79.7 L 90,78.8 L 90.3,77.8 L 90.4,76.7 L 90.3,75.6 L 90,74.7 L 89.5,73.9 L 88.8,73.2 L 88,72.6 L 87.1,72.2 L 86.1,72 L 85.1,72 L 84.1,72.2 L 83.2,72.6 L 82.4,73.2 L 81.7,73.9 L 81.2,74.7 L 80.9,75.7 L 80.8,76.7 L 80.9,77.8 L 81.2,78.8 L 81.7,79.7 L 82.4,80.5 L 83.2,81.1 L 84.1,81.5 L 85.1,81.7 L 86.1,81.7 L 87.1,81.5 L 88,81.1 L 88.8,80.5 L 89.5,79.7 L 90,78.8 L 90.3,77.8 L 90.4,76.7 L 90.3,75.7 L 90,74.7 L 89.5,73.9 L 88.8,73.2 L 88,72.6 L 87.1,72.2 L 86.1,72 L 85.1,72 L 84.1,72.2 L 83.2,72.6 L 82.4,73.2 L 81.7,73.9 L 81.2,74.7 L 80.9,75.7 L 80.8,76.8 L 80.9,77.9 L 81.2,78.9 L 81.7,79.8 L 82.4,80.6 L 83.2,81.2 L 84.1,81.6 L 85.1,81.8 L 86.1,81.8 L 87.1,81.6 L 88,81.2 L 88.8,80.6 L 89.5,79.8 L 90,78.9 L 90.3,77.9 L 90.4,76.8 L 90.3,75.7 L 90,74.8 L 89.5,74 L 88.8,73.3 L 88,72.7 L 87.1,72.3 L 86.1,72.1 L 85.1,72.1 L 84.1,72.3 L 83.2,72.7 L 82.4,73.3 L 81.7,74 L 81.2,74.8 L 80.9,75.8 L 80.8,76.8 L 80.9,77.9 L 81.2,78.9 L 81.7,79.8 L 82.4,80.6 L 83.2,81.2 L 84.1,81.6 L 85.1,81.8 L 86.1,81.8 L 87.1,81.6 L 88,81.2 L 88.8,80.6 L 89.5,79.8 L 90,78.9 L 90.3,77.9 L 90.4,76.8 L 90.3,75.8 L 90,74.8 L 89.5,74 L 88.8,73.3 L 88,72.7 L 87.1,72.3 L 86.1,72.1 L 85.1,72.1 L 84.1,72.3 L 83.2,72.7 L 82.4,73.3 L 81.7,74 L 81.2,74.8 L 80.9,75.8 L 80.8,76.9 L 80.9,78 L 81.2,79 L 81.7,79.9 L 82.4,80.7 L 83.2,81.3 L 84.1,81.7 L 85.1,81.9 L 86.1,81.9 L 87.1,81.7 L 88,81.3 L 88.8,80.7 L 89.5,79.9 L 90,79 L 90.3,78 L 90.4,76.9 L 90.3,75.8 L 90,74.9 L 89.5,74.1 L 88.8,73.4 L 88,72.8 L 87.1,72.4 L 86.1,72.2 L 85.1,72.2 L 84.1,72.4 L 83.2,72.8 L 82.4,73.4 L 81.7,74.1 L 81.2,74.9 L 80.9,75.9 L 80.8,76.9 L 80.9,78 L 81.2,79 L 81.7,79.9 L 82.4,80.7 L 83.2,81.3 L 84.1,81.7 L 85.1,81.9 L 86.1,81.9 L 87.1,81.7 L 88,81.3 L 88.8,80.7 L 89.5,79.9 L 90,79 L 90.3,78 L 90.4,76.9 L 90.3,75.9 L 90,74.9 L 89.5,74.1 L 88.8,73.4 L 88,72.8 L 87.1,72.4 L 86.1,72.2 L 85.1,72.2 L 84.1,72.4 L 83.2,72.8 L 82.4,73.4 L 81.7,74.1 L 81.2,74.9 L 80.9,75.9 L 80.8,77 L 80.9,78.1 L 81.2,79.1 L 81.7,80 L 82.4,80.8 L 83.2,81.4 L 84.1,81.8 L 85.1,82 L 86.1,82 L 87.1,81.8 L 88,81.4 L 88.8,80.8 L 89.5,80 L 90,79.1 L 90.3,78.1 L 90.4,77 L 90.3,75.9 L 90,75 L 89.5,74.2 L 88.8,73.5 L 88,72.9 L 87.1,72.5 L 86.1,72.3 L 85.1,72.3 L 84.1,72.5 L 83.2,72.9 L 82.4,73.5 L 81.7,74.2 L 81.2,75 L 80.9,76 L 80.8,77 L 80.9,78.1 L 81.2,79.1 L 81.7,80 L 82.4,80.8 L 83.2,81.4 L 84.1,81.8 L 85.1,82 L 86.1,82 L 87.1,81.8 L 88,81.4 L 88.8,80.8 L 89.5,80 L 90,79.1 L 90.3,78.1 L 90.4,77 L 90.3,76 L 90,75 L 89.5,74.2 L 88.8,73.5 L 88,72.9 L 87.1,72.5 L 86.1,72.3 L 85.1,72.3 L 84.1,72.5 L 83.2,72.9 L 82.4,73.5 L 81.7,74.2 L 81.2,75 L 80.9,76 L 80.8,77.1 L 80.9,78.2 L 81.2,79.2 L 81.7,80.1 L 82.4,80.9 L 83.2,81.5 L 84.1,81.9 L 85.1,82.1 L 86.1,82.1 L 87.1,81.9 L 88,81.5 L 88.8,80.9 L 89.5,80.1 L 90,79.2 L 90.3,78.2 L 90.4,77.1 L 90.3,76 L 90,75.1 L 89.5,74.3 L 88.8,73.6 L 88,73 L 87.1,72.6 L 86.1,72.4 L 85.1,72.4 L 84.1,72.6 L 83.2,73 L 82.4,73.6 L 81.7,74.3 L 81.2,75.1 L 80.9,76.1 L 80.8,77.1 L 80.9,78.2 L 81.2,79.2 L 81.7,80.1 L 82.4,80.9 L 83.2,81.5 L 84.1,81.9 L 85.1,82.1 L 86.1,82.1 L 87.1,81.9 L 88,81.5 L 88.8,80.9 L 89.5,80.1 L 90,79.2 L 90.3,78.2 L 90.4,77.1 L 90.3,76.1 L 90,75.1 L 89.5,74.3 L 88.8,73.6 L 88,73 L 87.1,72.6 L 86.1,72.4 L 85.1,72.4 L 84.1,72.6 L 83.2,73 L 82.4,73.6 L 81.7,74.3 L 81.2,75.1 L 80.9,76.1 L 80.8,77.2 L 80.9,78.3 L 81.2,79.3 L 81.7,80.2 L 82.4,81 L 83.2,81.6 L 84.1,82 L 85.1,82.2 L 86.1,82.2 L 87.1,82 L 88,81.6 L 88.8,81 L 89.5,80.2 L 90,79.3 L 90.3,78.3 L 90.4,77.2 L 90.3,76.1 L 90,75.2 L 89.5,74.4 L 88.8,73.7 L 88,73.1 L 87.1,72.7 L 86.1,72.5 L 85.1,72.5 L 84.1,72.7 L 83.2,73.1 L 82.4,73.7 L 81.7,74.4 L 81.2,75.2 L 80.9,76.2 L 80.8,77.2 L 80.9,78.3 L 81.2,79.3 L 81.7,80.2 L 82.4,81 L 83.2,81.6 L 84.1,82 L 85.1,82.2 L 86.1,82.2 L 87.1,82 L 88,81.6 L 88.8,81 L 89.5,80.2 L 90,79.3 L 90.3,78.3 L 90.4,77.2 L 90.3,76.2 L 90,75.2 L 89.5,74.4 L 88.8,73.7 L 88,73.1 L 87.1,72.7 L 86.1,72.5 L 85.1,72.5 L 84.1,72.7 L 83.2,73.1 L 82.4,73.7 L 81.7,74.4 L 81.2,75.2 L 80.9,76.2 L 80.8,77.3 L 80.9,78.4 L 81.2,79.4 L 81.7,80.3 L 82.4,81.1 L 83.2,81.7 L 84.1,82.1 L 85.1,82.3 L 86.1,82.3 L 87.1,82.1 L 88,81.7 L 88.8,81.1 L 89.5,80.3 L 90,79.4 L 90.3,78.4 L 90.4,77.3 L 90.3,76.2 L 90,75.3 L 89.5,74.5 L 88.8,73.8 L 88,73.2 L 87.1,72.8 L 86.1,72.6 L 85.1,72.6 L 84.1,72.8 L 83.2,73.2 L 82.4,73.8 L 81.7,74.5 L 81.2,75.3 L 80.9,76.3 L 80.8,77.3 L 80.9,78.4 L 81.2,79.4 L 81.7,80.3 L 82.4,81.1 L 83.2,81.7 L 84.1,82.1 L 85.1,82.3 L 86.1,82.3 L 87.1,82.1 L 88,81.7 L 88.8,81.1 L 89.5,80.3 L 90,79.4 L 90.3,78.4 L 90.4,77.3 L 90.3,76.3 L 90,75.3 L 89.5,74.5 L 88.8,73.8 L 88,73.2 L 87.1,72.8 L 86.1,72.6 L 85.1,72.6 L 84.1,72.8 L 83.2,73.2 L 82.4,73.8 L 81.7,74.5 L 81.2,75.3 L 80.9,76.3 L 80.8,77.4 L 80.9,78.5 L 81.2,79.5 L 81.7,80.4 L 82.4,81.2 L 83.2,81.8 L 84.1,82.2 L 85.1,82.4 L 86.1,82.4 L 87.1,82.2 L 88,81.8 L 88.8,81.2 L 89.5,80.4 L 90,79.5 L 90.3,78.5 L 90.4,77.4 L 90.3,76.3 L 90,75.4 L 89.5,74.6 L 88.8,73.9 L 88,73.3 L 87.1,72.9 L 86.1,72.7 L 85.1,72.7 L 84.1,72.9 L 83.2,73.3 L 82.4,73.9 L 81.7,74.6 L 81.2,75.4 L 80.9,76.4 L 80.8,77.4 L 80.9,78.5 L 81.2,79.5 L 81.7,80.4 L 82.4,81.2 L 83.2,81.8 L 84.1,82.2 L 85.1,82.4 L 86.1,82.4 L 87.1,82.2 L 88,81.8 L 88.8,81.2 L 89.5,80.4 L 90,79.5 L 90.3,78.5 L 90.4,77.4 L 90.3,76.4 L 90,75.4 L 89.5,74.6 L 88.8,73.9 L 88,73.3 L 87.1,72.9 L 86.1,72.7 L 85.1,72.7 L 84.1,72.9 L 83.2,73.3 L 82.4,73.9 L 81.7,74.6 L 81.2,75.4 L 80.9,76.4 L 80.8,77.5 L 80.9,78.6 L 81.2,79.6 L 81.7,80.5 L 82.4,81.3 L 83.2,81.9 L 84.1,82.3 L 85.1,82.5 L 86.1,82.5 L 87.1,82.3 L 88,81.9 L 88.8,81.3 L 89.5,80.5 L 90,79.6 L 90.3,78.6 L 90.4,77.5 L 90.3,76.4 L 90,75.5 L 89.5,74.7 L 88.8,74 L 88,73.4 L 87.1,73 L 86.1,72.8 L 85.1,72.8 L 84.1,73 L 83.2,73.4 L 82.4,74 L 81.7,74.7 L 81.2,75.5 L 80.9,76.5 L 80.8,77.5 L 80.9,78.6 L 81.2,79.6 L 81.7,80.5 L 82.4,81.3 L 83.2,81.9 L 84.1,82.3 L 85.1,82.5 L 86.1,82.5 L 87.1,82.3 L 88,81.9 L 88.8,81.3 L 89.5,80.5 L 90,79.6 L 90.3,78.6 L 90.4,77.5 L 90.3,76.5 L 90,75.5 L 89.5,74.7 L 88.8,74 L 88,73.4 L 87.1,73 L 86.1,72.8 L 85.1,72.8 L 84.1,73 L 83.2,73.4 L 82.4,74 L 81.7,74.7 L 81.2,75.5 L 80.9,76.5 L 80.8,77.6 L 80.9,78.7 L 81.2,79.7 L 81.7,80.6 L 82.4,81.4 L 83.2,82 L 84.1,82.4 L 85.1,82.6 L 86.1,82.6 L 87.1,82.4 L 88,82 L 88.8,81.4 L 89.5,80.6 L 90,79.7 L 90.3,78.7 L 90.4,77.6 L 90.3,76.5 L 90,75.6 L 89.5,74.8 L 88.8,74.1 L 88,73.5 L 87.1,73.1 L 86.1,72.9 L 85.1,72.9 L 84.1,73.1 L 83.2,73.5 L 82.4,74.1 L 81.7,74.8 L 81.2,75.6 L 80.9,76.6 L 80.8,77.6 L 80.9,78.7 L 81.2,79.7 L 81.7,80.6 L 82.4,81.4 L 83.2,82 L 84.1,82.4 L 85.1,82.6 L 86.1,82.6 L 87.1,82.4 L 88,82 L 88.8,81.4 L 89.5,80.6 L 90,79.7 L 90.3,78.7 L 90.4,77.6 L 90.3,76.6 L 90,75.6 L 89.5,74.8 L 88.8,74.1 L 88,73.5 L 87.1,73.1 L 86.1,72.9 L 85.1,72.9 L 84.1,73.1 L 83.2,73.5 L 82.4,74.1 L 81.7,74.8 L 81.2,75.6 L 80.9,76.6 L 80.8,77.7 L 80.9,78.8 L 81.2,79.8 L 81.7,80.7 L 82.4,81.5 L 83.2,82.1 L 84.1,82.5 L 85.1,82.7 L 86.1,82.7 L 87.1,82.5 L 88,82.1 L 88.8,81.5 L 89.5,80.7 L 90,79.8 L 90.3,78.8 L 90.4,77.7 L 90.3,76.6 L 90,75.7 L 89.5,74.9 L 88.8,74.2 L 88,73.6 L 87.1,73.2 L 86.1,73 L 85.1,73 L 84.1,73.2 L 83.2,73.6 L 82.4,74.2 L 81.7,74.9 L 81.2,75.7 L 80.9,76.7 L 80.8,77.7 L 80.9,78.8 L 81.2,79.8 L 81.7,80.7 L 82.4,81.5 L 83.2,82.1 L 84.1,82.5 L 85.1,82.7 L 86.1,82.7 L 87.1,82.5 L 88,82.1 L 88.8,81.5 L 89.5,80.7 L 90,79.8 L 90.3,78.8 L 90.4,77.7 L 90.3,76.7 L 90,75.7 L 89.5,74.9 L 88.8,74.2 L 88,73.6 L 87.1,73.2 L 86.1,73 L 85.1,73 L 84.1,73.2 L 83.2,73.6 L 82.4,74.2 L 81.7,74.9 L 81.2,75.7 L 80.9,76.7 L 80.8,77.8 L 80.9,78.9 L 81.2,79.9 L 81.7,80.8 L 82.4,81.6 L 83.2,82.2 L 84.1,82.6 L 85.1,82.8 L 86.1,82.8 L 87.1,82.6 L 88,82.2 L 88.8,81.6 L 89.5,80.8 L 90,79.9 L 90.3,78.9 L 90.4,77.8 L 90.3,76.7 L 90,75.8 L 89.5,75 L 88.8,74.3 L 88,73.7 L 87.1,73.3 L 86.1,73.1 L 85.1,73.1 L 84.1,73.3 L 83.2,73.7 L 82.4,74.3 L 81.7,75 L 81.2,75.8 L 80.9,76.8 L 80.8,77.8 L 80.9,78.9 L 81.2,79.9 L 81.7,80.8 L 82.4,81.6 L 83.2,82.2 L 84.1,82.6 L 85.1,82.8 L 86.1,82.8 L 87.1,82.6 L 88,82.2 L 88.8,81.6 L 89.5,80.8 L 90,79.9 L 90.3,78.9 L 90.4,77.8 L 90.3,76.8 L 90,75.8 L 89.5,75 L 88.8,74.3 L 88,73.7 L 87.1,73.3 L 86.1,73.1 L 85.1,73.1 L 84.1,73.3 L 83.2,73.7 L 82.4,74.3 L 81.7,75 L 81.2,75.8 L 80.9,76.8 L 80.8,77.9 L 80.9,79 L 81.2,80 L 81.7,80.9 L 82.4,81.7 L 83.2,82.3 L 84.1,82.7 L 85.1,82.9 L 86.1,82.9 L 87.1,82.7 L 88,82.3 L 88.8,81.7 L 89.5,80.9 L 90,80 L 90.3,79 L 90.4,77.9 L 90.3,76.8 L 90,75.9 L 89.5,75.1 L 88.8,74.4 L 88,73.8 L 87.1,73.4 L 86.1,73.2 L 85.1,73.2 L 84.1,73.4 L 83.2,73.8 L 82.4,74.4 L 81.7,75.1 L 81.2,75.9 L 80.9,76.9 L 80.8,77.9 L 80.9,79 L 81.2,80 L 81.7,80.9 L 82.4,81.7 L 83.2,82.3 L 84.1,82.7 L 85.1,82.9 L 86.1,82.9 L 87.1,82.7 L 88,82.3 L 88.8,81.7 L 89.5,80.9 L 90,80 L 90.3,79 L 90.4,77.9 L 90.3,76.9 L 90,75.9 L 89.5,75.1 L 88.8,74.4 L 88,73.8 L 87.1,73.4 L 86.1,73.2 L 85.1,73.2 L 84.1,73.4 L 83.2,73.8 L 82.4,74.4 L 81.7,75.1 L 81.2,75.9 L 80.9,76.9 L 80.8,78 L 80.9,79.1 L 81.2,80.1 L 81.7,81 L 82.4,81.8 L 83.2,82.4 L 84.1,82.8 L 85.1,83 L 86.1,83 L 87.1,82.8 L 88,82.4 L 88.8,81.8 L 89.5,81 L 90,80.1 L 90.3,79.1 L 90.4,78 L 90.3,76.9 L 90,76 L 89.5,75.2 L 88.8,74.5 L 88,73.9 L 87.1,73.5 L 86.1,73.3 L 85.1,73.3 L 84.1,73.5 L 83.2,73.9 L 82.4,74.5 L 81.7,75.2 L 81.2,76 L 80.9,77 L 80.8,78 L 80.9,79.1 L 81.2,80.1 L 81.7,81 L 82.4,81.8 L 83.2,82.4 L 84.1,82.8 L 85.1,83 L 86.1,83 L 87.1,82.8 L 88,82.4 L 88.8,81.8 L 89.5,81 L 90,80.1 L 90.3,79.1 L 90.4,78 L 90.3,77 L 90,76 L 89.5,75.2 L 88.8,74.5 L 88,73.9 L 87.1,73.5 L 86.1,73.3 L 85.1,73.3 L 84.1,73.5 L 83.2,73.9 L 82.4,74.5 L 81.7,75.2 L 81.2,76 L 80.9,77 L 80.8,78.1 L 80.9,79.2 L 81.2,80.2 L 81.7,81.1 L 82.4,81.9 L 83.2,82.5 L 84.1,82.9 L 85.1,83.1 L 86.1,83.1 L 87.1,82.9 L 88,82.5 L 88.8,81.9 L 89.5,81.1 L 90,80.2 L 90.3,79.2 L 90.4,78.1 L 90.3,77 L 90,76.1 L 89.5,75.3 L 88.8,74.6 L 88,74 L 87.1,73.6 L 86.1,73.4 L 85.1,73.4 L 84.1,73.6 L 83.2,74 L 82.4,74.6 L 81.7,75.3 L 81.2,76.1 L 80.9,77.1 L 80.8,78.1 L 80.9,79.2 L 81.2,80.2 L 81.7,81.1 L 82.4,81.9 L 83.2,82.5 L 84.1,82.9 L 85.1,83.1 L 86.1,83.1 L 87.1,82.9 L 88,82.5 L 88.8,81.9 L 89.5,81.1 L 90,80.2 L 90.3,79.2 L 90.4,78.1 L 90.3,77.1 L 90,76.1 L 89.5,75.3 L 88.8,74.6 L 88,74 L 87.1,73.6 L 86.1,73.4 L 85.1,73.4 L 84.1,73.6 L 83.2,74 L 82.4,74.6 L 81.7,75.3 L 81.2,76.1 L 80.9,77.1 Z"
-          stroke="#3b82f6"
-          strokeWidth="0.8"
-          fill="none"
-          filter="url(#mapGlow)"
-          opacity="0.9"
+        {/* Dark themed map tiles */}
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
         />
-      </svg>
 
-      <canvas 
-        ref={canvasRef}
-        className="w-full h-full"
-        style={{ display: 'block' }}
-      />
+        {/* City markers with pulsing effect */}
+        {cityData.map((city, index) => (
+          <CircleMarker
+            key={index}
+            center={[city.lat, city.lng]}
+            radius={getMarkerSize(city.count)}
+            pathOptions={{
+              fillColor: getMarkerColor(city.count),
+              fillOpacity: 0.8,
+              color: '#ffffff',
+              weight: 2,
+              className: 'pulsing-marker'
+            }}
+          >
+            <Popup>
+              <div className="text-sm">
+                <div className="font-bold text-base mb-1">{city.label}</div>
+                <div className="text-gray-700">
+                  <span className="font-semibold">{city.count}</span> devices
+                </div>
+              </div>
+            </Popup>
+          </CircleMarker>
+        ))}
+      </MapContainer>
 
       {/* Stats Overlay - Top Left */}
       <div className={`${isFullscreen ? 'fixed top-8 left-8' : 'absolute top-6 left-6'} z-[10000] flex flex-col gap-3`}>
