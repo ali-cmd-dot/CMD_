@@ -118,19 +118,19 @@ function CanvasOverlay({ cityData }) {
         let color, size
         if (city.count > 500) {
           color = { r: 239, g: 68, b: 68 }
-          size = 16
+          size = 13
         } else if (city.count > 200) {
           color = { r: 249, g: 115, b: 22 }
-          size = 13
+          size = 11
         } else if (city.count > 100) {
           color = { r: 245, g: 158, b: 11 }
-          size = 10
+          size = 8
         } else if (city.count > 50) {
           color = { r: 234, g: 179, b: 8 }
-          size = 8
+          size = 6
         } else {
           color = { r: 132, g: 204, b: 22 }
-          size = 6
+          size = 4
         }
 
         // Outer glow
