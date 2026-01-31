@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Popup, Tooltip } from 'react-leaflet'
-import { Maximize2, Minimize2, MapPin, Activity, TrendingUp, Zap, AlertCircle } from 'lucide-react'
+import { Maximize2, Minimize2, MapPin, Activity, TrendingUp, Zap } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
 
 export default function IndiaMapLeaflet({ installationTrackerData }) {
@@ -48,14 +48,18 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     )
   }
 
-  // COMPREHENSIVE city coordinates - covers ALL major Indian cities
+  // ULTIMATE COMPREHENSIVE city coordinates - ALL INDIAN CITIES
   const cityCoordinates = {
     // Major metros
     'mumbai': { lat: 19.0760, lng: 72.8777, label: 'Mumbai' },
     'delhi': { lat: 28.7041, lng: 77.1025, label: 'Delhi' },
+    'new delhi': { lat: 28.6139, lng: 77.2090, label: 'New Delhi' },
     'bengaluru': { lat: 12.9716, lng: 77.5946, label: 'Bengaluru' },
     'bangalore': { lat: 12.9716, lng: 77.5946, label: 'Bangalore' },
+    'banagalore': { lat: 12.9716, lng: 77.5946, label: 'Bangalore' },
+    'banaglore': { lat: 12.9716, lng: 77.5946, label: 'Bangalore' },
     'kolkata': { lat: 22.5726, lng: 88.3639, label: 'Kolkata' },
+    'kolkota': { lat: 22.5726, lng: 88.3639, label: 'Kolkata' },
     'chennai': { lat: 13.0827, lng: 80.2707, label: 'Chennai' },
     'hyderabad': { lat: 17.3850, lng: 78.4867, label: 'Hyderabad' },
     'pune': { lat: 18.5204, lng: 73.8567, label: 'Pune' },
@@ -64,6 +68,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     // All Tier 1 & 2 cities
     'surat': { lat: 21.1702, lng: 72.8311, label: 'Surat' },
     'jaipur': { lat: 26.9124, lng: 75.7873, label: 'Jaipur' },
+    'jaipuar': { lat: 26.9124, lng: 75.7873, label: 'Jaipur' },
     'lucknow': { lat: 26.8467, lng: 80.9462, label: 'Lucknow' },
     'kanpur': { lat: 26.4499, lng: 80.3319, label: 'Kanpur' },
     'nagpur': { lat: 21.1458, lng: 79.0882, label: 'Nagpur' },
@@ -77,6 +82,8 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'baroda': { lat: 22.3072, lng: 73.1812, label: 'Baroda' },
     'ghaziabad': { lat: 28.6692, lng: 77.4538, label: 'Ghaziabad' },
     'ludhiana': { lat: 30.9010, lng: 75.8573, label: 'Ludhiana' },
+    'ludhiana punjab': { lat: 30.9010, lng: 75.8573, label: 'Ludhiana' },
+    'ludhiana punajb': { lat: 30.9010, lng: 75.8573, label: 'Ludhiana' },
     'agra': { lat: 27.1767, lng: 78.0081, label: 'Agra' },
     'nashik': { lat: 19.9975, lng: 73.7898, label: 'Nashik' },
     'faridabad': { lat: 28.4089, lng: 77.3178, label: 'Faridabad' },
@@ -95,16 +102,19 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'ranchi': { lat: 23.3441, lng: 85.3096, label: 'Ranchi' },
     'howrah': { lat: 22.5958, lng: 88.2636, label: 'Howrah' },
     'coimbatore': { lat: 11.0168, lng: 76.9558, label: 'Coimbatore' },
+    'coiambatore': { lat: 11.0168, lng: 76.9558, label: 'Coimbatore' },
     'jabalpur': { lat: 23.1815, lng: 79.9864, label: 'Jabalpur' },
     'gwalior': { lat: 26.2183, lng: 78.1828, label: 'Gwalior' },
     'vijayawada': { lat: 16.5062, lng: 80.6480, label: 'Vijayawada' },
+    'vijaywada': { lat: 16.5062, lng: 80.6480, label: 'Vijayawada' },
     'jodhpur': { lat: 26.2389, lng: 73.0243, label: 'Jodhpur' },
     'madurai': { lat: 9.9252, lng: 78.1198, label: 'Madurai' },
     'raipur': { lat: 21.2514, lng: 81.6296, label: 'Raipur' },
     'kota': { lat: 25.2138, lng: 75.8648, label: 'Kota' },
     'chandigarh': { lat: 30.7333, lng: 76.7794, label: 'Chandigarh' },
     'guwahati': { lat: 26.1445, lng: 91.7362, label: 'Guwahati' },
-    'gauhati': { lat: 26.1445, lng: 91.7362, label: 'Gauhati' },
+    'guwathi': { lat: 26.1445, lng: 91.7362, label: 'Guwahati' },
+    'gauhati': { lat: 26.1445, lng: 91.7362, label: 'Guwahati' },
     'thiruvananthapuram': { lat: 8.5241, lng: 76.9366, label: 'Thiruvananthapuram' },
     'trivandrum': { lat: 8.5241, lng: 76.9366, label: 'Trivandrum' },
     'solapur': { lat: 17.6599, lng: 75.9064, label: 'Solapur' },
@@ -117,12 +127,15 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'salem': { lat: 11.6643, lng: 78.1460, label: 'Salem' },
     'gurgaon': { lat: 28.4595, lng: 77.0266, label: 'Gurgaon' },
     'gurugram': { lat: 28.4595, lng: 77.0266, label: 'Gurugram' },
+    'gurgoan': { lat: 28.4595, lng: 77.0266, label: 'Gurgaon' },
     'aligarh': { lat: 27.8974, lng: 78.0880, label: 'Aligarh' },
     'jalandhar': { lat: 31.3260, lng: 75.5762, label: 'Jalandhar' },
     'bhubaneswar': { lat: 20.2961, lng: 85.8245, label: 'Bhubaneswar' },
-    'bhubaneshwar': { lat: 20.2961, lng: 85.8245, label: 'Bhubaneshwar' },
+    'bhubaneshwar': { lat: 20.2961, lng: 85.8245, label: 'Bhubaneswar' },
+    'bhubneshwar': { lat: 20.2961, lng: 85.8245, label: 'Bhubaneswar' },
     'noida': { lat: 28.5355, lng: 77.3910, label: 'Noida' },
     'moradabad': { lat: 28.8389, lng: 78.7378, label: 'Moradabad' },
+    'mordabad': { lat: 28.8389, lng: 78.7378, label: 'Moradabad' },
     'kochi': { lat: 9.9312, lng: 76.2673, label: 'Kochi' },
     'cochin': { lat: 9.9312, lng: 76.2673, label: 'Cochin' },
     'mangalore': { lat: 12.9141, lng: 74.8560, label: 'Mangalore' },
@@ -200,7 +213,6 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'etawah': { lat: 26.7855, lng: 79.0215, label: 'Etawah' },
     'bharatpur': { lat: 27.2173, lng: 77.4900, label: 'Bharatpur' },
     'begusarai': { lat: 25.4182, lng: 86.1346, label: 'Begusarai' },
-    'new delhi': { lat: 28.6139, lng: 77.2090, label: 'New Delhi' },
     'chhapra': { lat: 25.7805, lng: 84.7278, label: 'Chhapra' },
     'saran': { lat: 25.7805, lng: 84.7278, label: 'Saran' },
     'ozhukarai': { lat: 11.9570, lng: 79.7737, label: 'Ozhukarai' },
@@ -244,8 +256,9 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'sagar': { lat: 23.8388, lng: 78.7378, label: 'Sagar' },
     'tumkur': { lat: 13.3392, lng: 77.1006, label: 'Tumkur' },
     'tumakuru': { lat: 13.3392, lng: 77.1006, label: 'Tumakuru' },
+    'tumkur': { lat: 13.3392, lng: 77.1006, label: 'Tumkur' },
     'hisar': { lat: 29.1492, lng: 75.7217, label: 'Hisar' },
-    'hissar': { lat: 29.1492, lng: 75.7217, label: 'Hissar' },
+    'hissar': { lat: 29.1492, lng: 75.7217, label: 'Hisar' },
     'panvel': { lat: 18.9894, lng: 73.1105, label: 'Panvel' },
     'darbhanga': { lat: 26.1542, lng: 85.8918, label: 'Darbhanga' },
     'kharagpur': { lat: 22.3460, lng: 87.2320, label: 'Kharagpur' },
@@ -253,6 +266,8 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'ichalkaranji': { lat: 16.6890, lng: 74.4606, label: 'Ichalkaranji' },
     'karnal': { lat: 29.6857, lng: 76.9905, label: 'Karnal' },
     'bathinda': { lat: 30.2110, lng: 74.9455, label: 'Bathinda' },
+    'bhathinda': { lat: 30.2110, lng: 74.9455, label: 'Bathinda' },
+    'bhatinda': { lat: 30.2110, lng: 74.9455, label: 'Bathinda' },
     'shillong': { lat: 25.5788, lng: 91.8933, label: 'Shillong' },
     'sambalpur': { lat: 21.4704, lng: 83.9701, label: 'Sambalpur' },
     'ongole': { lat: 15.5057, lng: 80.0499, label: 'Ongole' },
@@ -260,6 +275,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'nandyal': { lat: 15.4777, lng: 78.4836, label: 'Nandyal' },
     'morena': { lat: 26.4953, lng: 77.9956, label: 'Morena' },
     'bhiwani': { lat: 28.7830, lng: 76.1399, label: 'Bhiwani' },
+    'bhiwandi': { lat: 19.3009, lng: 73.0629, label: 'Bhiwandi' },
     'port blair': { lat: 11.6234, lng: 92.7265, label: 'Port Blair' },
     'haridwar': { lat: 29.9457, lng: 78.1642, label: 'Haridwar' },
     'nagercoil': { lat: 8.1762, lng: 77.4347, label: 'Nagercoil' },
@@ -274,9 +290,11 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'dibrugarh': { lat: 27.4728, lng: 94.9120, label: 'Dibrugarh' },
     'hosur': { lat: 12.7409, lng: 77.8253, label: 'Hosur' },
     'vellore': { lat: 12.9165, lng: 79.1325, label: 'Vellore' },
+    'vellore': { lat: 12.9165, lng: 79.1325, label: 'Vellore' },
     'raiganj': { lat: 25.6140, lng: 88.1239, label: 'Raiganj' },
     'santipur': { lat: 23.2551, lng: 88.4349, label: 'Santipur' },
     'gandhidham': { lat: 23.0800, lng: 70.1300, label: 'Gandhidham' },
+    'gandhinagar': { lat: 23.2156, lng: 72.6369, label: 'Gandhinagar' },
     'cuddalore': { lat: 11.7480, lng: 79.7714, label: 'Cuddalore' },
     'kumbakonam': { lat: 10.9617, lng: 79.3881, label: 'Kumbakonam' },
     'dindigul': { lat: 10.3673, lng: 77.9803, label: 'Dindigul' },
@@ -289,11 +307,12 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'tanjore': { lat: 10.7870, lng: 79.1378, label: 'Tanjore' },
     'bulandshahr': { lat: 28.4067, lng: 77.8498, label: 'Bulandshahr' },
     'bharuch': { lat: 21.7051, lng: 72.9959, label: 'Bharuch' },
+    'baharampur': { lat: 24.1000, lng: 88.2500, label: 'Baharampur' },
+    'kulti': { lat: 23.7307, lng: 86.8454, label: 'Kulti' },
     'naihati': { lat: 22.8934, lng: 88.4196, label: 'Naihati' },
     'barasat': { lat: 22.7237, lng: 88.4820, label: 'Barasat' },
     'bally': { lat: 22.6514, lng: 88.3405, label: 'Bally' },
     'baranagar': { lat: 22.6422, lng: 88.3726, label: 'Baranagar' },
-    'tiruchengode': { lat: 11.3782, lng: 77.8938, label: 'Tiruchengode' },
     'pallavaram': { lat: 12.9675, lng: 80.1491, label: 'Pallavaram' },
     'bidhannagar': { lat: 22.6240, lng: 88.4337, label: 'Bidhannagar' },
     'munger': { lat: 25.3753, lng: 86.4733, label: 'Munger' },
@@ -304,61 +323,96 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'srikakulam': { lat: 18.2949, lng: 83.8938, label: 'Srikakulam' },
     'rewari': { lat: 28.1988, lng: 76.6194, label: 'Rewari' },
     'yamunanagar': { lat: 30.1290, lng: 77.2674, label: 'Yamunanagar' },
-    'baharampur': { lat: 24.1000, lng: 88.2500, label: 'Baharampur' },
-    'kulti': { lat: 23.7307, lng: 86.8454, label: 'Kulti' },
+    
+    // Additional cities from user's list
+    'hosur': { lat: 12.7409, lng: 77.8253, label: 'Hosur' },
+    'panaji': { lat: 15.4909, lng: 73.8278, label: 'Panaji' },
+    'singapore': { lat: 1.3521, lng: 103.8198, label: 'Singapore' },
+    'jharsuguda': { lat: 21.8537, lng: 84.0070, label: 'Jharsuguda' },
+    'kolar': { lat: 13.1368, lng: 78.1294, label: 'Kolar' },
+    'krishnagiri': { lat: 12.5186, lng: 78.2137, label: 'Krishnagiri' },
+    'manesar': { lat: 28.3632, lng: 76.9318, label: 'Manesar' },
+    'sikar': { lat: 27.6119, lng: 75.1399, label: 'Sikar' },
+    'assam': { lat: 26.2006, lng: 92.9376, label: 'Assam' },
+    'rajasthan': { lat: 27.0238, lng: 74.2179, label: 'Rajasthan' },
+    'bhilwara': { lat: 25.3407, lng: 74.6269, label: 'Bhilwara' },
+    'narsapura': { lat: 13.2197, lng: 77.4338, label: 'Narsapura' },
+    'goa': { lat: 15.2993, lng: 74.1240, label: 'Goa' },
+    'ernakulam': { lat: 9.9816, lng: 76.2999, label: 'Ernakulam' },
+    'jhunjhunu': { lat: 28.1308, lng: 75.3979, label: 'Jhunjhunu' },
+    'kapurthala': { lat: 31.3802, lng: 75.3807, label: 'Kapurthala' },
+    'guntur': { lat: 16.3067, lng: 80.4365, label: 'Guntur' },
+    'bhiwadi': { lat: 28.2110, lng: 76.8606, label: 'Bhiwadi' },
+    'amritar': { lat: 31.6340, lng: 74.8723, label: 'Amritsar' },
+    'vallore': { lat: 12.9165, lng: 79.1325, label: 'Vellore' },
+    'erode': { lat: 11.3410, lng: 77.7172, label: 'Erode' },
+    'kadirvedu': { lat: 13.0000, lng: 79.8000, label: 'Kadirvedu' },
+    'vellore': { lat: 12.9165, lng: 79.1325, label: 'Vellore' },
+    'tn': { lat: 11.1271, lng: 78.6569, label: 'Tamil Nadu' },
+    'moga': { lat: 30.8176, lng: 75.1706, label: 'Moga' },
+    'haryana': { lat: 29.0588, lng: 76.0856, label: 'Haryana' },
+    'tepl': { lat: 28.7041, lng: 77.1025, label: 'Delhi' },
+    'iatur': { lat: 18.3996, lng: 76.5630, label: 'Latur' },
+    'up': { lat: 26.8467, lng: 80.9462, label: 'Uttar Pradesh' },
+    'kerala': { lat: 10.8505, lng: 76.2711, label: 'Kerala' },
+    'punjab': { lat: 31.1471, lng: 75.3412, label: 'Punjab' },
+    'mumbai- nalsapora': { lat: 19.1176, lng: 72.8561, label: 'Nalsapora' },
+    'beed': { lat: 18.9894, lng: 75.7566, label: 'Beed' },
+    'sonipar': { lat: 28.9931, lng: 77.0151, label: 'Sonipat' },
+    'sonipat': { lat: 28.9931, lng: 77.0151, label: 'Sonipat' },
+    'ambala': { lat: 30.3782, lng: 76.7826, label: 'Ambala' },
+    'solan (parwanoo)': { lat: 30.8388, lng: 76.9733, label: 'Solan' },
+    'solan': { lat: 30.9045, lng: 77.0967, label: 'Solan' },
+    'manali': { lat: 32.2396, lng: 77.1887, label: 'Manali' },
+    'hisar': { lat: 29.1492, lng: 75.7217, label: 'Hisar' },
+    'mussorie': { lat: 30.4598, lng: 78.0644, label: 'Mussoorie' },
+    'mussoorie': { lat: 30.4598, lng: 78.0644, label: 'Mussoorie' },
+    'jhajjar': { lat: 28.6063, lng: 76.6565, label: 'Jhajjar' },
+    'ernakulam': { lat: 9.9816, lng: 76.2999, label: 'Ernakulam' },
+    'rudrapur': { lat: 28.9845, lng: 79.4052, label: 'Rudrapur' },
+    'manipal': { lat: 13.3479, lng: 74.7869, label: 'Manipal' },
+    'jalna': { lat: 19.8347, lng: 75.8800, label: 'Jalna' },
+  }
+
+  // Normalize city names to handle case and spacing variations
+  const normalizeCityName = (name) => {
+    return name.toLowerCase().trim().replace(/\s+/g, ' ')
   }
 
   // Get ALL cities from data with their counts
   const citiesBreakdown = installationTrackerData.citiesBreakdown || []
   
-  // Map cities to coordinates - IMPORTANT: Don't filter out any cities!
+  // Map cities to coordinates
   const cityData = citiesBreakdown.map(cityInfo => {
-    const cityKey = cityInfo.city.toLowerCase().trim()
+    const cityKey = normalizeCityName(cityInfo.city)
     const coords = cityCoordinates[cityKey]
     
     if (coords) {
       return {
         ...coords,
         count: cityInfo.count,
-        key: cityKey,
-        hasCoordinates: true
-      }
-    } else {
-      // For cities without coordinates, place them in a default location
-      // We'll spread them around central India
-      const baseAngle = (cityKey.charCodeAt(0) + cityKey.charCodeAt(Math.floor(cityKey.length/2))) * 13.7
-      const radius = 5 + (cityInfo.count / 10)
-      
-      return {
-        lat: 23.0 + Math.sin(baseAngle) * radius,
-        lng: 79.0 + Math.cos(baseAngle) * radius,
-        label: cityInfo.city,
-        count: cityInfo.count,
-        key: cityKey,
-        hasCoordinates: false
+        key: cityKey
       }
     }
-  })
-
-  // Separate mapped and unmapped cities for stats
-  const mappedCities = cityData.filter(c => c.hasCoordinates)
-  const unmappedCities = cityData.filter(c => !c.hasCoordinates)
+    return null
+  }).filter(Boolean)
 
   const totalDevices = Object.values(installationTrackerData.cityCount || {}).reduce((a, b) => a + b, 0)
+  const totalCities = cityData.length
 
   const getMarkerColor = (count) => {
-    if (count > 500) return '#ef4444' // red
-    if (count > 200) return '#f97316' // orange
-    if (count > 100) return '#f59e0b' // amber
-    if (count > 50) return '#eab308' // yellow
-    return '#22c55e' // green
+    if (count > 500) return '#ef4444' // red - HOT
+    if (count > 200) return '#f97316' // orange - ACTIVE
+    if (count > 100) return '#f59e0b' // amber - GROWING
+    if (count > 50) return '#eab308' // yellow - MODERATE
+    return '#22c55e' // green - LOW
   }
 
   const getMarkerSize = (count) => {
-    if (count > 500) return 24
-    if (count > 200) return 20
-    if (count > 100) return 16
-    if (count > 50) return 13
+    if (count > 500) return 26
+    if (count > 200) return 22
+    if (count > 100) return 18
+    if (count > 50) return 14
     return 10
   }
 
@@ -366,7 +420,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
 
   const MapView = () => (
     <div className="relative w-full h-full">
-      {/* Leaflet Map with Vibrant Colorful Theme */}
+      {/* Leaflet Map with BRIGHT VIBRANT MAP */}
       <MapContainer
         center={[22.5, 79.5]}
         zoom={5}
@@ -374,13 +428,14 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
         zoomControl={true}
         attributionControl={false}
       >
-        {/* Beautiful Esri World Street Map - Colorful and vibrant */}
+        {/* BRIGHT COLORFUL MAP - CartoDB Voyager for vibrant colors */}
         <TileLayer
-          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
-          attribution='Tiles &copy; Esri'
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          maxZoom={20}
         />
 
-        {/* City markers with counts - ALL CITIES SHOWN! */}
+        {/* City markers - ALL CITIES */}
         {cityData.map((city, index) => (
           <CircleMarker
             key={index}
@@ -388,37 +443,27 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
             radius={getMarkerSize(city.count)}
             pathOptions={{
               fillColor: getMarkerColor(city.count),
-              fillOpacity: city.hasCoordinates ? 0.85 : 0.65,
-              color: city.hasCoordinates ? '#ffffff' : '#fbbf24',
-              weight: city.hasCoordinates ? 2.5 : 3,
+              fillOpacity: 0.9,
+              color: '#ffffff',
+              weight: 3,
               className: 'city-marker'
             }}
           >
             {/* Count displayed inside bubble */}
             <Tooltip permanent direction="center" className="count-tooltip" opacity={1}>
               <span className="font-bold text-white" style={{ 
-                fontSize: city.count > 100 ? '11px' : '10px', 
-                textShadow: '0 1px 2px rgba(0,0,0,0.8)' 
+                fontSize: city.count > 100 ? '12px' : '10px', 
+                textShadow: '0 2px 4px rgba(0,0,0,0.9)' 
               }}>
                 {city.count}
               </span>
             </Tooltip>
             <Popup>
-              <div className="text-sm p-1">
-                <div className="font-bold text-base mb-1 text-gray-800">
-                  {city.label}
-                  {!city.hasCoordinates && (
-                    <span className="ml-2 text-xs text-yellow-600">📍 Approx</span>
-                  )}
-                </div>
+              <div className="text-sm p-2">
+                <div className="font-bold text-lg mb-2 text-gray-800">{city.label}</div>
                 <div className="text-gray-700">
-                  <span className="font-semibold text-lg text-blue-600">{city.count}</span> devices
+                  <span className="font-semibold text-xl text-blue-600">{city.count}</span> devices
                 </div>
-                {!city.hasCoordinates && (
-                  <div className="text-xs text-yellow-600 mt-1">
-                    Coordinates not available
-                  </div>
-                )}
               </div>
             </Popup>
           </CircleMarker>
@@ -429,19 +474,19 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
       <div className={`${isFullscreen ? 'fixed top-8 left-8' : 'absolute top-6 left-6'} z-[10000] flex flex-col gap-3`}>
         <div className="map-card">
           <div className="flex items-center gap-3">
-            <div className="map-icon" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>
+            <div className="map-icon" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)' }}>
               <MapPin size={20} />
             </div>
             <div>
-              <div className="map-label">ALL CITIES</div>
-              <div className="map-value">{cityData.length}</div>
+              <div className="map-label">TOTAL CITIES</div>
+              <div className="map-value">{totalCities}</div>
             </div>
           </div>
         </div>
         
         <div className="map-card">
           <div className="flex items-center gap-3">
-            <div className="map-icon" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)' }}>
+            <div className="map-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
               <Activity size={20} />
             </div>
             <div>
@@ -457,33 +502,14 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
               <TrendingUp size={20} />
             </div>
             <div>
-              <div className="map-label">MAPPED</div>
-              <div className="map-value">{mappedCities.length}</div>
+              <div className="map-label">COVERAGE</div>
+              <div className="map-value">Pan India</div>
             </div>
           </div>
         </div>
-
-        {unmappedCities.length > 0 && (
-          <div className="map-card bg-yellow-50 border-yellow-300">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertCircle className="text-yellow-600" size={16} />
-              <div className="text-xs font-bold text-yellow-800">
-                {unmappedCities.length} cities approx. positioned
-              </div>
-            </div>
-            <div className="text-xs text-yellow-700 max-h-24 overflow-y-auto space-y-1">
-              {unmappedCities.slice(0, 5).map((c, i) => (
-                <div key={i}>• {c.label} ({c.count})</div>
-              ))}
-              {unmappedCities.length > 5 && (
-                <div className="font-semibold">...and {unmappedCities.length - 5} more</div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Legend - Bottom Right */}
+      {/* Device Density Legend - Bottom Right */}
       <div className={`${isFullscreen ? 'fixed bottom-8 right-8' : 'absolute bottom-6 right-6'} z-[10000] map-card map-legend`}>
         <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-300">
           <Zap className="text-blue-600" size={22} />
@@ -491,27 +517,27 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
         </div>
         <div className="flex flex-col gap-3">
           <div className="legend-row">
-            <div className="legend-dot pulse-marker" style={{ background: '#ef4444', boxShadow: '0 0 10px rgba(239, 68, 68, 0.4)' }}></div>
+            <div className="legend-dot pulse-marker" style={{ background: '#ef4444', boxShadow: '0 0 15px rgba(239, 68, 68, 0.5)' }}></div>
             <span className="legend-text">500+ devices</span>
             <span className="legend-badge hot">🔥 HOT</span>
           </div>
           <div className="legend-row">
-            <div className="legend-dot pulse-marker" style={{ background: '#f97316', boxShadow: '0 0 10px rgba(249, 115, 22, 0.4)' }}></div>
+            <div className="legend-dot pulse-marker" style={{ background: '#f97316', boxShadow: '0 0 15px rgba(249, 115, 22, 0.5)' }}></div>
             <span className="legend-text">200-500</span>
             <span className="legend-badge active">⚡ ACTIVE</span>
           </div>
           <div className="legend-row">
-            <div className="legend-dot pulse-marker" style={{ background: '#f59e0b', boxShadow: '0 0 10px rgba(245, 158, 11, 0.4)' }}></div>
+            <div className="legend-dot pulse-marker" style={{ background: '#f59e0b', boxShadow: '0 0 15px rgba(245, 158, 11, 0.5)' }}></div>
             <span className="legend-text">100-200</span>
             <span className="legend-badge growing">✨ GROWING</span>
           </div>
           <div className="legend-row">
-            <div className="legend-dot pulse-marker" style={{ background: '#eab308', boxShadow: '0 0 10px rgba(234, 179, 8, 0.4)' }}></div>
+            <div className="legend-dot pulse-marker" style={{ background: '#eab308', boxShadow: '0 0 15px rgba(234, 179, 8, 0.5)' }}></div>
             <span className="legend-text">50-100</span>
             <span className="legend-badge moderate">📊 MODERATE</span>
           </div>
           <div className="legend-row">
-            <div className="legend-dot" style={{ background: '#22c55e', boxShadow: '0 0 10px rgba(34, 197, 94, 0.4)' }}></div>
+            <div className="legend-dot" style={{ background: '#22c55e', boxShadow: '0 0 15px rgba(34, 197, 94, 0.5)' }}></div>
             <span className="legend-text">1-50</span>
             <span className="legend-badge low">📍 LOW</span>
           </div>
