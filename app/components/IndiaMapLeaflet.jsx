@@ -152,6 +152,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'amravati': { lat: 20.9374, lng: 77.7796, label: 'Amravati' },
     'udaipur': { lat: 24.5854, lng: 73.7125, label: 'Udaipur' },
     'jamshedpur': { lat: 22.8046, lng: 86.2029, label: 'Jamshedpur' },
+    'jamshedhpur': { lat: 22.8046, lng: 86.2029, label: 'Jamshedpur' },
     'bhilai': { lat: 21.1938, lng: 81.3509, label: 'Bhilai' },
     'cuttack': { lat: 20.4625, lng: 85.8830, label: 'Cuttack' },
     'firozabad': { lat: 27.1591, lng: 78.3957, label: 'Firozabad' },
@@ -539,19 +540,6 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
           </div>
         </div>
 
-        {/* Debug: Show missing cities if any */}
-        {missingCities.length > 0 && (
-          <div className="map-card" style={{ background: 'rgba(254, 243, 199, 0.97)', borderColor: 'rgba(234, 179, 8, 0.4)' }}>
-            <div style={{ color: '#92400e', fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>
-              ⚠ {missingCities.length} city not mapped
-            </div>
-            <div style={{ color: '#78350f', fontSize: '10px', maxHeight: '80px', overflowY: 'auto' }}>
-              {missingCities.map((c, i) => (
-                <div key={i} style={{ padding: '1px 0' }}>• "{c.name}" ({c.count}) [norm: "{c.normalized}"]</div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* CLEAN Device Density Legend - NO SYMBOLS */}
