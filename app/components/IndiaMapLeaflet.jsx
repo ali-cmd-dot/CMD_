@@ -364,31 +364,72 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'jalna': { lat: 19.8347, lng: 75.8800, label: 'Jalna' },
   }
 
-  // Normalize city names
+  // AGGRESSIVE normalization - strips invisible chars, zero-width spaces, etc
   const normalizeCityName = (name) => {
-    return name.toLowerCase().trim().replace(/\s+/g, ' ')
+    return name
+      .replace(/[\u200B-\u200D\uFEFF\u00A0\u202F\u205F\u3000]/g, '') // remove zero-width & special spaces
+      .replace(/[^\w\s\-()]/g, '')  // remove weird special chars but keep letters, numbers, spaces, hyphens, parens
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, ' ')         // collapse multiple spaces
   }
+
+  // Build a lookup map with normalized keys for fast matching
+  const normalizedCoords = {}
+  Object.keys(cityCoordinates).forEach(key => {
+    normalizedCoords[normalizeCityName(key)] = cityCoordinates[key]
+  })
 
   // Get ALL cities from data
   const citiesBreakdown = installationTrackerData.citiesBreakdown || []
   
+  // Track missing cities for debugging
+  const missingCities = []
+
   // Map cities to coordinates
   const cityData = citiesBreakdown.map(cityInfo => {
-    const cityKey = normalizeCityName(cityInfo.city)
-    const coords = cityCoordinates[cityKey]
+    const rawName = cityInfo.city
+    const cityKey = normalizeCityName(rawName)
+    
+    // 1. Try exact normalized match
+    let coords = normalizedCoords[cityKey]
+    
+    // 2. If not found, try stripping ALL non-alpha characters and match
+    if (!coords) {
+      const alphaOnly = cityKey.replace(/[^a-z]/g, '')
+      for (const [key, val] of Object.entries(normalizedCoords)) {
+        if (key.replace(/[^a-z]/g, '') === alphaOnly) {
+          coords = val
+          break
+        }
+      }
+    }
+
+    // 3. If still not found, try startsWith match (e.g. "patna " with trailing invisible)
+    if (!coords) {
+      for (const [key, val] of Object.entries(normalizedCoords)) {
+        if (cityKey.startsWith(key) || key.startsWith(cityKey)) {
+          coords = val
+          break
+        }
+      }
+    }
     
     if (coords) {
       return {
         ...coords,
         count: cityInfo.count,
-        key: cityKey
+        key: cityKey,
+        rawName: rawName
       }
     }
+    
+    missingCities.push({ name: rawName, normalized: cityKey, count: cityInfo.count })
     return null
   }).filter(Boolean)
 
   const totalDevices = Object.values(installationTrackerData.cityCount || {}).reduce((a, b) => a + b, 0)
-  const totalCities = cityData.length
+  const totalCities = citiesBreakdown.length // Use SOURCE count, not mapped count
 
   const getMarkerColor = (count) => {
     if (count > 500) return '#ef4444' 
@@ -497,6 +538,20 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
             </div>
           </div>
         </div>
+
+        {/* Debug: Show missing cities if any */}
+        {missingCities.length > 0 && (
+          <div className="map-card" style={{ background: 'rgba(254, 243, 199, 0.97)', borderColor: 'rgba(234, 179, 8, 0.4)' }}>
+            <div style={{ color: '#92400e', fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>
+              ⚠ {missingCities.length} city not mapped
+            </div>
+            <div style={{ color: '#78350f', fontSize: '10px', maxHeight: '80px', overflowY: 'auto' }}>
+              {missingCities.map((c, i) => (
+                <div key={i} style={{ padding: '1px 0' }}>• "{c.name}" ({c.count}) [norm: "{c.normalized}"]</div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* CLEAN Device Density Legend - NO SYMBOLS */}
