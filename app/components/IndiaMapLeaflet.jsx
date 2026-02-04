@@ -162,7 +162,7 @@ function CanvasOverlay({ cityData }) {
         ctx.beginPath()
         ctx.arc(city.x, city.y, size * 0.6, 0, Math.PI * 2)
         ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 1)`
-        ctx.shadowBlur = 20
+        ctx.shadowBlur = 5
         ctx.shadowColor = `rgba(${color.r}, ${color.g}, ${color.b}, 1)`
         ctx.fill()
         ctx.shadowBlur = 0
