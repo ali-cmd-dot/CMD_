@@ -90,7 +90,7 @@ function CanvasOverlay({ cityData }) {
       // Draw connection lines with animation (darker for light theme)
       connections.forEach((conn, i) => {
         const flowProgress = (frame * 0.01 + i * 0.3) % 1
-        const alpha = 0.25 + Math.sin(frame * 0.03 + conn.distance) * 0.15
+        const alpha = 0.2 + Math.sin(frame * 0.03 + conn.distance) * 0.1
         
         // Line (darker blue for visibility on white)
         ctx.strokeStyle = `rgba(37, 99, 235, ${alpha})`
@@ -104,8 +104,8 @@ function CanvasOverlay({ cityData }) {
         const dotX = conn.from.x + (conn.to.x - conn.from.x) * flowProgress
         const dotY = conn.from.y + (conn.to.y - conn.from.y) * flowProgress
         ctx.beginPath()
-        ctx.arc(dotX, dotY, 2.5, 0, Math.PI * 2)
-        ctx.fillStyle = 'rgba(37, 99, 235, 0.9)'
+        ctx.arc(dotX, dotY, 2, 0, Math.PI * 2)
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.7)'
         ctx.fill()
       })
 
@@ -115,29 +115,29 @@ function CanvasOverlay({ cityData }) {
         const pulse = Math.sin(pulsePhase) * 0.3 + 0.7
         
         // Determine color and size based on device count
-        let color, size
-        if (city.count > 500) {
-          color = { r: 239, g: 68, b: 68 }
-          size = 13
-        } else if (city.count > 200) {
-          color = { r: 249, g: 115, b: 22 }
-          size = 11
-        } else if (city.count > 100) {
-          color = { r: 245, g: 158, b: 11 }
-          size = 18
-        } else if (city.count > 50) {
-          color = { r: 234, g: 179, b: 8 }
-          size = 6
-        } else {
-          color = { r: 34, g: 197, b: 94 }
-          size = 4
-        }
+          let color, size
+          if (city.count > 500) {
+            color = { r: 239, g: 68, b: 68 }
+            size = 13
+          } else if (city.count > 200) {
+            color = { r: 249, g: 115, b: 22 }
+            size = 11
+          } else if (city.count > 100) {
+            color = { r: 245, g: 158, b: 11 }
+            size = 8
+          } else if (city.count > 50) {
+            color = { r: 234, g: 179, b: 8 }
+            size = 6
+          } else {
+            color = { r: 132, g: 204, b: 22 }
+            size = 4
+          }
 
         // Outer glow
-        const outerGlow = ctx.createRadialGradient(city.x, city.y, 0, city.x, city.y, size * 2 * pulse)
-        outerGlow.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, 0.7)`)
-        outerGlow.addColorStop(0.3, `rgba(${color.r}, ${color.g}, ${color.b}, 0.5)`)
-        outerGlow.addColorStop(0.6, `rgba(${color.r}, ${color.g}, ${color.b}, 0.3)`)
+        const outerGlow = ctx.createRadialGradient(city.x, city.y, 0, city.x, city.y, size * 6 * pulse)
+        outerGlow.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, 0.3)`)
+        outerGlow.addColorStop(0.3, `rgba(${color.r}, ${color.g}, ${color.b}, 0.2)`)
+        outerGlow.addColorStop(0.6, `rgba(${color.r}, ${color.g}, ${color.b}, 0.1)`)
         outerGlow.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0)`)
         ctx.fillStyle = outerGlow
         ctx.fillRect(city.x - size * 6 * pulse, city.y - size * 6 * pulse, size * 12 * pulse, size * 12 * pulse)
@@ -145,7 +145,7 @@ function CanvasOverlay({ cityData }) {
         // Middle ring
         ctx.beginPath()
         ctx.arc(city.x, city.y, size * 2.5 * pulse, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.6)`
+        ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.5)`
         ctx.fill()
 
         // Inner glow
@@ -154,7 +154,7 @@ function CanvasOverlay({ cityData }) {
         const innerGradient = ctx.createRadialGradient(city.x, city.y, 0, city.x, city.y, size * 1.5 * pulse)
         innerGradient.addColorStop(0, `rgba(255, 255, 255, 1)`)
         innerGradient.addColorStop(0.4, `rgba(${color.r}, ${color.g}, ${color.b}, 0.9)`)
-        innerGradient.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0.6)`)
+        innerGradient.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0.5)`)
         ctx.fillStyle = innerGradient
         ctx.fill()
 
@@ -163,16 +163,16 @@ function CanvasOverlay({ cityData }) {
         ctx.arc(city.x, city.y, size * 0.6, 0, Math.PI * 2)
         ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 1)`
         ctx.shadowBlur = 20
-        ctx.shadowColor = `rgba(${color.r}, ${color.g}, ${color.b}, 0.8)`
+        ctx.shadowColor = `rgba(${color.r}, ${color.g}, ${color.b}, 1)`
         ctx.fill()
         ctx.shadowBlur = 0
 
         // Ring animation
         if (pulse > 0.9) {
-          const ringSize = size * 4 * (pulse - 0.9) * 10
+          const ringSize = size * 3 * (pulse - 0.9) * 8
           ctx.beginPath()
           ctx.arc(city.x, city.y, ringSize, 0, Math.PI * 2)
-          ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${0.7 * (1 - (pulse - 0.9) * 10)})`
+          ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${0.5 * (1 - (pulse - 0.9) * 10)})`
           ctx.lineWidth = 3
           ctx.stroke()
         }
