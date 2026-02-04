@@ -134,19 +134,19 @@ function CanvasOverlay({ cityData }) {
           }
 
         // Outer glow
-        const outerGlow = ctx.createRadialGradient(city.x, city.y, 0, city.x, city.y, size * 6 * pulse)
-        outerGlow.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, 0.3)`)
-        outerGlow.addColorStop(0.3, `rgba(${color.r}, ${color.g}, ${color.b}, 0.2)`)
-        outerGlow.addColorStop(0.6, `rgba(${color.r}, ${color.g}, ${color.b}, 0.1)`)
-        outerGlow.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0)`)
-        ctx.fillStyle = outerGlow
-        ctx.fillRect(city.x - size * 6 * pulse, city.y - size * 6 * pulse, size * 12 * pulse, size * 12 * pulse)
+        // const outerGlow = ctx.createRadialGradient(city.x, city.y, 0, city.x, city.y, size * 6 * pulse)
+        // outerGlow.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, 0.3)`)
+        // outerGlow.addColorStop(0.3, `rgba(${color.r}, ${color.g}, ${color.b}, 0.2)`)
+        // outerGlow.addColorStop(0.6, `rgba(${color.r}, ${color.g}, ${color.b}, 0.1)`)
+        // outerGlow.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0)`)
+        // ctx.fillStyle = outerGlow
+        // ctx.fillRect(city.x - size * 6 * pulse, city.y - size * 6 * pulse, size * 12 * pulse, size * 12 * pulse)
 
-        // Middle ring
-        ctx.beginPath()
-        ctx.arc(city.x, city.y, size * 2.5 * pulse, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.5)`
-        ctx.fill()
+        // // Middle ring
+        // ctx.beginPath()
+        // ctx.arc(city.x, city.y, size * 2.5 * pulse, 0, Math.PI * 2)
+        // ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.5)`
+        // ctx.fill()
 
         // Inner glow
         ctx.beginPath()
@@ -169,7 +169,7 @@ function CanvasOverlay({ cityData }) {
 
         // Ring animation
         if (pulse > 0.9) {
-          const ringSize = size * 3 * (pulse - 0.9) * 1
+          const ringSize = size * 3 * (pulse - 0.9) * 3
           ctx.beginPath()
           ctx.arc(city.x, city.y, ringSize, 0, Math.PI * 2)
           ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${0.5 * (1 - (pulse - 0.9) * 10)})`
