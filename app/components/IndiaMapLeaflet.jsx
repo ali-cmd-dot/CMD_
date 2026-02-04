@@ -112,7 +112,7 @@ function CanvasOverlay({ cityData }) {
       // Draw glowing pings for each city
       cityPositions.forEach((city, index) => {
         const pulsePhase = frame * 0.04 + index * 0.4
-        const pulse = Math.sin(pulsePhase) * 0.3 + 0.7
+        const pulse = 1  // Static - no animation      
         
         // Determine color and size based on device count
           let color, size
@@ -650,7 +650,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
             </div>
             <div>
               <div className="network-label-light">ACTIVE CITIES</div>
-               <div className="network-value" style={{ filter: 'blur(8px)', transition: 'filter 0.3s' }} onMouseEnter={(e) => e.target.style.filter = 'blur(0px)'} onMouseLeave={(e) => e.target.style.filter = 'blur(8px)'}>{activeCities.length}</div>
+               <div className="network-value-light" style={{ filter: 'blur(8px)', transition: 'filter 0.3s' }} onMouseEnter={(e) => e.target.style.filter = 'blur(0px)'} onMouseLeave={(e) => e.target.style.filter = 'blur(8px)'}>{activeCities.length}</div>
             </div>
           </div>
         </div>
@@ -662,7 +662,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
             </div>
             <div>
               <div className="network-label-light">TOTAL DEVICES</div>
-              <div className="network-value" style={{ filter: 'blur(8px)', transition: 'filter 0.3s' }} onMouseEnter={(e) => e.target.style.filter = 'blur(0px)'} onMouseLeave={(e) => e.target.style.filter = 'blur(8px)'}>{totalDevices.toLocaleString()}</div>
+              <div className="network-value-light" style={{ filter: 'blur(8px)', transition: 'filter 0.3s' }} onMouseEnter={(e) => e.target.style.filter = 'blur(0px)'} onMouseLeave={(e) => e.target.style.filter = 'blur(8px)'}>{totalDevices.toLocaleString()}</div>
             </div>
           </div>
         </div>
