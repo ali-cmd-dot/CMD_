@@ -647,11 +647,11 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
           <div className="flex items-center gap-3">
             <div className="network-icon" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>
               <MapPin size={20} />
-            </div>
+            /* {/* /* {/* /* {/* </div>
             {/* <div>
               {/* <div className="network-label">ACTIVE CITIES</div>
               <div className="network-value">{activeCities.length}</div> */}
-            </div> */}
+            </div> */} */} */ */} */ */} */
           </div>
         </div>
         
