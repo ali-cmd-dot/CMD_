@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 
-// Import Leaflet map with no SSR (client-side only)
+// Import Leaflet maps with no SSR (client-side only)
 const IndiaMapLeaflet = dynamic(
   () => import('./components/IndiaMapLeaflet'),
   { 
@@ -11,6 +11,15 @@ const IndiaMapLeaflet = dynamic(
     loading: () => <div className="text-center py-20 text-white">Loading map...</div>
   }
 )
+
+const IndiaMapLeaflet2 = dynamic(
+  () => import('./components/IndiaMapLeaflet2'),
+  { 
+    ssr: false,
+    loading: () => <div className="text-center py-20 text-white">Loading map...</div>
+  }
+)
+
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, ComposedChart
@@ -41,6 +50,7 @@ export default function Dashboard() {
   const [offlineFilter, setOfflineFilter] = useState('')
   const [devicesFilter, setDevicesFilter] = useState('')
   const [mapFilter, setMapFilter] = useState('')
+  const [cities2Filter, setCities2Filter] = useState('')
   
   // Client selection for offline tab
   const [selectedClients, setSelectedClients] = useState([])
@@ -374,14 +384,20 @@ export default function Dashboard() {
     )
   }
 
+  const filterCities2 = () => {
+    if (!installationTrackerData || !installationTrackerData.citiesBreakdown) return []
+    if (!cities2Filter) return installationTrackerData.citiesBreakdown
+    return installationTrackerData.citiesBreakdown.filter(city => 
+      city.city.toLowerCase().includes(cities2Filter.toLowerCase())
+    )
+  }
+
   const getTopClientsForDisplay = () => {
     if (selectedClients.length === 0) {
       return offlineVehiclesData.top10Clients || []
     }
     return filterOfflineVehicles().slice(0, 10)
   }
-
-  // Map is now imported via dynamic import at top of file
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -406,7 +422,8 @@ export default function Dashboard() {
             { id: 'issues', label: 'Issues', icon: Settings },
             { id: 'offline', label: 'Offline', icon: WifiOff },
             { id: 'devices', label: 'Device Movement', icon: Cpu },
-            { id: 'map', label: 'Cities', icon: MapIcon }
+            { id: 'map', label: 'City Heatmap', icon: MapIcon },
+            { id: 'cities2', label: 'Cities', icon: MapIcon }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1320,7 +1337,7 @@ export default function Dashboard() {
             <div className="bg-white rounded-lg card-shadow overflow-hidden" style={{ height: '1000px' }}>
               <div className="p-6 border-b border-gray-200">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-semibold">Device Installation Map</h3>
+                  <h3 className="text-xl font-semibold">Device Installation Heatmap</h3>
                   <div className="flex items-center space-x-4">
                     <div className="text-sm text-gray-600">
                       <span className="font-semibold">{installationTrackerData?.totalInstallations || 0}</span> devices across{' '}
@@ -1388,6 +1405,95 @@ export default function Dashboard() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'cities2' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <MetricCard 
+                title="Total Installations" 
+                value={installationTrackerData?.totalInstallations?.toLocaleString() || '0'} 
+                subtitle="Devices installed" 
+                icon={Cpu} 
+                color="bg-blue-500" 
+              />
+              <MetricCard 
+                title="Cities Count" 
+                value={installationTrackerData?.uniqueCities || '0'} 
+                subtitle="Locations covered" 
+                icon={MapIcon} 
+                color="bg-green-500" 
+              />
+              <MetricCard 
+                title="Top City" 
+                value={installationTrackerData?.citiesBreakdown?.[0]?.city.toUpperCase() || 'N/A'} 
+                subtitle={`${installationTrackerData?.citiesBreakdown?.[0]?.count || 0} devices`} 
+                icon={TrendingUp} 
+                color="bg-purple-500" 
+              />
+            </div>
+
+            <div className="bg-white rounded-lg card-shadow overflow-hidden" style={{ height: '1000px' }}>
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-semibold">Cities Map View</h3>
+                  <div className="flex items-center space-x-4">
+                    <div className="text-sm text-gray-600">
+                      <span className="font-semibold">{installationTrackerData?.totalInstallations || 0}</span> devices across{' '}
+                      <span className="font-semibold">{installationTrackerData?.uniqueCities || 0}</span> cities
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Filter size={18} className="text-gray-500" />
+                      <input 
+                        type="text" 
+                        placeholder="Search city..." 
+                        value={cities2Filter} 
+                        onChange={(e) => setCities2Filter(e.target.value)} 
+                        className="px-3 py-1 border rounded-lg text-sm" 
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="h-full" style={{ height: 'calc(100% - 80px)' }}>
+                <IndiaMapLeaflet2 installationTrackerData={installationTrackerData} />
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg card-shadow">
+              <h3 className="text-xl font-semibold mb-4">Cities Data Table</h3>
+              <div className="max-h-96 overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-4 py-3 text-left">#</th>
+                      <th className="px-4 py-3 text-left">City</th>
+                      <th className="px-4 py-3 text-center">Devices</th>
+                      <th className="px-4 py-3 text-center">%</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filterCities2().map((city, idx) => (
+                      <tr key={idx} className="border-t hover:bg-gray-50">
+                        <td className="px-4 py-3">{idx + 1}</td>
+                        <td className="px-4 py-3 font-medium capitalize">{city.city}</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`px-3 py-1 rounded-full font-semibold ${
+                            city.count > 10 ? 'bg-green-100 text-green-800' :
+                            city.count > 5 ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-blue-100 text-blue-800'
+                          }`}>
+                            {city.count}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">{city.percentage}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
