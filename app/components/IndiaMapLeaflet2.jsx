@@ -502,44 +502,43 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
         ))}
       </MapContainer>
 
-      {/* Stats Overlay */}
+     {/* Stats Overlay - Top Left */}
       <div className={`${isFullscreen ? 'fixed top-8 left-8' : 'absolute top-6 left-6'} z-[10000] flex flex-col gap-3`}>
-        <div className="map-card">
+        <div className="network-card-light">
           <div className="flex items-center gap-3">
-            <div className="map-icon" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)' }}>
+            <div className="network-icon-light" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>
               <MapPin size={20} />
             </div>
             <div>
-              <div className="map-label">TOTAL CITIES</div>
-              <div className="map-value">{totalCities}</div>
+              <div className="network-label-light">ACTIVE CITIES</div>
+               <div className="network-value-light" style={{ filter: 'blur(8px)', transition: 'filter 0.3s' }} onMouseEnter={(e) => e.target.style.filter = 'blur(0px)'} onMouseLeave={(e) => e.target.style.filter = 'blur(8px)'}>{activeCities.length}</div>
             </div>
           </div>
         </div>
         
-        <div className="map-card">
+        <div className="network-card-light">
           <div className="flex items-center gap-3">
-            <div className="map-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
+            <div className="network-icon-light" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)' }}>
               <Activity size={20} />
             </div>
             <div>
-              <div className="map-label">TOTAL DEVICES</div>
-              <div className="map-value">{totalDevices.toLocaleString()}</div>
+              <div className="network-label-light">TOTAL DEVICES</div>
+              <div className="network-value-light" style={{ filter: 'blur(8px)', transition: 'filter 0.3s' }} onMouseEnter={(e) => e.target.style.filter = 'blur(0px)'} onMouseLeave={(e) => e.target.style.filter = 'blur(8px)'}>{totalDevices.toLocaleString()}</div>
             </div>
           </div>
         </div>
 
-        <div className="map-card">
+        <div className="network-card-light">
           <div className="flex items-center gap-3">
-            <div className="map-icon" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>
+            <div className="network-icon-light" style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
               <TrendingUp size={20} />
             </div>
             <div>
-              <div className="map-label">COVERAGE</div>
-              <div className="map-value">Pan India</div>
+              <div className="network-label-light">COVERAGE</div>
+              <div className="network-value-light">Pan India</div>
             </div>
           </div>
         </div>
-
       </div>
 
       {/* CLEAN Device Density Legend - NO SYMBOLS */}
