@@ -173,7 +173,7 @@ function CanvasOverlay({ cityData }) {
           ctx.beginPath()
           ctx.arc(city.x, city.y, ringSize, 0, Math.PI * 2)
           ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${0.5 * (1 - (pulse - 0.9) * 10)})`
-          ctx.lineWidth = 3
+          ctx.lineWidth = 1
           ctx.stroke()
         }
       })
