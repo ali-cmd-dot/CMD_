@@ -129,7 +129,7 @@ function CanvasOverlay({ cityData }) {
             color = { r: 234, g: 179, b: 8 }
             size = 6
           } else {
-            color = { r: 132, g: 204, b: 22 }
+            color = { r: 34, g: 197, b: 94 }
             size = 4
           }
 
@@ -169,7 +169,7 @@ function CanvasOverlay({ cityData }) {
 
         // Ring animation
         if (pulse > 0.9) {
-          const ringSize = size * 3 * (pulse - 0.9) * 8
+          const ringSize = size * 1 * (pulse - 0.9) * 3
           ctx.beginPath()
           ctx.arc(city.x, city.y, ringSize, 0, Math.PI * 2)
           ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${0.5 * (1 - (pulse - 0.9) * 10)})`
