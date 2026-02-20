@@ -36,7 +36,7 @@ export async function GET() {
       }, { status: 404 })
     }
 
-    // Find EXACT column names - FIXED: "Clients" and "Sub-request"
+    // Find column indices
     const headers = rows[0]
     console.log('All headers:', headers)
     
@@ -44,38 +44,36 @@ export async function GET() {
     let timestampResolvedIndex = -1
     let clientIndex = -1
     let issueIndex = -1
+    let resolvedYNIndex = -1  // NEW: Resolved Y/N column
 
-    // Search for EXACT column names
     headers.forEach((header, index) => {
       if (!header) return
       const h = header.toString().trim()
       
-      // Exact match for "Timestamp Issues Raised"
       if (h === 'Timestamp Issues Raised') {
         timestampRaisedIndex = index
       }
-      
-      // Exact match for "Timestamp Issues Resolved"  
       if (h === 'Timestamp Issues Resolved') {
         timestampResolvedIndex = index
       }
-      
-      // FIXED: Match "Clients" (with 's')
       if (h === 'Clients' || h === 'Client' || h === 'clients') {
         clientIndex = index
       }
-      
-      // FIXED: Match "Sub-request" column for issue type
       if (h === 'Sub-request' || h === 'Issue' || h === 'issue') {
         issueIndex = index
       }
+      // NEW: Match "Resolved Y/N" column
+      if (h === 'Resolved Y/N' || h === 'Resolved Y/N ' || h.toLowerCase().includes('resolved y')) {
+        resolvedYNIndex = index
+      }
     })
 
-    console.log('Exact column indices found:', {
+    console.log('Column indices found:', {
       timestampRaisedIndex,
       timestampResolvedIndex, 
       clientIndex,
       issueIndex,
+      resolvedYNIndex,
       headers: headers
     })
 
@@ -88,28 +86,18 @@ export async function GET() {
           issue: issueIndex === -1 ? 'Missing "Sub-request"' : 'Found'
         },
         headers: headers,
-        indices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex }
+        indices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex, resolvedYNIndex }
       }, { status: 400 })
     }
 
     // Filter for EXACT "Customer request for video" in "Sub-request" column
     const filteredRows = rows.slice(1).filter(row => {
       const issueType = (row[issueIndex] || '').toString().trim()
-      
-      // Exact match for "Customer request for video"
       return issueType === 'Customer request for video'
     })
 
     console.log('Customer request for video rows found:', filteredRows.length)
-    console.log('Sample filtered rows:', filteredRows.slice(0, 3).map((row, idx) => ({
-      row: idx + 1,
-      timestampRaised: row[timestampRaisedIndex],
-      timestampResolved: row[timestampResolvedIndex],
-      client: row[clientIndex],
-      issue: row[issueIndex]
-    })))
 
-    // If no Customer request for video found, show all Issue types for debugging
     if (filteredRows.length === 0) {
       const allIssueTypes = rows.slice(1, 20)
         .map(row => row[issueIndex])
@@ -138,8 +126,10 @@ export async function GET() {
 
     filteredRows.forEach((row, rowIndex) => {
       const timestampRaised = row[timestampRaisedIndex]
-      const timestampResolved = row[timestampResolvedIndex]
+      const timestampResolved = timestampResolvedIndex >= 0 ? row[timestampResolvedIndex] : null
       const clientName = (row[clientIndex] || 'Unknown').toString().trim()
+      // NEW: Get Resolved Y/N value
+      const resolvedYN = resolvedYNIndex >= 0 ? (row[resolvedYNIndex] || '').toString().trim().toLowerCase() : ''
       
       // Must have raised timestamp
       if (!timestampRaised || !timestampRaised.toString().trim()) {
@@ -160,7 +150,7 @@ export async function GET() {
       const today = new Date()
       if (raisedDate > today) {
         console.log(`Row ${rowIndex + 1}: Future date detected, skipping: "${timestampRaised}"`)
-        totalRequests -= 1 // Rollback count
+        totalRequests -= 1
         return
       }
 
@@ -186,20 +176,33 @@ export async function GET() {
       }
       clientStats[clientName].requests += 1
 
-      // Check if delivered - ONLY if "Timestamp Issues Resolved" has data
+      // FIXED: Check if delivered via EITHER:
+      // 1. Timestamp Issues Resolved has a valid date, OR
+      // 2. Resolved Y/N column says "yes"
+      const isDeliveredByYN = resolvedYN === 'yes' || resolvedYN === 'y'
+      
+      let deliveryTime = null
+      
       if (timestampResolved && timestampResolved.toString().trim()) {
         const resolvedDate = parseTimestamp(timestampResolved)
         if (resolvedDate && resolvedDate >= raisedDate) {
-          const deliveryTime = (resolvedDate - raisedDate) / (1000 * 60 * 60) // hours
-          
-          if (deliveryTime >= 0 && deliveryTime < 8760) { // Less than 1 year
-            totalDelivered += 1
-            monthlyStats[month].delivered += 1
-            monthlyStats[month].resolutionTimes.push(deliveryTime)
-            clientStats[clientName].delivered += 1
-            clientStats[clientName].resolutionTimes.push(deliveryTime)
-            resolutionTimes.push(deliveryTime)
+          const timeDiff = (resolvedDate - raisedDate) / (1000 * 60 * 60) // hours
+          if (timeDiff >= 0 && timeDiff < 8760) {
+            deliveryTime = timeDiff
           }
+        }
+      }
+      
+      // If no valid timestamp but Y/N says yes, still count as delivered
+      if (isDeliveredByYN || deliveryTime !== null) {
+        totalDelivered += 1
+        monthlyStats[month].delivered += 1
+        clientStats[clientName].delivered += 1
+        
+        if (deliveryTime !== null) {
+          monthlyStats[month].resolutionTimes.push(deliveryTime)
+          clientStats[clientName].resolutionTimes.push(deliveryTime)
+          resolutionTimes.push(deliveryTime)
         }
       }
     })
@@ -234,7 +237,8 @@ export async function GET() {
           : 0,
         fastestDelivery: data.resolutionTimes.length > 0 ? parseFloat(Math.min(...data.resolutionTimes).toFixed(2)) : 0,
         fastestDeliveryMinutes: data.resolutionTimes.length > 0 ? parseFloat((Math.min(...data.resolutionTimes) * 60).toFixed(1)) : 0,
-        slowestDelivery: data.resolutionTimes.length > 0 ? parseFloat(Math.max(...data.resolutionTimes).toFixed(2)) : 0
+        slowestDelivery: data.resolutionTimes.length > 0 ? parseFloat(Math.max(...data.resolutionTimes).toFixed(2)) : 0,
+        medianDeliveryTime: data.resolutionTimes.length > 0 ? parseFloat(calculateMedian(data.resolutionTimes).toFixed(2)) : 0
       }))
 
     const clientBreakdown = Object.entries(clientStats)
@@ -249,9 +253,7 @@ export async function GET() {
           ? parseFloat((data.resolutionTimes.reduce((a, b) => a + b, 0) / data.resolutionTimes.length).toFixed(2))
           : 0,
         fastestDelivery: data.resolutionTimes.length > 0 ? parseFloat(Math.min(...data.resolutionTimes).toFixed(2)) : 0,
-        fastestDeliveryMinutes: data.resolutionTimes.length > 0 ? parseFloat((Math.min(...data.resolutionTimes) * 60).toFixed(1)) : 0,
-        slowestDelivery: data.resolutionTimes.length > 0 ? parseFloat(Math.max(...data.resolutionTimes).toFixed(2)) : 0,
-        medianDeliveryTime: data.resolutionTimes.length > 0 ? parseFloat(calculateMedian(data.resolutionTimes).toFixed(2)) : 0
+        slowestDelivery: data.resolutionTimes.length > 0 ? parseFloat(Math.max(...data.resolutionTimes).toFixed(2)) : 0
       }))
 
     return NextResponse.json({
@@ -267,8 +269,10 @@ export async function GET() {
       medianDeliveryTime: parseFloat(medianDeliveryTime.toFixed(2)),
       debug: {
         totalRowsProcessed: filteredRows.length,
+        resolvedYNColumnFound: resolvedYNIndex >= 0,
+        resolvedYNIndex,
         headers: headers,
-        columnIndices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex }
+        columnIndices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex, resolvedYNIndex }
       }
     }, {
       headers: {
@@ -294,8 +298,6 @@ function parseTimestamp(timestampStr) {
   if (!str) return null
   
   try {
-    // Handle multiple timestamp formats
-    
     // Format: DD/MM/YYYY HH:mm:ss
     if (str.includes('/') && str.includes(' ')) {
       const [datePart, timePart] = str.split(' ')
@@ -304,9 +306,7 @@ function parseTimestamp(timestampStr) {
         const day = parseInt(dateParts[0])
         const month = parseInt(dateParts[1]) - 1
         let year = parseInt(dateParts[2])
-        
         if (year < 100) year += 2000
-        
         if (timePart) {
           const timeParts = timePart.split(':')
           const hour = parseInt(timeParts[0]) || 0
@@ -327,52 +327,48 @@ function parseTimestamp(timestampStr) {
         const day = parseInt(dateParts[0])
         const month = parseInt(dateParts[1]) - 1
         let year = parseInt(dateParts[2])
-        
         if (year < 100) year += 2000
-        
         const timeParts = timePart.split(':')
         const hour = parseInt(timeParts[0]) || 0
         const minute = parseInt(timeParts[1]) || 0
         const second = parseInt(timeParts[2]) || 0
-        
         return new Date(year, month, day, hour, minute, second)
       }
     }
     
     // Format: Just date DD/MM/YYYY or DD-MM-YYYY
     if (!str.includes(' ')) {
-      const dateParts = str.includes('/') ? str.split('/') : str.split('-')
+      const sep = str.includes('/') ? '/' : '-'
+      const dateParts = str.split(sep)
       if (dateParts.length === 3) {
         const day = parseInt(dateParts[0])
         const month = parseInt(dateParts[1]) - 1
         let year = parseInt(dateParts[2])
-        
         if (year < 100) year += 2000
-        
         return new Date(year, month, day)
       }
     }
     
-    return new Date(str)
+    // Try JS Date parse as fallback
+    const parsed = new Date(str)
+    if (!isNaN(parsed.getTime())) {
+      return parsed
+    }
+    
+    return null
   } catch (e) {
-    console.error('Error parsing timestamp:', str, e)
     return null
   }
 }
 
 function getMonthYear(date) {
-  const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-  ]
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
   return `${months[date.getMonth()]} ${date.getFullYear()}`
 }
 
 function calculateMedian(arr) {
+  if (arr.length === 0) return 0
   const sorted = [...arr].sort((a, b) => a - b)
   const mid = Math.floor(sorted.length / 2)
-  
-  return sorted.length % 2 !== 0 
-    ? sorted[mid]
-    : (sorted[mid - 1] + sorted[mid]) / 2
+  return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
 }
