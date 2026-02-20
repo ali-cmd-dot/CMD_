@@ -28,12 +28,13 @@ export async function GET() {
       return NextResponse.json({ error: 'No data found' }, { status: 404 })
     }
 
-    // Find column indices - FIXED: "Clients" and "Sub-request"
+    // Find column indices
     const headers = rows[0]
     let timestampRaisedIndex = -1
     let timestampResolvedIndex = -1
     let clientIndex = -1
     let issueIndex = -1
+    let resolvedYNIndex = -1  // NEW: Resolved Y/N column
 
     headers.forEach((header, index) => {
       if (!header) return
@@ -45,17 +46,19 @@ export async function GET() {
       if (h === 'Timestamp Issues Resolved') {
         timestampResolvedIndex = index
       }
-      // FIXED: Match "Clients" (with 's')
       if (h === 'Clients' || h === 'Client' || h === 'clients') {
         clientIndex = index
       }
-      // FIXED: Match "Sub-request" column
       if (h === 'Sub-request' || h === 'Issue' || h === 'issue') {
         issueIndex = index
       }
+      // NEW: Match "Resolved Y/N" column
+      if (h === 'Resolved Y/N' || h === 'Resolved Y/N ' || h.toLowerCase().includes('resolved y')) {
+        resolvedYNIndex = index
+      }
     })
 
-    if (timestampRaisedIndex === -1 || timestampResolvedIndex === -1 || clientIndex === -1 || issueIndex === -1) {
+    if (timestampRaisedIndex === -1 || clientIndex === -1 || issueIndex === -1) {
       return NextResponse.json({ 
         error: 'Required columns not found',
         headers: headers
@@ -76,8 +79,10 @@ export async function GET() {
 
     filteredRows.forEach((row, rowIndex) => {
       const timestampRaised = row[timestampRaisedIndex]
-      const timestampResolved = row[timestampResolvedIndex]
+      const timestampResolved = timestampResolvedIndex >= 0 ? row[timestampResolvedIndex] : null
       const clientName = (row[clientIndex] || 'Unknown').toString().trim()
+      // NEW: Get Resolved Y/N value
+      const resolvedYN = resolvedYNIndex >= 0 ? (row[resolvedYNIndex] || '').toString().trim().toLowerCase() : ''
       
       const hasRaisedData = timestampRaised && timestampRaised.toString().trim()
       if (!hasRaisedData) return
@@ -97,8 +102,11 @@ export async function GET() {
       let resolvedDate = null
       let resolutionTime = null
 
-      const hasResolvedData = timestampResolved && timestampResolved.toString().trim()
-      if (hasResolvedData) {
+      // FIXED: Check resolved via timestamp OR Resolved Y/N = "yes"
+      const isResolvedByYN = resolvedYN === 'yes' || resolvedYN === 'y'
+      const hasResolvedTimestamp = timestampResolved && timestampResolved.toString().trim()
+
+      if (hasResolvedTimestamp) {
         resolvedDate = parseTimestamp(timestampResolved)
         if (resolvedDate && resolvedDate >= raisedDate) {
           resolvedMonth = getMonthYear(resolvedDate)
@@ -109,14 +117,24 @@ export async function GET() {
             totalResolved += 1
           }
         }
+      } else if (isResolvedByYN) {
+        // Resolved Y/N = Yes but no timestamp — still count as resolved
+        // Use today's date for month tracking
+        resolvedMonth = getMonthYear(today)
+        totalResolved += 1
+        // No resolutionTime since we don't know exact resolved time
       }
+
+      const isResolved = hasResolvedTimestamp 
+        ? (resolvedDate && resolvedDate >= raisedDate && resolutionTime !== null && resolutionTime < 8760)
+        : isResolvedByYN
 
       allIssues.push({
         client: clientName,
         raisedMonth,
         resolvedMonth,
         resolutionTime,
-        isResolved: !!resolvedMonth,
+        isResolved: !!isResolved,
         raisedDate,
         resolvedDate
       })
@@ -127,7 +145,7 @@ export async function GET() {
     // Get current month for logic
     const currentMonth = getMonthYear(new Date())
     
-    // Calculate monthly statistics with CORRECTED logic
+    // Calculate monthly statistics
     const monthlyBreakdown = {}
     const clientStats = {}
 
@@ -174,6 +192,8 @@ export async function GET() {
       if (isResolved && resolutionTime !== null) {
         clientStats[client].resolved += 1
         clientStats[client].resolutionTimes.push(resolutionTime)
+      } else if (isResolved) {
+        clientStats[client].resolved += 1
       }
     })
 
@@ -181,7 +201,7 @@ export async function GET() {
     allIssues.forEach(issue => {
       const { raisedMonth, resolvedMonth, isResolved } = issue
       
-      if (isResolved && raisedMonth !== resolvedMonth) {
+      if (isResolved && resolvedMonth && raisedMonth !== resolvedMonth) {
         if (!monthlyBreakdown[resolvedMonth]) {
           monthlyBreakdown[resolvedMonth] = {
             raised: 0, resolvedSameMonth: 0, resolvedLaterMonths: 0,
@@ -266,7 +286,9 @@ export async function GET() {
       debug: {
         totalRowsProcessed: filteredRows.length,
         resolutionTimesCount: resolutionTimes.length,
-        logic: 'FIXED: Column names updated to Clients and Sub-request'
+        resolvedYNColumnFound: resolvedYNIndex >= 0,
+        resolvedYNIndex,
+        logic: 'FIXED: Now checks Resolved Y/N column in addition to timestamp'
       }
     }, {
       headers: {
@@ -311,6 +333,7 @@ function parseTimestamp(timestampStr) {
   if (!str) return null
   
   try {
+    // Format: DD/MM/YYYY HH:mm:ss
     if (str.includes('/') && str.includes(' ')) {
       const [datePart, timePart] = str.split(' ')
       const dateParts = datePart.split('/')
@@ -318,9 +341,7 @@ function parseTimestamp(timestampStr) {
         const day = parseInt(dateParts[0])
         const month = parseInt(dateParts[1]) - 1
         let year = parseInt(dateParts[2])
-        
         if (year < 100) year += 2000
-        
         if (timePart) {
           const timeParts = timePart.split(':')
           const hour = parseInt(timeParts[0]) || 0
@@ -333,6 +354,7 @@ function parseTimestamp(timestampStr) {
       }
     }
     
+    // Format: DD-MM-YYYY HH:mm:ss
     if (str.includes('-') && str.includes(' ')) {
       const [datePart, timePart] = str.split(' ')
       const dateParts = datePart.split('-')
@@ -340,47 +362,47 @@ function parseTimestamp(timestampStr) {
         const day = parseInt(dateParts[0])
         const month = parseInt(dateParts[1]) - 1
         let year = parseInt(dateParts[2])
-        
         if (year < 100) year += 2000
-        
         const timeParts = timePart.split(':')
         const hour = parseInt(timeParts[0]) || 0
         const minute = parseInt(timeParts[1]) || 0
         const second = parseInt(timeParts[2]) || 0
-        
         return new Date(year, month, day, hour, minute, second)
       }
     }
     
+    // Format: Just date DD/MM/YYYY or DD-MM-YYYY
     if (!str.includes(' ')) {
-      const dateParts = str.includes('/') ? str.split('/') : str.split('-')
+      const sep = str.includes('/') ? '/' : '-'
+      const dateParts = str.split(sep)
       if (dateParts.length === 3) {
         const day = parseInt(dateParts[0])
         const month = parseInt(dateParts[1]) - 1
         let year = parseInt(dateParts[2])
-        
         if (year < 100) year += 2000
-        
         return new Date(year, month, day)
       }
     }
     
-    return new Date(str)
+    // Try JS Date parse as fallback
+    const parsed = new Date(str)
+    if (!isNaN(parsed.getTime())) {
+      return parsed
+    }
+    
+    return null
   } catch (e) {
-    console.error('Error parsing timestamp:', str, e)
     return null
   }
 }
 
 function getMonthYear(date) {
-  const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-  ]
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
   return `${months[date.getMonth()]} ${date.getFullYear()}`
 }
 
 function calculateMedian(arr) {
+  if (arr.length === 0) return 0
   const sorted = [...arr].sort((a, b) => a - b)
   const mid = Math.floor(sorted.length / 2)
   return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
