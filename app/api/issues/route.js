@@ -15,8 +15,6 @@ export async function GET() {
 
     const issuesUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Issues-%20Realtime!A:Z?key=${API_KEY}`
     
-    console.log('Fetching from URL:', issuesUrl)
-    
     const issuesResponse = await fetch(issuesUrl)
     
     if (!issuesResponse.ok) {
@@ -26,67 +24,42 @@ export async function GET() {
     const issuesData = await issuesResponse.json()
     const rows = issuesData.values || []
     
-    console.log('Total rows received:', rows.length)
-    
     if (rows.length < 2) {
-      return NextResponse.json({ 
-        error: 'No data found',
-        totalRows: rows.length,
-        sampleData: rows.slice(0, 3)
-      }, { status: 404 })
+      return NextResponse.json({ error: 'No data found' }, { status: 404 })
     }
 
     // Find column indices
     const headers = rows[0]
-    console.log('All headers:', headers)
-    
     let timestampRaisedIndex = -1
     let timestampResolvedIndex = -1
     let clientIndex = -1
     let issueIndex = -1
-    let resolvedYNIndex = -1  // NEW: Resolved Y/N column
+    let resolvedYNIndex = -1
+    let issueDetailsIndex = -1
+    let vehicleNumberIndex = -1
+    let raisedByIndex = -1
+    let currentStatusIndex = -1
 
     headers.forEach((header, index) => {
       if (!header) return
       const h = header.toString().trim()
       
-      if (h === 'Timestamp Issues Raised') {
-        timestampRaisedIndex = index
-      }
-      if (h === 'Timestamp Issues Resolved') {
-        timestampResolvedIndex = index
-      }
-      if (h === 'Clients' || h === 'Client' || h === 'clients') {
-        clientIndex = index
-      }
-      if (h === 'Sub-request' || h === 'Issue' || h === 'issue') {
-        issueIndex = index
-      }
-      // NEW: Match "Resolved Y/N" column
-      if (h === 'Resolved Y/N' || h === 'Resolved Y/N ' || h.toLowerCase().includes('resolved y')) {
-        resolvedYNIndex = index
-      }
-    })
-
-    console.log('Column indices found:', {
-      timestampRaisedIndex,
-      timestampResolvedIndex, 
-      clientIndex,
-      issueIndex,
-      resolvedYNIndex,
-      headers: headers
+      if (h === 'Timestamp Issues Raised') timestampRaisedIndex = index
+      if (h === 'Timestamp Issues Resolved') timestampResolvedIndex = index
+      if (h === 'Clients' || h === 'Client' || h === 'clients') clientIndex = index
+      if (h === 'Sub-request' || h === 'Issue' || h === 'issue') issueIndex = index
+      if (h === 'Resolved Y/N' || h === 'Resolved Y/N ' || h.toLowerCase().includes('resolved y')) resolvedYNIndex = index
+      // New columns
+      if (h === 'Issue Details' || h.toLowerCase().includes('issue detail')) issueDetailsIndex = index
+      if (h === 'Vehicle Number' || h.toLowerCase().includes('vehicle number')) vehicleNumberIndex = index
+      if (h === 'Raised by' || h === 'Raised By' || h.toLowerCase().includes('raised by')) raisedByIndex = index
+      if (h === 'Date - Current Status' || h.toLowerCase().includes('current status') || h.toLowerCase().includes('date - current')) currentStatusIndex = index
     })
 
     if (timestampRaisedIndex === -1 || clientIndex === -1 || issueIndex === -1) {
       return NextResponse.json({ 
         error: 'Required columns not found',
-        missingColumns: {
-          timestampRaised: timestampRaisedIndex === -1 ? 'Missing "Timestamp Issues Raised"' : 'Found',
-          client: clientIndex === -1 ? 'Missing "Clients"' : 'Found',
-          issue: issueIndex === -1 ? 'Missing "Sub-request"' : 'Found'
-        },
-        headers: headers,
-        indices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex, resolvedYNIndex }
+        headers: headers
       }, { status: 400 })
     }
 
@@ -96,23 +69,10 @@ export async function GET() {
       return issueType === 'Customer request for video'
     })
 
-    console.log('Customer request for video rows found:', filteredRows.length)
-
     if (filteredRows.length === 0) {
-      const allIssueTypes = rows.slice(1, 20)
-        .map(row => row[issueIndex])
-        .filter(Boolean)
-        .map(issue => issue.toString().trim())
-      
-      const uniqueIssueTypes = [...new Set(allIssueTypes)]
-      
       return NextResponse.json({
-        error: 'No "Customer request for video" found in Sub-request column',
+        error: 'No "Customer request for video" found',
         totalDataRows: rows.length - 1,
-        issueColumnIndex: issueIndex,
-        issueColumnName: headers[issueIndex],
-        sampleIssueTypes: uniqueIssueTypes.slice(0, 10),
-        exactSearchTerm: 'Customer request for video',
         headers: headers
       }, { status: 404 })
     }
@@ -124,77 +84,63 @@ export async function GET() {
     let totalRequests = 0
     let totalDelivered = 0
 
+    // Store all individual rows for table display
+    const allRows = []
+
     filteredRows.forEach((row, rowIndex) => {
       const timestampRaised = row[timestampRaisedIndex]
       const timestampResolved = timestampResolvedIndex >= 0 ? row[timestampResolvedIndex] : null
       const clientName = (row[clientIndex] || 'Unknown').toString().trim()
-      // NEW: Get Resolved Y/N value
       const resolvedYN = resolvedYNIndex >= 0 ? (row[resolvedYNIndex] || '').toString().trim().toLowerCase() : ''
+      const issueDetails = issueDetailsIndex >= 0 ? (row[issueDetailsIndex] || '').toString().trim() : ''
+      const vehicleNumber = vehicleNumberIndex >= 0 ? (row[vehicleNumberIndex] || '').toString().trim() : ''
+      const raisedBy = raisedByIndex >= 0 ? (row[raisedByIndex] || '').toString().trim() : ''
+      const currentStatus = currentStatusIndex >= 0 ? (row[currentStatusIndex] || '').toString().trim() : ''
       
-      // Must have raised timestamp
-      if (!timestampRaised || !timestampRaised.toString().trim()) {
-        console.log(`Row ${rowIndex + 1}: No raised timestamp`)
-        return
-      }
+      if (!timestampRaised || !timestampRaised.toString().trim()) return
 
       totalRequests += 1
 
-      // Parse raised timestamp
       const raisedDate = parseTimestamp(timestampRaised)
-      if (!raisedDate) {
-        console.log(`Row ${rowIndex + 1}: Could not parse timestamp: "${timestampRaised}"`)
-        return
-      }
+      if (!raisedDate) return
 
-      // CRITICAL: Skip future dates
       const today = new Date()
       if (raisedDate > today) {
-        console.log(`Row ${rowIndex + 1}: Future date detected, skipping: "${timestampRaised}"`)
         totalRequests -= 1
         return
       }
 
       const month = getMonthYear(raisedDate)
       
-      // Monthly stats
       if (!monthlyStats[month]) {
-        monthlyStats[month] = { 
-          requests: 0, 
-          delivered: 0, 
-          resolutionTimes: []
-        }
+        monthlyStats[month] = { requests: 0, delivered: 0, resolutionTimes: [] }
       }
       monthlyStats[month].requests += 1
 
-      // Client stats
       if (!clientStats[clientName]) {
-        clientStats[clientName] = { 
-          requests: 0, 
-          delivered: 0, 
-          resolutionTimes: []
-        }
+        clientStats[clientName] = { requests: 0, delivered: 0, resolutionTimes: [] }
       }
       clientStats[clientName].requests += 1
 
-      // FIXED: Check if delivered via EITHER:
-      // 1. Timestamp Issues Resolved has a valid date, OR
-      // 2. Resolved Y/N column says "yes"
       const isDeliveredByYN = resolvedYN === 'yes' || resolvedYN === 'y'
       
       let deliveryTime = null
+      let resolvedTimestamp = ''
       
       if (timestampResolved && timestampResolved.toString().trim()) {
+        resolvedTimestamp = timestampResolved.toString().trim()
         const resolvedDate = parseTimestamp(timestampResolved)
         if (resolvedDate && resolvedDate >= raisedDate) {
-          const timeDiff = (resolvedDate - raisedDate) / (1000 * 60 * 60) // hours
+          const timeDiff = (resolvedDate - raisedDate) / (1000 * 60 * 60)
           if (timeDiff >= 0 && timeDiff < 8760) {
             deliveryTime = timeDiff
           }
         }
       }
       
-      // If no valid timestamp but Y/N says yes, still count as delivered
-      if (isDeliveredByYN || deliveryTime !== null) {
+      const isDelivered = isDeliveredByYN || deliveryTime !== null
+
+      if (isDelivered) {
         totalDelivered += 1
         monthlyStats[month].delivered += 1
         clientStats[clientName].delivered += 1
@@ -205,26 +151,38 @@ export async function GET() {
           resolutionTimes.push(deliveryTime)
         }
       }
+
+      // Store row data for table
+      allRows.push({
+        client: clientName,
+        timestampRaised: timestampRaised.toString().trim(),
+        issueDetails: issueDetails || '-',
+        vehicleNumber: vehicleNumber || '-',
+        raisedBy: raisedBy || '-',
+        currentStatus: currentStatus || '-',
+        isDelivered: isDelivered,
+        deliveryTime: deliveryTime,
+        month: month,
+        raisedDate: raisedDate.toISOString()
+      })
     })
 
-    console.log('Customer request for video Processing complete:', {
-      totalRequests,
-      totalDelivered,
-      deliveryRate: totalRequests > 0 ? ((totalDelivered / totalRequests) * 100).toFixed(1) : 0
+    // Sort allRows: delivered first, not delivered last
+    allRows.sort((a, b) => {
+      if (a.isDelivered && !b.isDelivered) return -1
+      if (!a.isDelivered && b.isDelivered) return 1
+      // Within same group, sort by date descending
+      return new Date(b.raisedDate) - new Date(a.raisedDate)
     })
 
-    // Calculate delivery time statistics
     const avgDeliveryTime = resolutionTimes.length > 0 
       ? resolutionTimes.reduce((a, b) => a + b, 0) / resolutionTimes.length 
       : 0
     
     const fastestDeliveryTime = resolutionTimes.length > 0 ? Math.min(...resolutionTimes) : 0
     const slowestDeliveryTime = resolutionTimes.length > 0 ? Math.max(...resolutionTimes) : 0
-    const medianDeliveryTime = resolutionTimes.length > 0 
-      ? calculateMedian(resolutionTimes) 
-      : 0
+    const medianDeliveryTime = resolutionTimes.length > 0 ? calculateMedian(resolutionTimes) : 0
 
-    // Convert to arrays for frontend  
     const monthlyData = Object.entries(monthlyStats)
       .sort(([a], [b]) => new Date(a.replace(' ', ' 1, ')) - new Date(b.replace(' ', ' 1, ')))
       .map(([month, data]) => ({
@@ -259,6 +217,7 @@ export async function GET() {
     return NextResponse.json({
       monthlyData,
       clientBreakdown,
+      allRows,
       totalRequests,
       totalDelivered,
       overallDeliveryRate: totalRequests > 0 ? parseFloat(((totalDelivered / totalRequests) * 100).toFixed(1)) : 0,
@@ -271,8 +230,13 @@ export async function GET() {
         totalRowsProcessed: filteredRows.length,
         resolvedYNColumnFound: resolvedYNIndex >= 0,
         resolvedYNIndex,
-        headers: headers,
-        columnIndices: { timestampRaisedIndex, timestampResolvedIndex, clientIndex, issueIndex, resolvedYNIndex }
+        newColumnsFound: {
+          issueDetails: issueDetailsIndex >= 0 ? `Found at ${issueDetailsIndex}` : 'Not found',
+          vehicleNumber: vehicleNumberIndex >= 0 ? `Found at ${vehicleNumberIndex}` : 'Not found',
+          raisedBy: raisedByIndex >= 0 ? `Found at ${raisedByIndex}` : 'Not found',
+          currentStatus: currentStatusIndex >= 0 ? `Found at ${currentStatusIndex}` : 'Not found',
+        },
+        headers: headers
       }
     }, {
       headers: {
@@ -293,12 +257,10 @@ export async function GET() {
 
 function parseTimestamp(timestampStr) {
   if (!timestampStr) return null
-  
   const str = timestampStr.toString().trim()
   if (!str) return null
   
   try {
-    // Format: DD/MM/YYYY HH:mm:ss
     if (str.includes('/') && str.includes(' ')) {
       const [datePart, timePart] = str.split(' ')
       const dateParts = datePart.split('/')
@@ -319,7 +281,6 @@ function parseTimestamp(timestampStr) {
       }
     }
     
-    // Format: DD-MM-YYYY HH:mm:ss
     if (str.includes('-') && str.includes(' ')) {
       const [datePart, timePart] = str.split(' ')
       const dateParts = datePart.split('-')
@@ -336,7 +297,6 @@ function parseTimestamp(timestampStr) {
       }
     }
     
-    // Format: Just date DD/MM/YYYY or DD-MM-YYYY
     if (!str.includes(' ')) {
       const sep = str.includes('/') ? '/' : '-'
       const dateParts = str.split(sep)
@@ -349,11 +309,8 @@ function parseTimestamp(timestampStr) {
       }
     }
     
-    // Try JS Date parse as fallback
     const parsed = new Date(str)
-    if (!isNaN(parsed.getTime())) {
-      return parsed
-    }
+    if (!isNaN(parsed.getTime())) return parsed
     
     return null
   } catch (e) {
