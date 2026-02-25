@@ -46,7 +46,7 @@ export default function Dashboard() {
   const [misalignmentFilter,setMisalignmentFilter] = useState('')
   const [videosFilter,      setVideosFilter]       = useState('')
   const [videoRowsFilter,   setVideoRowsFilter]    = useState('')
-  const [videoViewMode,     setVideoViewMode]      = useState('all') // 'all' | 'delivered' | 'not_delivered'
+  const [videoViewMode,     setVideoViewMode]      = useState(null) // null | 'all' | 'delivered' | 'not_delivered'
   const [issuesFilter,      setIssuesFilter]       = useState('')
   const [devicesFilter,     setDevicesFilter]      = useState('')
   const [cities2Filter,     setCities2Filter]      = useState('')
@@ -77,6 +77,7 @@ export default function Dashboard() {
   const filterCities2     = () => { if(!installationTrackerData?.citiesBreakdown) return []; return !cities2Filter ? installationTrackerData.citiesBreakdown : installationTrackerData.citiesBreakdown.filter(c=>c.city.toLowerCase().includes(cities2Filter.toLowerCase())) }
 
   const filterVideoRows = () => {
+    if (!videoViewMode) return []
     let rows = historicalVideoData?.allRows || []
     if (videoViewMode === 'delivered')     rows = rows.filter(r => r.isDelivered)
     if (videoViewMode === 'not_delivered') rows = rows.filter(r => !r.isDelivered)
@@ -128,7 +129,6 @@ export default function Dashboard() {
       <header style={styles.header}>
         <div style={styles.headerInner}>
           <div>
-            <div style={styles.headerBadge}>LIVE ANALYTICS</div>
             <h1 style={styles.headerTitle}>CAUTIO COMMAND CENTER</h1>
             <p style={styles.headerSub}>Real-time analytics from live Google Sheets</p>
           </div>
@@ -556,13 +556,22 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Status bar */}
-              <div style={styles.statusBar}>
-                <div style={{...styles.statusSegment, flex:historicalVideoData.totalDelivered, background:'#10b981'}} title={`Delivered: ${historicalVideoData.totalDelivered}`}/>
-                <div style={{...styles.statusSegment, flex:notDelivered, background:'#ef4444'}} title={`Not Delivered: ${notDelivered}`}/>
-              </div>
+              {/* Status bar - only show when mode selected */}
+              {videoViewMode && (
+                <div style={styles.statusBar}>
+                  <div style={{...styles.statusSegment, flex:historicalVideoData.totalDelivered, background:'#10b981'}} title={`Delivered: ${historicalVideoData.totalDelivered}`}/>
+                  <div style={{...styles.statusSegment, flex:notDelivered, background:'#ef4444'}} title={`Not Delivered: ${notDelivered}`}/>
+                </div>
+              )}
 
               {/* Table */}
+              {!videoViewMode ? (
+                <div style={{textAlign:'center',padding:'60px 0',color:'#94a3b8'}}>
+                  <div style={{fontSize:40,marginBottom:12}}>☝️</div>
+                  <div style={{fontSize:16,fontWeight:700,color:'#475569',marginBottom:6}}>Select a filter to view records</div>
+                  <div style={{fontSize:13}}>Click All, Delivered, or Not Delivered above</div>
+                </div>
+              ) : (
               <div style={{overflowX:'auto'}}>
                 <div style={{maxHeight:520,overflowY:'auto'}}>
                   <table style={{...styles.table,minWidth:1000}}>
@@ -606,6 +615,7 @@ export default function Dashboard() {
                   )}
                 </div>
               </div>
+              )}
             </div>
           </div>
         )}
@@ -891,33 +901,33 @@ const styles = {
 
   /* Header */
   header: {
-    background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4c1d95 100%)',
-    padding: '28px 32px',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    padding: '20px 32px',
     width: '100%',
   },
   headerInner: { display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:20 },
-  headerBadge: { display:'inline-block', background:'rgba(167,139,250,0.25)', color:'#c4b5fd', fontSize:10, fontWeight:800, letterSpacing:'0.12em', padding:'4px 10px', borderRadius:20, marginBottom:8, border:'1px solid rgba(167,139,250,0.3)' },
-  headerTitle: { color:'#fff', fontSize:26, fontWeight:900, letterSpacing:'-0.02em', margin:0 },
-  headerSub:   { color:'#a5b4fc', fontSize:13, marginTop:4 },
-  headerStats: { display:'flex', gap:24 },
+  headerBadge: { display:'inline-block', background:'rgba(255,255,255,0.2)', color:'#fff', fontSize:10, fontWeight:800, letterSpacing:'0.12em', padding:'4px 10px', borderRadius:20, marginBottom:8 },
+  headerTitle: { color:'#fff', fontSize:22, fontWeight:800, letterSpacing:'-0.01em', margin:0 },
+  headerSub:   { color:'rgba(255,255,255,0.75)', fontSize:12, marginTop:4 },
+  headerStats: { display:'flex', gap:32 },
   headerStat:  { textAlign:'center' },
-  headerStatVal:{ color:'#fff', fontSize:22, fontWeight:800 },
-  headerStatLbl:{ color:'#a5b4fc', fontSize:11, marginTop:2, textTransform:'uppercase', letterSpacing:'0.06em' },
+  headerStatVal:{ color:'#fff', fontSize:24, fontWeight:800 },
+  headerStatLbl:{ color:'rgba(255,255,255,0.7)', fontSize:10, marginTop:2, textTransform:'uppercase', letterSpacing:'0.08em' },
 
   /* Tab bar */
   tabBar: {
     background: '#fff',
     borderBottom: '1px solid #e2e8f0',
-    padding: '0 24px',
+    padding: '0 16px',
     position: 'sticky',
     top: 0,
     zIndex: 100,
     boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
   },
-  tabInner: { display:'flex', gap:0, overflowX:'auto' },
+  tabInner: { display:'flex', gap:0, overflowX:'auto', width:'fit-content' },
   tab: {
-    display: 'flex', alignItems: 'center', gap: 7,
-    padding: '14px 18px',
+    display: 'inline-flex', alignItems: 'center', gap: 6,
+    padding: '13px 16px',
     fontSize: 13, fontWeight: 600,
     color: '#64748b',
     background: 'transparent',
@@ -925,15 +935,15 @@ const styles = {
     borderBottom: '2px solid transparent',
     cursor: 'pointer',
     whiteSpace: 'nowrap',
-    transition: 'all 0.18s ease',
+    transition: 'all 0.15s ease',
     position: 'relative',
+    flexShrink: 0,
   },
   tabActive: {
     color: '#4f46e5',
     borderBottom: '2px solid #4f46e5',
-    background: '#fafafe',
   },
-  tabDot: { width:5, height:5, borderRadius:'50%', background:'#4f46e5', position:'absolute', bottom:3, left:'50%', transform:'translateX(-50%)' },
+  tabDot: { width:4, height:4, borderRadius:'50%', background:'#4f46e5', position:'absolute', bottom:4, left:'50%', transform:'translateX(-50%)' },
 
   /* Main */
   main: { padding: '28px 24px', width:'100%', maxWidth:'100%', boxSizing:'border-box' },
