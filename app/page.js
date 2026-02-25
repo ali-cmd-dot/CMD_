@@ -3,20 +3,11 @@
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 
-// Import Leaflet maps with no SSR (client-side only)
-const IndiaMapLeaflet = dynamic(
-  () => import('./components/IndiaMapLeaflet'),
-  { 
-    ssr: false,
-    loading: () => <div className="text-center py-20 text-white">Loading map...</div>
-  }
-)
-
 const IndiaMapLeaflet2 = dynamic(
   () => import('./components/IndiaMapLeaflet2'),
   { 
     ssr: false,
-    loading: () => <div className="text-center py-20 text-white">Loading map...</div>
+    loading: () => <div className="text-center py-20 text-gray-500">Loading map...</div>
   }
 )
 
@@ -35,7 +26,6 @@ export default function Dashboard() {
   const [misalignmentData, setMisalignmentData] = useState(null)
   const [historicalVideoData, setHistoricalVideoData] = useState(null)
   const [generalIssuesData, setGeneralIssuesData] = useState(null)
-  const [offlineVehiclesData, setOfflineVehiclesData] = useState(null)
   const [deviceMovementData, setDeviceMovementData] = useState(null)
   const [installationTrackerData, setInstallationTrackerData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -46,44 +36,10 @@ export default function Dashboard() {
   const [alertsFilter, setAlertsFilter] = useState('')
   const [misalignmentFilter, setMisalignmentFilter] = useState('')
   const [videosFilter, setVideosFilter] = useState('')
+  const [videoRowsFilter, setVideoRowsFilter] = useState('')
   const [issuesFilter, setIssuesFilter] = useState('')
-  const [offlineFilter, setOfflineFilter] = useState('')
   const [devicesFilter, setDevicesFilter] = useState('')
-  const [mapFilter, setMapFilter] = useState('')
   const [cities2Filter, setCities2Filter] = useState('')
-  
-  // Client selection for offline tab
-  const [selectedClients, setSelectedClients] = useState([])
-  const [tempSelectedClients, setTempSelectedClients] = useState([])
-  const [showClientDropdown, setShowClientDropdown] = useState(false)
-  const [viewMode, setViewMode] = useState('individual')
-  
-  // Calculate filtered metrics
-  const getFilteredOfflineMetrics = () => {
-    if (!offlineVehiclesData || !offlineVehiclesData.allClients) {
-      return { totalOffline: 0, notRunningCount: 0, cameraIssueCount: 0 }
-    }
-    
-    if (selectedClients.length === 0) {
-      return {
-        totalOffline: offlineVehiclesData.totalOffline || 0,
-        notRunningCount: offlineVehiclesData.notRunningCount || 0,
-        cameraIssueCount: offlineVehiclesData.cameraIssueCount || 0
-      }
-    }
-    
-    const filtered = offlineVehiclesData.allClients.filter(c => 
-      selectedClients.includes(c.client)
-    )
-    
-    return {
-      totalOffline: filtered.reduce((sum, c) => sum + (c.count || 0), 0),
-      notRunningCount: filtered.reduce((sum, c) => sum + (c.notRunning || 0), 0),
-      cameraIssueCount: filtered.reduce((sum, c) => sum + (c.cameraIssue || 0), 0)
-    }
-  }
-  
-  const filteredMetrics = getFilteredOfflineMetrics()
 
   useEffect(() => {
     fetchAllData()
@@ -99,7 +55,6 @@ export default function Dashboard() {
         fetchMisalignmentData(),
         fetchHistoricalVideoData(),
         fetchGeneralIssuesData(),
-        fetchOfflineVehiclesData(),
         fetchDeviceMovementData(),
         fetchInstallationTrackerData()
       ])
@@ -146,7 +101,7 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('Error fetching historical video data:', error)
-      setHistoricalVideoData({ totalRequests: 0, totalDelivered: 0, overallDeliveryRate: 0, avgDeliveryTime: 0, monthlyData: [], clientBreakdown: [] })
+      setHistoricalVideoData({ totalRequests: 0, totalDelivered: 0, overallDeliveryRate: 0, avgDeliveryTime: 0, monthlyData: [], clientBreakdown: [], allRows: [] })
     }
   }
 
@@ -160,24 +115,6 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Error fetching general issues data:', error)
       setGeneralIssuesData({ totalRaised: 0, totalResolved: 0, resolutionRate: 0, avgResolutionTime: 0, monthlyData: [], clientBreakdown: [] })
-    }
-  }
-
-  const fetchOfflineVehiclesData = async () => {
-    try {
-      const response = await fetch('/api/offline-vehicles')
-      if (response.ok) {
-        const data = await response.json()
-        setOfflineVehiclesData(data)
-      }
-    } catch (error) {
-      console.error('Error fetching offline vehicles data:', error)
-      setOfflineVehiclesData({ 
-        totalDevices: 0, totalOffline: 0, notRunningCount: 0, cameraIssueCount: 0,
-        offlinePercentage: 0, uniqueClients: 0, top10Clients: [], allClients: [],
-        notRunningBreakdown: [], cameraIssueBreakdown: [], vehicleDetails: [],
-        notRunningVehicles: [], cameraIssueVehicles: []
-      })
     }
   }
 
@@ -207,7 +144,7 @@ export default function Dashboard() {
     }
   }
 
-  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316', '#84CC16', '#6366F1', '#8B5A2B', '#059669']
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316', '#84CC16', '#6366F1']
 
   const MetricCard = ({ title, value, subtitle, icon: Icon, color = 'bg-blue-500' }) => (
     <div className="metric-card h-full flex flex-col">
@@ -226,7 +163,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <div className="text-xl font-semibold text-gray-700">Loading Dashboard...</div>
@@ -236,9 +173,9 @@ export default function Dashboard() {
     )
   }
 
-  if (!alertData || !misalignmentData || !historicalVideoData || !generalIssuesData || !offlineVehiclesData || !deviceMovementData) {
+  if (!alertData || !misalignmentData || !historicalVideoData || !generalIssuesData || !deviceMovementData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
           <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <div className="text-xl font-semibold text-gray-700">Data Loading Error</div>
@@ -292,79 +229,20 @@ export default function Dashboard() {
     return historicalVideoData.clientBreakdown.filter(client => client.client.toLowerCase().includes(videosFilter.toLowerCase()))
   }
 
+  const filterVideoRows = () => {
+    const allRows = historicalVideoData.allRows || []
+    if (!videoRowsFilter) return allRows
+    return allRows.filter(row =>
+      row.client.toLowerCase().includes(videoRowsFilter.toLowerCase()) ||
+      row.vehicleNumber.toLowerCase().includes(videoRowsFilter.toLowerCase()) ||
+      row.raisedBy.toLowerCase().includes(videoRowsFilter.toLowerCase()) ||
+      row.issueDetails.toLowerCase().includes(videoRowsFilter.toLowerCase())
+    )
+  }
+
   const filterIssues = () => {
     if (!issuesFilter) return generalIssuesData.clientBreakdown
     return generalIssuesData.clientBreakdown.filter(client => client.client.toLowerCase().includes(issuesFilter.toLowerCase()))
-  }
-
-  const filterOfflineVehicles = () => {
-    let filtered = offlineVehiclesData.allClients || []
-    
-    if (selectedClients.length > 0) {
-      filtered = filtered.filter(client => selectedClients.includes(client.client))
-    }
-    
-    if (viewMode === 'grouped') {
-      const groups = {
-        'CF Group': ['CF', 'cf'],
-        'Euro Group': ['Euro', 'euro'],
-        'Shoffr Group': ['Shoffr', 'shoffr', 'Shoffer', 'shoffer']
-      }
-      
-      const grouped = {}
-      const others = []
-      
-      filtered.forEach(client => {
-        let added = false
-        for (const [groupName, members] of Object.entries(groups)) {
-          if (members.some(m => client.client.toLowerCase().includes(m.toLowerCase()))) {
-            if (!grouped[groupName]) {
-              grouped[groupName] = { client: groupName, count: 0, notRunning: 0, cameraIssue: 0, percentage: 0, vehicles: [] }
-            }
-            grouped[groupName].count += client.count
-            grouped[groupName].notRunning += client.notRunning
-            grouped[groupName].cameraIssue += client.cameraIssue
-            grouped[groupName].vehicles = [...grouped[groupName].vehicles, ...(client.vehicles || [])]
-            added = true
-            break
-          }
-        }
-        if (!added) others.push(client)
-      })
-      
-      const allGroups = [...Object.values(grouped), ...others]
-      const total = allGroups.reduce((sum, c) => sum + c.count, 0)
-      allGroups.forEach(g => {
-        g.percentage = total > 0 ? parseFloat(((g.count / total) * 100).toFixed(1)) : 0
-      })
-      
-      return allGroups
-    }
-    
-    if (offlineFilter) {
-      filtered = filtered.filter(client => client.client.toLowerCase().includes(offlineFilter.toLowerCase()))
-    }
-    
-    return filtered
-  }
-
-  const allClients = offlineVehiclesData.allClients?.map(c => c.client) || []
-  
-  const toggleClientSelection = (client) => {
-    setTempSelectedClients(prev => prev.includes(client) ? prev.filter(c => c !== client) : [...prev, client])
-  }
-  
-  const selectAllClients = () => setTempSelectedClients(allClients)
-  const deselectAllClients = () => setTempSelectedClients([])
-  
-  const applyClientSelection = () => {
-    setSelectedClients(tempSelectedClients)
-    setShowClientDropdown(false)
-  }
-  
-  const cancelClientSelection = () => {
-    setTempSelectedClients(selectedClients)
-    setShowClientDropdown(false)
   }
 
   const filterDevices = () => {
@@ -376,14 +254,6 @@ export default function Dashboard() {
     )
   }
 
-  const filterMapCities = () => {
-    if (!installationTrackerData || !installationTrackerData.citiesBreakdown) return []
-    if (!mapFilter) return installationTrackerData.citiesBreakdown
-    return installationTrackerData.citiesBreakdown.filter(city => 
-      city.city.toLowerCase().includes(mapFilter.toLowerCase())
-    )
-  }
-
   const filterCities2 = () => {
     if (!installationTrackerData || !installationTrackerData.citiesBreakdown) return []
     if (!cities2Filter) return installationTrackerData.citiesBreakdown
@@ -392,17 +262,17 @@ export default function Dashboard() {
     )
   }
 
-  const getTopClientsForDisplay = () => {
-    if (selectedClients.length === 0) {
-      return offlineVehiclesData.top10Clients || []
-    }
-    return filterOfflineVehicles().slice(0, 10)
+  // Format hours nicely
+  const formatHours = (hours) => {
+    if (!hours || hours === 0) return '0h'
+    return `${parseFloat(hours.toFixed(2))}h`
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="dashboard-gradient text-white p-6">
-        <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen w-full bg-gray-50">
+      {/* Header */}
+      <header className="dashboard-gradient text-white p-6 w-full">
+        <div className="w-full px-4">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold mb-2">CAUTIO COMMAND CENTER</h1>
@@ -412,17 +282,16 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-6 py-4">
-        <div className="flex flex-wrap gap-1 bg-gray-200 p-1 rounded-lg">
+      {/* Tabs */}
+      <div className="w-full px-6 py-4">
+        <div className="flex flex-wrap gap-1 bg-gray-200 p-1 rounded-lg w-full">
           {[
             { id: 'overview', label: 'Overview', icon: BarChart3 },
             { id: 'alerts', label: 'Alerts', icon: AlertTriangle },
             { id: 'misalignment', label: 'Misalignment', icon: Activity },
             { id: 'videos', label: 'Videos', icon: Video },
             { id: 'issues', label: 'Issues', icon: Settings },
-            { id: 'offline', label: 'Offline', icon: WifiOff },
             { id: 'devices', label: 'Device Movement', icon: Cpu },
-            { id: 'map', label: 'City Heatmap', icon: MapIcon },
             { id: 'cities2', label: 'Cities', icon: MapIcon }
           ].map((tab) => (
             <button
@@ -439,7 +308,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 pb-6">
+      {/* Content */}
+      <div className="w-full px-6 pb-6">
+
+        {/* ===== OVERVIEW ===== */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -449,7 +321,7 @@ export default function Dashboard() {
               <MetricCard title="General Issues" value={generalIssuesData.totalRaised?.toLocaleString() || '0'} subtitle={`${generalIssuesData.resolutionRate}% resolved`} icon={Settings} color="bg-green-500" />
             </div>
 
-            <div className="bg-white p-6 rounded-lg card-shadow">
+            <div className="bg-white p-6 rounded-lg card-shadow w-full">
               <h3 className="text-xl font-semibold mb-4">Monthly Trends - All Categories</h3>
               <ResponsiveContainer width="100%" height={400}>
                 <ComposedChart data={combinedMonthlyData}>
@@ -474,7 +346,7 @@ export default function Dashboard() {
                   <div className="flex justify-between items-center p-4 bg-purple-50 rounded-lg">
                     <div>
                       <div className="font-semibold text-gray-800">Video Delivery</div>
-                      <div className="text-sm text-gray-600">Average: {historicalVideoData.avgDeliveryTime}h</div>
+                      <div className="text-sm text-gray-600">Average: {formatHours(historicalVideoData.avgDeliveryTime)}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-3xl font-bold text-purple-600">{historicalVideoData.overallDeliveryRate}%</div>
@@ -520,67 +392,27 @@ export default function Dashboard() {
                     <div className="text-3xl font-bold text-blue-600">{deviceMovementData.deployedCount?.toLocaleString()}</div>
                   </div>
 
-                  <div className="flex justify-between items-center p-4 bg-red-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <WifiOff className="text-red-600" size={32} />
-                      <div>
-                        <div className="font-semibold text-gray-800">Offline (72h+)</div>
-                        <div className="text-xs text-red-600">Needs attention</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-3xl font-bold text-red-600">{offlineVehiclesData.totalOffline?.toLocaleString()}</div>
-                      <div className="text-xs text-gray-600">
-                        {deviceMovementData.deployedCount > 0 ? ((offlineVehiclesData.totalOffline / deviceMovementData.deployedCount) * 100).toFixed(1) : 0}%
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-orange-500 rounded-lg p-4 text-white">
-                      <div className="text-2xl font-bold">{offlineVehiclesData.notRunningCount}</div>
-                      <div className="text-sm font-medium">Not Running</div>
-                      <div className="text-xs opacity-80">Vehicle off</div>
-                    </div>
-
+                  <div className="grid grid-cols-3 gap-3">
                     <div className="bg-yellow-500 rounded-lg p-4 text-white">
-                      <div className="text-2xl font-bold">{offlineVehiclesData.cameraIssueCount}</div>
-                      <div className="text-sm font-medium">Camera Issue</div>
-                      <div className="text-xs opacity-80">⚠️ Critical</div>
+                      <div className="text-2xl font-bold">{deviceMovementData.availableCount}</div>
+                      <div className="text-sm font-medium">Available</div>
+                    </div>
+                    <div className="bg-orange-500 rounded-lg p-4 text-white">
+                      <div className="text-2xl font-bold">{deviceMovementData.underRepairCount}</div>
+                      <div className="text-sm font-medium">In Repair</div>
+                    </div>
+                    <div className="bg-red-500 rounded-lg p-4 text-white">
+                      <div className="text-2xl font-bold">{deviceMovementData.damagedCount}</div>
+                      <div className="text-sm font-medium">Damaged</div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-
-            <div className="bg-white p-6 rounded-lg card-shadow">
-              <h3 className="text-xl font-semibold mb-4">Top Clients by Activity</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[
-                  ...alertData.clientBreakdown.slice(0, 6).map(c => ({ ...c, type: 'Alerts', value: c.count, color: 'red' })),
-                  ...misalignmentData.clientBreakdown.slice(0, 6).map(c => ({ ...c, type: 'Misalignment', value: c.raised, color: 'orange' }))
-                ]
-                  .sort((a, b) => b.value - a.value)
-                  .slice(0, 9)
-                  .map((client, index) => (
-                  <div key={`${client.client}-${client.type}-${index}`} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="font-semibold text-sm">{client.client}</div>
-                      <span className={`text-xs px-2 py-1 rounded ${client.color === 'red' ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800'}`}>
-                        {client.type}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div className="text-2xl font-bold">{client.value}</div>
-                      <div className="text-sm text-gray-600">{client.percentage}%</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         )}
 
+        {/* ===== ALERTS ===== */}
         {activeTab === 'alerts' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -637,6 +469,7 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* ===== MISALIGNMENT ===== */}
         {activeTab === 'misalignment' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -728,15 +561,24 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* ===== VIDEOS ===== */}
         {activeTab === 'videos' && (
           <div className="space-y-6">
+            {/* Metric Cards - Fastest now in hours */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <MetricCard title="Requests" value={historicalVideoData.totalRequests?.toLocaleString() || '0'} subtitle="Total" icon={Video} color="bg-purple-500" />
               <MetricCard title="Delivered" value={historicalVideoData.totalDelivered?.toLocaleString() || '0'} subtitle={`${historicalVideoData.overallDeliveryRate}%`} icon={CheckCircle2} color="bg-green-500" />
-              <MetricCard title="Avg Time" value={`${historicalVideoData.avgDeliveryTime}h`} subtitle="Delivery" icon={Clock} color="bg-blue-500" />
-              <MetricCard title="Fastest" value={`${historicalVideoData.fastestDeliveryMinutes || 0}min`} subtitle="Best" icon={TrendingUp} color="bg-green-600" />
-              <MetricCard title="Slowest" value={`${historicalVideoData.slowestDeliveryTime}h`} subtitle="Worst" icon={XCircle} color="bg-red-600" />
+              <MetricCard title="Avg Time" value={formatHours(historicalVideoData.avgDeliveryTime)} subtitle="Delivery" icon={Clock} color="bg-blue-500" />
+              <MetricCard
+                title="Fastest"
+                value={formatHours(historicalVideoData.fastestDeliveryTime)}
+                subtitle="Best"
+                icon={TrendingUp}
+                color="bg-green-600"
+              />
+              <MetricCard title="Slowest" value={formatHours(historicalVideoData.slowestDeliveryTime)} subtitle="Worst" icon={XCircle} color="bg-red-600" />
             </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white p-6 rounded-lg card-shadow">
                 <h3 className="text-xl font-semibold mb-4">Monthly Trends</h3>
@@ -792,9 +634,86 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+
+            {/* ===== DETAILED ROWS TABLE with all columns ===== */}
+            <div className="bg-white p-6 rounded-lg card-shadow w-full">
+              <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
+                <div>
+                  <h3 className="text-xl font-semibold">All Video Requests</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    <span className="text-green-600 font-semibold">✓ Delivered: {historicalVideoData.totalDelivered}</span>
+                    <span className="mx-3">|</span>
+                    <span className="text-red-600 font-semibold">✗ Not Delivered: {historicalVideoData.totalRequests - historicalVideoData.totalDelivered}</span>
+                    <span className="mx-3">|</span>
+                    <span className="text-gray-600">Sorted: Delivered first, Not Delivered last</span>
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Filter size={18} className="text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="Search client, vehicle, raised by..."
+                    value={videoRowsFilter}
+                    onChange={(e) => setVideoRowsFilter(e.target.value)}
+                    className="px-3 py-1 border rounded-lg text-sm w-64"
+                  />
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <div className="max-h-[600px] overflow-y-auto">
+                  <table className="w-full text-sm min-w-[1000px]">
+                    <thead className="bg-gray-50 sticky top-0 z-10">
+                      <tr>
+                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">#</th>
+                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Status</th>
+                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Clients</th>
+                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Timestamp Issues Raised</th>
+                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Issue Details</th>
+                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Vehicle Number</th>
+                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Raised by</th>
+                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Date - Current Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {filterVideoRows().map((row, idx) => (
+                        <tr
+                          key={idx}
+                          className={`hover:bg-gray-50 transition-colors ${
+                            !row.isDelivered ? 'bg-red-50 hover:bg-red-100' : ''
+                          }`}
+                        >
+                          <td className="px-3 py-3 text-gray-500 text-xs">{idx + 1}</td>
+                          <td className="px-3 py-3">
+                            {row.isDelivered ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <CheckCircle2 size={12} /> Delivered
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <XCircle size={12} /> Not Delivered
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 font-medium text-gray-800 text-xs">{row.client}</td>
+                          <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">{row.timestampRaised}</td>
+                          <td className="px-3 py-3 text-gray-600 text-xs max-w-[200px] truncate" title={row.issueDetails}>{row.issueDetails}</td>
+                          <td className="px-3 py-3 text-gray-600 text-xs font-mono">{row.vehicleNumber}</td>
+                          <td className="px-3 py-3 text-gray-600 text-xs">{row.raisedBy}</td>
+                          <td className="px-3 py-3 text-gray-600 text-xs whitespace-nowrap">{row.currentStatus}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {filterVideoRows().length === 0 && (
+                    <div className="text-center py-12 text-gray-400">No records found</div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
+        {/* ===== ISSUES ===== */}
         {activeTab === 'issues' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -861,19 +780,19 @@ export default function Dashboard() {
             </div>
 
             <div className="bg-white p-6 rounded-lg card-shadow">
-              <h3 className="text-xl font-semibold mb-4">📊 Monthly Analysis</h3>
+              <h3 className="text-xl font-semibold mb-4">Monthly Analysis</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-3 py-3 text-left">Month</th>
-                      <th className="px-3 py-3 text-center text-red-600">📈 Raised</th>
-                      <th className="px-3 py-3 text-center text-green-600">✅ Same</th>
-                      <th className="px-3 py-3 text-center text-purple-600">🔄 Later</th>
-                      <th className="px-3 py-3 text-center text-blue-600">⬅️ Previous</th>
-                      <th className="px-3 py-3 text-center text-orange-600">⏳ Pending</th>
-                      <th className="px-3 py-3 text-center text-gray-600">🎯 Rate%</th>
-                      <th className="px-3 py-3 text-center text-indigo-600">⏱️ Time</th>
+                      <th className="px-3 py-3 text-center text-red-600">Raised</th>
+                      <th className="px-3 py-3 text-center text-green-600">Same Month</th>
+                      <th className="px-3 py-3 text-center text-purple-600">Later</th>
+                      <th className="px-3 py-3 text-center text-blue-600">Carry Forward</th>
+                      <th className="px-3 py-3 text-center text-orange-600">Pending</th>
+                      <th className="px-3 py-3 text-center text-gray-600">Rate%</th>
+                      <th className="px-3 py-3 text-center text-indigo-600">Avg Time</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -885,42 +804,19 @@ export default function Dashboard() {
                             <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">NOW</span>
                           )}
                         </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className="inline-block bg-red-100 text-red-800 px-2 py-1 rounded text-sm">{month.raised}</span>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-sm">{month.resolvedSameMonth}</span>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          {month.resolvedLaterMonths > 0 ? (
-                            <span className="inline-block bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">{month.resolvedLaterMonths}</span>
-                          ) : '-'}
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          {month.carryForwardIn > 0 ? (
-                            <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">{month.carryForwardIn}</span>
-                          ) : '-'}
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          {month.stillPending > 0 ? (
-                            <span className="inline-block bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm">{month.stillPending}</span>
-                          ) : '-'}
-                        </td>
+                        <td className="px-3 py-3 text-center"><span className="inline-block bg-red-100 text-red-800 px-2 py-1 rounded text-sm">{month.raised}</span></td>
+                        <td className="px-3 py-3 text-center"><span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-sm">{month.resolvedSameMonth}</span></td>
+                        <td className="px-3 py-3 text-center">{month.resolvedLaterMonths > 0 ? <span className="inline-block bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">{month.resolvedLaterMonths}</span> : '-'}</td>
+                        <td className="px-3 py-3 text-center">{month.carryForwardIn > 0 ? <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">{month.carryForwardIn}</span> : '-'}</td>
+                        <td className="px-3 py-3 text-center">{month.stillPending > 0 ? <span className="inline-block bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm">{month.stillPending}</span> : '-'}</td>
                         <td className="px-3 py-3 text-center">
                           {month.resolutionRate !== null ? (
-                            <span className={`inline-block px-2 py-1 rounded text-sm ${
-                              month.resolutionRate >= 80 ? 'bg-green-100 text-green-800' : 
-                              month.resolutionRate >= 60 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
-                            }`}>
+                            <span className={`inline-block px-2 py-1 rounded text-sm ${month.resolutionRate >= 80 ? 'bg-green-100 text-green-800' : month.resolutionRate >= 60 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
                               {month.resolutionRate}%
                             </span>
                           ) : <span className="text-gray-400 text-xs">TBD</span>}
                         </td>
-                        <td className="px-3 py-3 text-center">
-                          {month.avgTime !== '0h' ? (
-                            <span className="inline-block bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs">{month.avgTime}</span>
-                          ) : '-'}
-                        </td>
+                        <td className="px-3 py-3 text-center">{month.avgTime !== '0h' ? <span className="inline-block bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs">{month.avgTime}</span> : '-'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -930,287 +826,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {activeTab === 'offline' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <MetricCard
-                title="All Devices in System"
-                value={deviceMovementData.deployedCount?.toLocaleString() || '0'}
-                subtitle="Total deployed devices"
-                icon={Cpu}
-                color="bg-blue-500"
-              />
-              <MetricCard
-                title="Offline (72h+)"
-                value={filteredMetrics.totalOffline?.toLocaleString() || '0'}
-                subtitle={`${deviceMovementData.deployedCount > 0 ? ((filteredMetrics.totalOffline / deviceMovementData.deployedCount) * 100).toFixed(1) : 0}% of total${selectedClients.length > 0 ? ' (filtered)' : ''}`}
-                icon={WifiOff}
-                color="bg-red-500"
-              />
-              <MetricCard
-                title="Not Running"
-                value={filteredMetrics.notRunningCount?.toLocaleString() || '0'}
-                subtitle={selectedClients.length > 0 ? 'Filtered selection' : 'Vehicles not running'}
-                icon={XCircle}
-                color="bg-orange-500"
-              />
-              <MetricCard
-                title="Camera Issue"
-                value={filteredMetrics.cameraIssueCount?.toLocaleString() || '0'}
-                subtitle={selectedClients.length > 0 ? 'Filtered selection' : 'Offline but running'}
-                icon={AlertTriangle}
-                color="bg-yellow-500"
-              />
-            </div>
-
-            <div className="bg-white p-4 rounded-lg card-shadow">
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center space-x-4">
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowClientDropdown(!showClientDropdown)}
-                      className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                    >
-                      <Users size={18} />
-                      <span>Select Clients ({selectedClients.length})</span>
-                    </button>
-                    {showClientDropdown && (
-                      <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-hidden flex flex-col">
-                        <div className="p-3 border-b border-gray-200 flex justify-between items-center bg-white">
-                          <span className="font-semibold text-sm">Select Clients</span>
-                          <div className="flex space-x-2">
-                            <button 
-                              onClick={selectAllClients}
-                              className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200"
-                            >
-                              All
-                            </button>
-                            <button 
-                              onClick={deselectAllClients}
-                              className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
-                            >
-                              None
-                            </button>
-                          </div>
-                        </div>
-                        <div className="p-2 overflow-y-auto flex-1">
-                          {allClients.map((client, idx) => (
-                            <label key={idx} className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={tempSelectedClients.includes(client)}
-                                onChange={() => toggleClientSelection(client)}
-                                className="w-4 h-4 text-blue-600 rounded"
-                              />
-                              <span className="text-sm flex-1">{client}</span>
-                              <span className="text-xs text-gray-500">
-                                {offlineVehiclesData.allClients.find(c => c.client === client)?.count || 0}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                        <div className="p-3 border-t border-gray-200 flex justify-end space-x-2 bg-white">
-                          <button
-                            onClick={cancelClientSelection}
-                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={applyClientSelection}
-                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
-                          >
-                            Apply
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
-                    <button
-                      onClick={() => setViewMode('individual')}
-                      className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                        viewMode === 'individual' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'
-                      }`}
-                    >
-                      Individual
-                    </button>
-                    <button
-                      onClick={() => setViewMode('grouped')}
-                      className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                        viewMode === 'grouped' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'
-                      }`}
-                    >
-                      Grouped
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="text-sm text-gray-600">
-                  {selectedClients.length > 0 && (
-                    <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full mr-2">
-                      {selectedClients.length} client{selectedClients.length > 1 ? 's' : ''} selected
-                    </span>
-                  )}
-                  <span className="font-semibold">72+ hours offline</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg card-shadow">
-              <h3 className="text-xl font-semibold mb-6">Top Offline Clients Overview</h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wide">Client Rankings</h4>
-                  <div className="space-y-2">
-                    {getTopClientsForDisplay().map((client, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-transparent rounded-lg border-l-4 border-red-500 hover:shadow-md transition-shadow">
-                        <div className="flex items-center space-x-3 flex-1">
-                          <div className="bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
-                            {idx + 1}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-gray-800 truncate">{client.client}</div>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded font-medium">
-                                🚫 {client.notRunning}
-                              </span>
-                              <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded font-medium">
-                                📹 {client.cameraIssue}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right ml-3">
-                          <div className="text-2xl font-bold text-red-600">{client.count}</div>
-                          <div className="text-xs text-gray-500">{client.percentage}%</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wide">Category Distribution</h4>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: 'Not Running', value: filteredMetrics.notRunningCount },
-                          { name: 'Camera Issue', value: filteredMetrics.cameraIssueCount }
-                        ]}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={90}
-                        label={({name, value, percent}) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
-                        labelLine={true}
-                      >
-                        <Cell fill="#FB923C" />
-                        <Cell fill="#FBBF24" />
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="grid grid-cols-2 gap-3 mt-4">
-                    <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg p-4 text-white shadow-lg">
-                      <div className="text-3xl font-bold">{filteredMetrics.notRunningCount}</div>
-                      <div className="text-sm font-semibold mt-1">Not Running</div>
-                      <div className="text-xs opacity-90">Vehicle Off</div>
-                    </div>
-                    <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg p-4 text-white shadow-lg">
-                      <div className="text-3xl font-bold">{filteredMetrics.cameraIssueCount}</div>
-                      <div className="text-sm font-semibold mt-1">Camera Issue</div>
-                      <div className="text-xs opacity-90">⚠️ Critical</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg card-shadow">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold">All Offline Vehicles (72h+)</h3>
-                <div className="flex items-center space-x-2">
-                  <Filter size={18} className="text-gray-500" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={offlineFilter}
-                    onChange={(e) => setOfflineFilter(e.target.value)}
-                    className="px-3 py-1 border rounded-lg text-sm"
-                  />
-                </div>
-              </div>
-              <div className="max-h-96 overflow-y-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 sticky top-0">
-                    <tr>
-                      <th className="px-4 py-3 text-left">#</th>
-                      <th className="px-4 py-3 text-left">Client</th>
-                      <th className="px-4 py-3 text-center">Total</th>
-                      <th className="px-4 py-3 text-center">Not Running</th>
-                      <th className="px-4 py-3 text-center">Camera</th>
-                      <th className="px-4 py-3 text-center">%</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filterOfflineVehicles().map((client, idx) => (
-                      <tr key={idx} className="border-t hover:bg-gray-50">
-                        <td className="px-4 py-3">{idx + 1}</td>
-                        <td className="px-4 py-3 font-medium">{client.client}</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full font-semibold">{client.count}</span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">{client.notRunning}</span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">{client.cameraIssue}</span>
-                        </td>
-                        <td className="px-4 py-3 text-center">{client.percentage}%</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg card-shadow">
-              <h3 className="text-xl font-semibold mb-4 flex items-center">
-                <XCircle className="mr-2 text-orange-600" />
-                Not Running Vehicles by Client
-              </h3>
-              <div className="max-h-80 overflow-y-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 sticky top-0">
-                    <tr>
-                      <th className="px-4 py-3 text-left">#</th>
-                      <th className="px-4 py-3 text-left">Client</th>
-                      <th className="px-4 py-3 text-center">Count</th>
-                      <th className="px-4 py-3 text-center">%</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {offlineVehiclesData.notRunningBreakdown?.map((client, idx) => (
-                      <tr key={idx} className="border-t hover:bg-gray-50">
-                        <td className="px-4 py-3">{idx + 1}</td>
-                        <td className="px-4 py-3 font-medium">{client.client}</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full font-semibold">{client.count}</span>
-                        </td>
-                        <td className="px-4 py-3 text-center">{client.percentage}%</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
+        {/* ===== DEVICES ===== */}
         {activeTab === 'devices' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -1308,108 +924,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {activeTab === 'map' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <MetricCard 
-                title="Total Installations" 
-                value={installationTrackerData?.totalInstallations?.toLocaleString() || '0'} 
-                subtitle="Devices installed" 
-                icon={Cpu} 
-                color="bg-blue-500" 
-              />
-              <MetricCard 
-                title="Cities Count" 
-                value={installationTrackerData?.uniqueCities || '0'} 
-                subtitle="Locations covered" 
-                icon={MapIcon} 
-                color="bg-green-500" 
-              />
-              <MetricCard 
-                title="Top City" 
-                value={installationTrackerData?.citiesBreakdown?.[0]?.city.toUpperCase() || 'N/A'} 
-                subtitle={`${installationTrackerData?.citiesBreakdown?.[0]?.count || 0} devices`} 
-                icon={TrendingUp} 
-                color="bg-purple-500" 
-              />
-            </div>
-
-            <div className="bg-white rounded-lg card-shadow overflow-hidden" style={{ height: '1000px' }}>
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-semibold">Device Installation Heatmap</h3>
-                  <div className="flex items-center space-x-4">
-                    <div className="text-sm text-gray-600">
-                      <span className="font-semibold">{installationTrackerData?.totalInstallations || 0}</span> devices across{' '}
-                      <span className="font-semibold">{installationTrackerData?.uniqueCities || 0}</span> cities
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Filter size={18} className="text-gray-500" />
-                      <input 
-                        type="text" 
-                        placeholder="Search city..." 
-                        value={mapFilter} 
-                        onChange={(e) => setMapFilter(e.target.value)} 
-                        className="px-3 py-1 border rounded-lg text-sm" 
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="h-full" style={{ height: 'calc(100% - 80px)' }}>
-                <IndiaMapLeaflet installationTrackerData={installationTrackerData} />
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg card-shadow">
-              <h3 className="text-xl font-semibold mb-4">Top Cities by Installations</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <ResponsiveContainer width="100%" height={400}>
-                    <BarChart data={installationTrackerData?.citiesBreakdown?.slice(0, 15) || []}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="city" angle={-45} textAnchor="end" height={100} />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="count" fill="#3B82F6" name="Installations" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="max-h-96 overflow-y-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50 sticky top-0">
-                      <tr>
-                        <th className="px-4 py-3 text-left">#</th>
-                        <th className="px-4 py-3 text-left">City</th>
-                        <th className="px-4 py-3 text-center">Devices</th>
-                        <th className="px-4 py-3 text-center">%</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filterMapCities().map((city, idx) => (
-                        <tr key={idx} className="border-t hover:bg-gray-50">
-                          <td className="px-4 py-3">{idx + 1}</td>
-                          <td className="px-4 py-3 font-medium capitalize">{city.city}</td>
-                          <td className="px-4 py-3 text-center">
-                            <span className={`px-3 py-1 rounded-full font-semibold ${
-                              city.count > 10 ? 'bg-green-100 text-green-800' :
-                              city.count > 5 ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-blue-100 text-blue-800'
-                            }`}>
-                              {city.count}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-center">{city.percentage}%</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
+        {/* ===== CITIES ===== */}
         {activeTab === 'cities2' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1436,9 +951,9 @@ export default function Dashboard() {
               />
             </div>
 
-            <div className="bg-white rounded-lg card-shadow overflow-hidden" style={{ height: '1000px' }}>
+            <div className="bg-white rounded-lg card-shadow overflow-hidden w-full" style={{ height: '700px' }}>
               <div className="p-6 border-b border-gray-200">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center flex-wrap gap-3">
                   <h3 className="text-xl font-semibold">Cities Map View</h3>
                   <div className="flex items-center space-x-4">
                     <div className="text-sm text-gray-600">
@@ -1458,7 +973,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              <div className="h-full" style={{ height: 'calc(100% - 80px)' }}>
+              <div style={{ height: 'calc(100% - 80px)' }}>
                 <IndiaMapLeaflet2 installationTrackerData={installationTrackerData} />
               </div>
             </div>
@@ -1498,6 +1013,7 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
       </div>
     </div>
   )
