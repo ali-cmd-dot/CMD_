@@ -2,36 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
-
-:root {
-  /* ── Cautio Brand Colors ── */
-  --bg-base:        #060e08;
-  --bg-surface:     #0a1a0d;
-  --bg-card:        #0d1f10;
-  --bg-card-hover:  #112614;
-  --bg-elevated:    #152c19;
-
-  --accent:         #22c55e;
-  --accent-bright:  #4ade80;
-  --accent-dim:     #16a34a;
-  --accent-glow:    rgba(34, 197, 94, 0.15);
-  --accent-glow-sm: rgba(34, 197, 94, 0.08);
-
-  --text-primary:   #ffffff;
-  --text-secondary: rgba(255,255,255,0.6);
-  --text-muted:     rgba(255,255,255,0.35);
-  --text-label:     rgba(34, 197, 94, 0.7);
-
-  --border:         rgba(255,255,255,0.07);
-  --border-accent:  rgba(34, 197, 94, 0.25);
-
-  --red:    #f87171;
-  --orange: #fb923c;
-  --yellow: #fbbf24;
-  --blue:   #60a5fa;
-  --purple: #a78bfa;
-}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap');
 
 * {
   -webkit-font-smoothing: antialiased;
@@ -43,129 +14,121 @@ html, body {
   margin: 0 !important;
   padding: 0 !important;
   overflow-x: hidden !important;
-  background: var(--bg-base);
+  background: #060e08;
 }
 
 body {
   font-family: 'DM Sans', system-ui, sans-serif;
-  color: var(--text-primary);
-  background: var(--bg-base);
+  color: #ffffff;
+  background: #060e08;
+}
+
+/* ── Animations ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(1.4); }
+}
+
+/* ── Loading spinner ── */
+.loading-spinner-clean {
+  width: 52px;
+  height: 52px;
+  border: 3px solid rgba(34, 197, 94, 0.12);
+  border-top-color: #22c55e;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+  box-shadow: 0 0 24px rgba(34, 197, 94, 0.12);
 }
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-surface); }
-::-webkit-scrollbar-thumb {
-  background: var(--accent-dim);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+::-webkit-scrollbar-track { background: #0a1a0d; }
+::-webkit-scrollbar-thumb { background: #16a34a; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #22c55e; }
 
-/* ── Leaflet overrides ── */
-.leaflet-container { font-family: 'DM Sans', sans-serif !important; }
+/* ═══════════════════════════════════
+   LEAFLET MAP — DARK GREEN THEME
+═══════════════════════════════════ */
+.leaflet-container {
+  font-family: 'DM Sans', sans-serif !important;
+  background: #060e08 !important;
+}
 .leaflet-control-zoom { display: none !important; }
 .leaflet-control-attribution { display: none !important; }
-
 .leaflet-popup-content-wrapper {
-  background: rgba(10, 26, 13, 0.98) !important;
-  border: 1px solid var(--border-accent) !important;
+  background: rgba(9, 20, 11, 0.98) !important;
+  border: 1px solid rgba(34, 197, 94, 0.3) !important;
   border-radius: 12px !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.7) !important;
   color: white !important;
 }
-.leaflet-popup-tip { background: rgba(10, 26, 13, 0.98) !important; }
-
+.leaflet-popup-content { color: white !important; }
+.leaflet-popup-tip { background: rgba(9, 20, 11, 0.98) !important; }
 .leaflet-tooltip.count-tooltip {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
+  margin: 0 !important;
   pointer-events: none !important;
 }
 .leaflet-tooltip.count-tooltip::before { display: none !important; }
 
-/* ── Map card styles ── */
+/* ═══════════════════════════════════
+   MAP OVERLAY CARDS
+═══════════════════════════════════ */
 .map-card {
-  background: rgba(10, 26, 13, 0.95);
-  backdrop-filter: blur(12px);
+  background: rgba(9, 20, 11, 0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: 14px;
   padding: 14px 18px;
-  border: 1px solid var(--border-accent);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  transition: border-color 0.2s;
 }
+.map-card:hover { border-color: rgba(34, 197, 94, 0.4); }
 .map-icon {
-  width: 40px; height: 40px;
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  color: white;
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; color: white;
 }
 .map-label {
-  color: var(--text-label);
+  color: rgba(74, 222, 128, 0.75);
   font-size: 10px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.1em;
-  margin-bottom: 2px;
+  text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;
 }
-.map-value {
-  color: white;
-  font-size: 22px; font-weight: 800;
-}
-.map-value-light {
-  color: white;
-  font-size: 22px; font-weight: 800;
-  cursor: pointer;
-  transition: filter 0.3s;
-}
+.map-value { color: #fff; font-size: 22px; font-weight: 800; }
+.map-value-light { color: #fff; font-size: 22px; font-weight: 800; cursor: pointer; transition: filter 0.3s; }
 .map-button {
-  background: rgba(10,26,13,0.95);
-  border: 1px solid var(--border-accent);
-  color: white; padding: 10px 18px;
-  border-radius: 10px; font-weight: 700; font-size: 13px;
-  display: flex; align-items: center; gap: 8px;
-  cursor: pointer; transition: all 0.2s ease;
+  background: rgba(9,20,11,0.97); backdrop-filter: blur(12px);
+  border: 1px solid rgba(34,197,94,0.25); color: #fff;
+  padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 13px;
+  display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s;
 }
-.map-button:hover {
-  background: rgba(34,197,94,0.15);
-  border-color: var(--accent);
-}
+.map-button:hover { background: rgba(34,197,94,0.12); border-color: #22c55e; color: #4ade80; }
 .map-button-close {
-  background: rgba(248,65,65,0.15);
-  border: 1px solid rgba(248,65,65,0.4);
-  color: #fca5a5; padding: 12px 22px;
-  border-radius: 12px; font-weight: 700; font-size: 14px;
-  display: flex; align-items: center; gap: 10px;
-  cursor: pointer; transition: all 0.2s ease;
+  background: rgba(248,65,65,0.12); backdrop-filter: blur(12px);
+  border: 1px solid rgba(248,65,65,0.35); color: #fca5a5;
+  padding: 12px 22px; border-radius: 12px; font-weight: 700; font-size: 14px;
+  display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s;
 }
-.map-button-close:hover {
-  background: rgba(248,65,65,0.25);
-}
-.map-legend { min-width: 260px; padding: 18px 20px !important; }
+.map-button-close:hover { background: rgba(248,65,65,0.22); border-color: rgba(248,65,65,0.55); }
+.map-legend { min-width: 250px; padding: 18px 20px !important; }
 .legend-row {
   display: flex; align-items: center; gap: 12px;
-  padding: 7px 8px; border-radius: 8px;
-  transition: background 0.2s;
+  padding: 7px 8px; border-radius: 8px; transition: background 0.2s; cursor: default;
 }
 .legend-row:hover { background: rgba(34,197,94,0.06); }
-.legend-dot {
-  width: 16px; height: 16px; border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.3); flex-shrink: 0;
-}
-.legend-text {
-  color: rgba(255,255,255,0.75);
-  font-size: 13px; font-weight: 600;
-}
-.loading-spinner-clean {
-  width: 48px; height: 48px;
-  border: 3px solid rgba(34,197,94,0.2);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
+.legend-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0; }
+.legend-text { color: rgba(255,255,255,0.72); font-size: 13px; font-weight: 600; }
 
-/* ── Recharts tooltip dark ── */
-.recharts-tooltip-wrapper .recharts-default-tooltip {
-  background: var(--bg-elevated) !important;
-  border: 1px solid var(--border-accent) !important;
-  border-radius: 10px !important;
+@media (max-width: 768px) {
+  .map-card { padding: 12px 14px; }
+  .map-value { font-size: 18px; }
+  .map-legend { min-width: 220px; }
+  .map-button, .map-button-close { padding: 8px 14px; font-size: 12px; }
 }
