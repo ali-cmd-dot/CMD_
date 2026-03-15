@@ -9,9 +9,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
 
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
+  useEffect(() => { setIsMounted(true) }, [])
 
   useEffect(() => {
     if (isFullscreen) {
@@ -21,7 +19,6 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
       document.body.style.overflow = ''
       document.documentElement.style.overflow = ''
     }
-    
     return () => {
       document.body.style.overflow = ''
       document.documentElement.style.overflow = ''
@@ -30,10 +27,10 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
 
   if (!isMounted) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 rounded-2xl">
-        <div className="text-center space-y-4">
-          <div className="loading-spinner-clean"></div>
-          <div className="text-gray-700 text-lg font-medium">Loading Network Map...</div>
+      <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', background:'#060e08', borderRadius:16 }}>
+        <div style={{ textAlign:'center' }}>
+          <div className="loading-spinner-clean" />
+          <p style={{ color:'rgba(255,255,255,0.4)', marginTop:16, fontSize:14 }}>Loading Network Map...</p>
         </div>
       </div>
     )
@@ -41,16 +38,15 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
 
   if (!installationTrackerData || !installationTrackerData.cityCount) {
     return (
-      <div className="text-center py-20 text-gray-600">
-        <Activity className="mx-auto mb-4" size={48} />
+      <div style={{ textAlign:'center', padding:'80px 0', color:'rgba(255,255,255,0.4)', background:'#060e08' }}>
+        <Activity size={40} style={{ marginBottom:12, opacity:0.4 }} />
         <p>Loading device data...</p>
       </div>
     )
   }
 
-  // COMPREHENSIVE city coordinates - ALL CITIES INCLUDING PATNA
+  // City coordinates
   const cityCoordinates = {
-    // Major metros
     'mumbai': { lat: 19.0760, lng: 72.8777, label: 'Mumbai' },
     'delhi': { lat: 28.7041, lng: 77.1025, label: 'Delhi' },
     'new delhi': { lat: 28.6139, lng: 77.2090, label: 'New Delhi' },
@@ -365,109 +361,75 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'jalna': { lat: 19.8347, lng: 75.8800, label: 'Jalna' },
   }
 
-  // AGGRESSIVE normalization - strips invisible chars, zero-width spaces, etc
   const normalizeCityName = (name) => {
     return name
-      .replace(/[\u200B-\u200D\uFEFF\u00A0\u202F\u205F\u3000]/g, '') // remove zero-width & special spaces
-      .replace(/[^\w\s\-()]/g, '')  // remove weird special chars but keep letters, numbers, spaces, hyphens, parens
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, ' ')         // collapse multiple spaces
+      .replace(/[\u200B-\u200D\uFEFF\u00A0\u202F\u205F\u3000]/g, '')
+      .replace(/[^\w\s\-()]/g, '')
+      .toLowerCase().trim().replace(/\s+/g, ' ')
   }
 
-  // Build a lookup map with normalized keys for fast matching
   const normalizedCoords = {}
   Object.keys(cityCoordinates).forEach(key => {
     normalizedCoords[normalizeCityName(key)] = cityCoordinates[key]
   })
 
-  // Get ALL cities from data
   const citiesBreakdown = installationTrackerData.citiesBreakdown || []
-  
-  // Track missing cities for debugging
-  const missingCities = []
 
-  // Map cities to coordinates
   const cityData = citiesBreakdown.map(cityInfo => {
     const rawName = cityInfo.city
     const cityKey = normalizeCityName(rawName)
-    
-    // 1. Try exact normalized match
     let coords = normalizedCoords[cityKey]
-    
-    // 2. If not found, try stripping ALL non-alpha characters and match
     if (!coords) {
       const alphaOnly = cityKey.replace(/[^a-z]/g, '')
       for (const [key, val] of Object.entries(normalizedCoords)) {
-        if (key.replace(/[^a-z]/g, '') === alphaOnly) {
-          coords = val
-          break
-        }
+        if (key.replace(/[^a-z]/g, '') === alphaOnly) { coords = val; break }
       }
     }
-
-    // 3. If still not found, try startsWith match (e.g. "patna " with trailing invisible)
     if (!coords) {
       for (const [key, val] of Object.entries(normalizedCoords)) {
-        if (cityKey.startsWith(key) || key.startsWith(cityKey)) {
-          coords = val
-          break
-        }
+        if (cityKey.startsWith(key) || key.startsWith(cityKey)) { coords = val; break }
       }
     }
-    
-    if (coords) {
-      return {
-        ...coords,
-        count: cityInfo.count,
-        key: cityKey,
-        rawName: rawName
-      }
-    }
-    
-    missingCities.push({ name: rawName, normalized: cityKey, count: cityInfo.count })
+    if (coords) return { ...coords, count: cityInfo.count, key: cityKey, rawName }
     return null
   }).filter(Boolean)
 
-  const totalDevices = Object.values(installationTrackerData.cityCount || {}).reduce((a, b) => a + b, 0)
-  const totalCities = citiesBreakdown.length // Use SOURCE count, not mapped count
+  const totalDevices = Object.values(installationTrackerData.cityCount || {}).reduce((a,b)=>a+b, 0)
+  const totalCities  = citiesBreakdown.length
 
   const getMarkerColor = (count) => {
-    if (count > 500) return '#ef4444' 
-    if (count > 200) return '#f97316' 
-    if (count > 100) return '#f59e0b' 
-    if (count > 50) return '#eab308' 
-    return '#22c55e' 
+    if (count > 500) return '#ef4444'
+    if (count > 200) return '#f97316'
+    if (count > 100) return '#f59e0b'
+    if (count > 50)  return '#eab308'
+    return '#22c55e'
   }
-
   const getMarkerSize = (count) => {
     if (count > 500) return 28
     if (count > 200) return 24
     if (count > 100) return 20
-    if (count > 50) return 16
+    if (count > 50)  return 16
     return 12
   }
 
   const toggleFullscreen = () => setIsFullscreen(!isFullscreen)
 
   const MapView = () => (
-    <div className="relative w-full h-full">
-      {/* BRIGHT COLORFUL MAP - OpenStreetMap with bright colors */}
+    <div style={{ position:'relative', width:'100%', height:'100%' }}>
       <MapContainer
         center={[22.5, 79.5]}
         zoom={5}
-        style={{ height: '100%', width: '100%', background: '#f0f9ff' }}
+        style={{ height:'100%', width:'100%', background:'#060e08' }}
         zoomControl={true}
         attributionControl={false}
       >
-        {/* BEST BRIGHT MAP - OpenStreetMap HOT style for maximum color */}
+        {/* DARK map tile — CartoDB Dark Matter */}
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; OpenStreetMap contributors'
+          url="https://{s}.basemaps.cartocdn.com/dark_matter/{z}/{x}/{y}{r}.png"
+          attribution='&copy; OpenStreetMap &copy; CARTO'
           maxZoom={19}
         />
 
-        {/* City markers */}
         {cityData.map((city, index) => (
           <CircleMarker
             key={index}
@@ -477,24 +439,24 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
               fillColor: getMarkerColor(city.count),
               fillOpacity: 0.9,
               color: '#ffffff',
-              weight: 3.5,
-              className: 'city-marker'
+              weight: 2.5,
             }}
           >
             <Tooltip permanent direction="center" className="count-tooltip" opacity={1}>
-              <span className="font-bold text-white" style={{ 
-                fontSize: city.count > 200 ? '13px' : city.count > 100 ? '12px' : '10px', 
+              <span style={{
+                fontWeight: 900,
+                color: 'white',
+                fontSize: city.count > 200 ? '13px' : city.count > 100 ? '12px' : '10px',
                 textShadow: '0 2px 6px rgba(0,0,0,0.95)',
-                fontWeight: 900
               }}>
                 {city.count}
               </span>
             </Tooltip>
             <Popup>
-              <div className="text-sm p-2">
-                <div className="font-bold text-lg mb-2 text-gray-800">{city.label}</div>
-                <div className="text-gray-700">
-                  <span className="font-semibold text-xl text-blue-600">{city.count}</span> devices
+              <div style={{ padding:'4px 8px', minWidth:120 }}>
+                <div style={{ fontWeight:800, fontSize:15, marginBottom:6, color:'white' }}>{city.label}</div>
+                <div style={{ color:'rgba(255,255,255,0.7)', fontSize:13 }}>
+                  <span style={{ fontWeight:700, fontSize:18, color:'#4ade80' }}>{city.count}</span> devices
                 </div>
               </div>
             </Popup>
@@ -502,73 +464,74 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
         ))}
       </MapContainer>
 
-      {/* Stats Overlay */}
-      <div className={`${isFullscreen ? 'fixed top-8 left-8' : 'absolute top-6 left-6'} z-[10000] flex flex-col gap-3`}>
+      {/* ── Stats Overlay — top left ── */}
+      <div style={{ position: isFullscreen ? 'fixed' : 'absolute', top: isFullscreen ? 32 : 20, left: isFullscreen ? 32 : 20, zIndex:10000, display:'flex', flexDirection:'column', gap:10 }}>
         <div className="map-card">
-          <div className="flex items-center gap-3">
-            <div className="map-icon" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)' }}>
-              <MapPin size={20} />
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div className="map-icon" style={{ background:'linear-gradient(135deg,#3b82f6,#2563eb)' }}>
+              <MapPin size={18} color="white" />
             </div>
             <div>
-              <div className="map-label">TOTAL CITIES</div>
-              <div className="map-value-light" style={{ filter: 'blur(8px)', transition: 'filter 0.3s' }} onMouseEnter={(e) => e.target.style.filter = 'blur(0px)'} onMouseLeave={(e) => e.target.style.filter = 'blur(8px)'}>{totalCities}</div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="map-card">
-          <div className="flex items-center gap-3">
-            <div className="map-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
-              <Activity size={20} />
-            </div>
-            <div>
-              <div className="map-label">TOTAL DEVICES</div>
-              <div className="map-value-light" style={{ filter: 'blur(8px)', transition: 'filter 0.3s' }} onMouseEnter={(e) => e.target.style.filter = 'blur(0px)'} onMouseLeave={(e) => e.target.style.filter = 'blur(8px)'}>{totalDevices.toLocaleString()}</div>
+              <div className="map-label">Total Cities</div>
+              <div
+                className="map-value-light"
+                style={{ filter:'blur(7px)', transition:'filter 0.3s' }}
+                onMouseEnter={e=>e.target.style.filter='blur(0px)'}
+                onMouseLeave={e=>e.target.style.filter='blur(7px)'}
+              >{totalCities}</div>
             </div>
           </div>
         </div>
 
         <div className="map-card">
-          <div className="flex items-center gap-3">
-            <div className="map-icon" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>
-              <TrendingUp size={20} />
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div className="map-icon" style={{ background:'linear-gradient(135deg,#8b5cf6,#7c3aed)' }}>
+              <Activity size={18} color="white" />
             </div>
             <div>
-              <div className="map-label">COVERAGE</div>
+              <div className="map-label">Total Devices</div>
+              <div
+                className="map-value-light"
+                style={{ filter:'blur(7px)', transition:'filter 0.3s' }}
+                onMouseEnter={e=>e.target.style.filter='blur(0px)'}
+                onMouseLeave={e=>e.target.style.filter='blur(7px)'}
+              >{totalDevices.toLocaleString()}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="map-card">
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div className="map-icon" style={{ background:'linear-gradient(135deg,#22c55e,#16a34a)' }}>
+              <TrendingUp size={18} color="white" />
+            </div>
+            <div>
+              <div className="map-label">Coverage</div>
               <div className="map-value">Pan India</div>
             </div>
           </div>
         </div>
-
       </div>
 
-      {/* CLEAN Device Density Legend - NO SYMBOLS */}
-      <div className={`${isFullscreen ? 'fixed bottom-8 right-8' : 'absolute bottom-6 right-6'} z-[10000] map-card map-legend`}>
-        <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-300">
-          <Zap className="text-blue-600" size={22} />
-          <div className="text-gray-800 font-bold text-base">Device Density</div>
-        </div>
-        <div className="flex flex-col gap-3">
-          <div className="legend-row">
-            <div className="legend-dot" style={{ background: '#ef4444', boxShadow: '0 0 15px rgba(239, 68, 68, 0.5)' }}></div>
-            <span className="legend-text">500+ devices</span>
+      {/* ── Legend — bottom right ── */}
+      <div style={{ position: isFullscreen ? 'fixed' : 'absolute', bottom: isFullscreen ? 32 : 20, right: isFullscreen ? 32 : 20, zIndex:10000 }}>
+        <div className="map-card map-legend">
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14, paddingBottom:12, borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
+            <Zap size={18} color="#4ade80" />
+            <span style={{ color:'white', fontWeight:700, fontSize:14 }}>Device Density</span>
           </div>
-          <div className="legend-row">
-            <div className="legend-dot" style={{ background: '#f97316', boxShadow: '0 0 15px rgba(249, 115, 22, 0.5)' }}></div>
-            <span className="legend-text">200-500</span>
-          </div>
-          <div className="legend-row">
-            <div className="legend-dot" style={{ background: '#f59e0b', boxShadow: '0 0 15px rgba(245, 158, 11, 0.5)' }}></div>
-            <span className="legend-text">100-200</span>
-          </div>
-          <div className="legend-row">
-            <div className="legend-dot" style={{ background: '#eab308', boxShadow: '0 0 15px rgba(234, 179, 8, 0.5)' }}></div>
-            <span className="legend-text">50-100</span>
-          </div>
-          <div className="legend-row">
-            <div className="legend-dot" style={{ background: '#22c55e', boxShadow: '0 0 15px rgba(34, 197, 94, 0.5)' }}></div>
-            <span className="legend-text">1-50</span>
-          </div>
+          {[
+            { color:'#ef4444', label:'500+ devices' },
+            { color:'#f97316', label:'200-500' },
+            { color:'#f59e0b', label:'100-200' },
+            { color:'#eab308', label:'50-100' },
+            { color:'#22c55e', label:'1-50' },
+          ].map((item, i) => (
+            <div key={i} className="legend-row">
+              <div className="legend-dot" style={{ background:item.color, boxShadow:`0 0 10px ${item.color}66` }} />
+              <span className="legend-text">{item.label}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -576,41 +539,22 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
 
   if (isFullscreen) {
     return (
-      <div 
-        style={{
-          position: 'fixed',
-          inset: 0,
-          width: '100vw',
-          height: '100vh',
-          zIndex: 999999,
-          margin: 0,
-          padding: 0,
-          background: '#f0f9ff'
-        }}
-      >
+      <div style={{ position:'fixed', inset:0, width:'100vw', height:'100vh', zIndex:999999, background:'#060e08' }}>
         <MapView />
-        
-        <button
-          onClick={toggleFullscreen}
-          className="fixed top-6 right-6 z-[1000000] map-button-close"
-        >
-          <Minimize2 size={20} />
-          <span>Exit Fullscreen</span>
+        <button onClick={toggleFullscreen} className="map-button-close" style={{ position:'fixed', top:24, right:24, zIndex:1000000 }}>
+          <Minimize2 size={18} />
+          Exit Fullscreen
         </button>
       </div>
     )
   }
 
   return (
-    <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl" style={{ background: '#f0f9ff' }}>
+    <div style={{ position:'relative', width:'100%', height:'100%', borderRadius:16, overflow:'hidden', background:'#060e08' }}>
       <MapView />
-      
-      <button
-        onClick={toggleFullscreen}
-        className="absolute top-4 right-4 z-[1000] map-button"
-      >
-        <Maximize2 size={18} />
-        <span>Expand Map</span>
+      <button onClick={toggleFullscreen} className="map-button" style={{ position:'absolute', top:16, right:16, zIndex:1000 }}>
+        <Maximize2 size={16} />
+        Expand Map
       </button>
     </div>
   )
