@@ -5,51 +5,100 @@ import dynamic from 'next/dynamic'
 
 const IndiaMapLeaflet2 = dynamic(
   () => import('./components/IndiaMapLeaflet2'),
-  { 
+  {
     ssr: false,
-    loading: () => <div className="text-center py-20 text-gray-500">Loading map...</div>
+    loading: () => (
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', background:'#060e08' }}>
+        <div style={{ textAlign:'center' }}>
+          <div className="loading-spinner-clean" />
+          <p style={{ color:'rgba(255,255,255,0.4)', marginTop:16, fontSize:14 }}>Loading map…</p>
+        </div>
+      </div>
+    )
   }
 )
 
-import { 
+import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, ComposedChart, Line
 } from 'recharts'
-import { 
+import {
   Activity, AlertTriangle, TrendingUp, Calendar, Users, Clock, Target,
   BarChart3, Video, Settings, CheckCircle2, XCircle,
-  Cpu, Zap, Filter, Map as MapIcon, ChevronRight
+  Cpu, Zap, Filter, Map as MapIcon
 } from 'lucide-react'
 
+// ── Brand colors ──
+const C = {
+  bg:           '#060e08',
+  surface:      '#0a1a0d',
+  card:         '#0d1f10',
+  cardHover:    '#112614',
+  elevated:     '#152c19',
+  accent:       '#22c55e',
+  accentBright: '#4ade80',
+  accentDim:    '#16a34a',
+  accentGlow:   'rgba(34,197,94,0.15)',
+  border:       'rgba(255,255,255,0.07)',
+  borderAccent: 'rgba(34,197,94,0.22)',
+  textPrimary:  '#ffffff',
+  textSec:      'rgba(255,255,255,0.55)',
+  textMuted:    'rgba(255,255,255,0.3)',
+  textLabel:    'rgba(34,197,94,0.75)',
+  red:    '#f87171',
+  orange: '#fb923c',
+  yellow: '#fbbf24',
+  blue:   '#60a5fa',
+  purple: '#a78bfa',
+}
+
 const TABS = [
-  { id: 'overview',    label: 'Overview',       icon: BarChart3  },
-  { id: 'alerts',      label: 'Alerts',          icon: AlertTriangle },
-  { id: 'misalignment',label: 'Misalignment',    icon: Activity   },
-  { id: 'videos',      label: 'Videos',          icon: Video      },
-  { id: 'issues',      label: 'Issues',          icon: Settings   },
-  { id: 'devices',     label: 'Device Movement', icon: Cpu        },
-  { id: 'cities2',     label: 'Cities',          icon: MapIcon    },
+  { id: 'overview',     label: 'Overview',        icon: BarChart3    },
+  { id: 'alerts',       label: 'Alerts',           icon: AlertTriangle},
+  { id: 'misalignment', label: 'Misalignment',     icon: Activity     },
+  { id: 'videos',       label: 'Videos',           icon: Video        },
+  { id: 'issues',       label: 'Issues',           icon: Settings     },
+  { id: 'devices',      label: 'Device Movement',  icon: Cpu          },
+  { id: 'cities2',      label: 'Cities',           icon: MapIcon      },
 ]
 
+// ── Custom dark tooltip for Recharts ──
+const DarkTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null
+  return (
+    <div style={{
+      background: '#0d1f10', border: `1px solid ${C.borderAccent}`,
+      borderRadius: 10, padding: '10px 14px', fontSize: 12,
+      boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
+    }}>
+      <p style={{ color: C.accentBright, fontWeight: 700, marginBottom: 6 }}>{label}</p>
+      {payload.map((p, i) => (
+        <p key={i} style={{ color: p.color || 'white', margin: '2px 0' }}>
+          {p.name}: <b>{p.value}</b>
+        </p>
+      ))}
+    </div>
+  )
+}
+
 export default function Dashboard() {
-  const [alertData,             setAlertData]             = useState(null)
-  const [misalignmentData,      setMisalignmentData]      = useState(null)
-  const [historicalVideoData,   setHistoricalVideoData]   = useState(null)
-  const [generalIssuesData,     setGeneralIssuesData]     = useState(null)
-  const [deviceMovementData,    setDeviceMovementData]    = useState(null)
+  const [alertData,               setAlertData]               = useState(null)
+  const [misalignmentData,        setMisalignmentData]        = useState(null)
+  const [historicalVideoData,     setHistoricalVideoData]     = useState(null)
+  const [generalIssuesData,       setGeneralIssuesData]       = useState(null)
+  const [deviceMovementData,      setDeviceMovementData]      = useState(null)
   const [installationTrackerData, setInstallationTrackerData] = useState(null)
-  const [loading,  setLoading]  = useState(true)
+  const [loading,   setLoading]   = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
 
-  // filter states
-  const [alertsFilter,      setAlertsFilter]      = useState('')
-  const [misalignmentFilter,setMisalignmentFilter] = useState('')
-  const [videosFilter,      setVideosFilter]       = useState('')
-  const [videoRowsFilter,   setVideoRowsFilter]    = useState('')
-  const [videoViewMode,     setVideoViewMode]      = useState(null) // null | 'all' | 'delivered' | 'not_delivered'
-  const [issuesFilter,      setIssuesFilter]       = useState('')
-  const [devicesFilter,     setDevicesFilter]      = useState('')
-  const [cities2Filter,     setCities2Filter]      = useState('')
+  const [alertsFilter,       setAlertsFilter]       = useState('')
+  const [misalignmentFilter, setMisalignmentFilter] = useState('')
+  const [videosFilter,       setVideosFilter]       = useState('')
+  const [videoRowsFilter,    setVideoRowsFilter]    = useState('')
+  const [videoViewMode,      setVideoViewMode]      = useState(null)
+  const [issuesFilter,       setIssuesFilter]       = useState('')
+  const [devicesFilter,      setDevicesFilter]      = useState('')
+  const [cities2Filter,      setCities2Filter]      = useState('')
 
   useEffect(() => { fetchAllData() }, [])
 
@@ -66,21 +115,20 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  const formatHours = (h) => (!h || h===0) ? '0h' : `${parseFloat(h.toFixed(2))}h`
+  const formatHours = h => (!h||h===0) ? '0h' : `${parseFloat(h.toFixed(2))}h`
 
-  /* ── filtered helpers ── */
-  const filterAlerts      = () => !alertsFilter       ? alertData.clientBreakdown       : alertData.clientBreakdown.filter(c=>c.client.toLowerCase().includes(alertsFilter.toLowerCase()))
-  const filterMisalign    = () => !misalignmentFilter ? misalignmentData.clientBreakdown : misalignmentData.clientBreakdown.filter(c=>c.client.toLowerCase().includes(misalignmentFilter.toLowerCase()))
-  const filterVideoCli    = () => !videosFilter       ? historicalVideoData.clientBreakdown : historicalVideoData.clientBreakdown.filter(c=>c.client.toLowerCase().includes(videosFilter.toLowerCase()))
-  const filterIssues      = () => !issuesFilter       ? generalIssuesData.clientBreakdown  : generalIssuesData.clientBreakdown.filter(c=>c.client.toLowerCase().includes(issuesFilter.toLowerCase()))
-  const filterDevices     = () => !devicesFilter      ? deviceMovementData.deviceDetails   : deviceMovementData.deviceDetails.filter(d=>d.device.toLowerCase().includes(devicesFilter.toLowerCase())||d.status.toLowerCase().includes(devicesFilter.toLowerCase())||d.vehicleNumber.toLowerCase().includes(devicesFilter.toLowerCase()))
-  const filterCities2     = () => { if(!installationTrackerData?.citiesBreakdown) return []; return !cities2Filter ? installationTrackerData.citiesBreakdown : installationTrackerData.citiesBreakdown.filter(c=>c.city.toLowerCase().includes(cities2Filter.toLowerCase())) }
+  const filterAlerts    = () => !alertsFilter       ? alertData.clientBreakdown       : alertData.clientBreakdown.filter(c=>c.client.toLowerCase().includes(alertsFilter.toLowerCase()))
+  const filterMisalign  = () => !misalignmentFilter ? misalignmentData.clientBreakdown : misalignmentData.clientBreakdown.filter(c=>c.client.toLowerCase().includes(misalignmentFilter.toLowerCase()))
+  const filterVideoCli  = () => !videosFilter       ? historicalVideoData.clientBreakdown : historicalVideoData.clientBreakdown.filter(c=>c.client.toLowerCase().includes(videosFilter.toLowerCase()))
+  const filterIssues    = () => !issuesFilter       ? generalIssuesData.clientBreakdown  : generalIssuesData.clientBreakdown.filter(c=>c.client.toLowerCase().includes(issuesFilter.toLowerCase()))
+  const filterDevices   = () => !devicesFilter      ? deviceMovementData.deviceDetails   : deviceMovementData.deviceDetails.filter(d=>d.device.toLowerCase().includes(devicesFilter.toLowerCase())||d.status.toLowerCase().includes(devicesFilter.toLowerCase())||d.vehicleNumber.toLowerCase().includes(devicesFilter.toLowerCase()))
+  const filterCities2   = () => { if(!installationTrackerData?.citiesBreakdown) return []; return !cities2Filter ? installationTrackerData.citiesBreakdown : installationTrackerData.citiesBreakdown.filter(c=>c.city.toLowerCase().includes(cities2Filter.toLowerCase())) }
 
   const filterVideoRows = () => {
     if (!videoViewMode) return []
     let rows = historicalVideoData?.allRows || []
-    if (videoViewMode === 'delivered')     rows = rows.filter(r => r.isDelivered)
-    if (videoViewMode === 'not_delivered') rows = rows.filter(r => !r.isDelivered)
+    if (videoViewMode==='delivered')     rows = rows.filter(r=>r.isDelivered)
+    if (videoViewMode==='not_delivered') rows = rows.filter(r=>!r.isDelivered)
     if (videoRowsFilter) rows = rows.filter(r =>
       r.client.toLowerCase().includes(videoRowsFilter.toLowerCase()) ||
       r.vehicleNumber.toLowerCase().includes(videoRowsFilter.toLowerCase()) ||
@@ -102,916 +150,745 @@ export default function Dashboard() {
       .sort((a,b)=>new Date(a.replace(' ',' 1, '))-new Date(b.replace(' ',' 1, ')))
       .map(month=>({
         month,
-        alerts:       alertData.monthlyData.find(d=>d.month===month)?.total  || 0,
-        misalignments:misalignmentData.monthlyData.find(d=>d.month===month)?.raised || 0,
-        videos:       historicalVideoData.monthlyData.find(d=>d.month===month)?.requests || 0,
-        issues:       generalIssuesData.monthlyData.find(d=>d.month===month)?.raised || 0,
+        alerts:        alertData.monthlyData.find(d=>d.month===month)?.total  ||0,
+        misalignments: misalignmentData.monthlyData.find(d=>d.month===month)?.raised||0,
+        videos:        historicalVideoData.monthlyData.find(d=>d.month===month)?.requests||0,
+        issues:        generalIssuesData.monthlyData.find(d=>d.month===month)?.raised||0,
       }))
   }
 
-  /* ═══════════ LOADING ═══════════ */
-  if (loading || !alertData || !misalignmentData || !historicalVideoData || !generalIssuesData || !deviceMovementData) {
+  /* ── LOADING ── */
+  if (loading||!alertData||!misalignmentData||!historicalVideoData||!generalIssuesData||!deviceMovementData) {
     return (
-      <div style={styles.loadWrap}>
-        <div style={styles.loadSpinner} />
-        <p style={styles.loadText}>Loading dashboard…</p>
+      <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:C.bg, gap:20 }}>
+        <img src="/cautio_shield.webp" alt="Cautio" style={{ width:56, height:56, opacity:0.9 }} />
+        <div className="loading-spinner-clean" />
+        <p style={{ color:C.textSec, fontSize:15, fontWeight:500, letterSpacing:'0.05em' }}>Loading Fleet Intelligence…</p>
       </div>
     )
   }
 
   const combinedMonthlyData = combineMonthlyData()
-  const notDelivered = (historicalVideoData.totalRequests||0) - (historicalVideoData.totalDelivered||0)
+  const notDelivered = (historicalVideoData.totalRequests||0)-(historicalVideoData.totalDelivered||0)
 
-  /* ═══════════ RENDER ═══════════ */
+  /* ═══════════════════════════════
+     SHARED MINI-COMPONENTS
+  ═══════════════════════════════ */
+  const SectionLabel = ({ children }) => (
+    <p style={{ color:C.textLabel, fontSize:11, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:6 }}>
+      {children}
+    </p>
+  )
+
+  const Card = ({ children, style={} }) => (
+    <div style={{ background:C.card, borderRadius:16, border:`1px solid ${C.border}`, padding:'22px 24px', ...style }}>
+      {children}
+    </div>
+  )
+
+  const CardHead = ({ title, right }) => (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18, flexWrap:'wrap', gap:10 }}>
+      <span style={{ fontSize:14, fontWeight:700, color:C.textPrimary, letterSpacing:'-0.01em' }}>{title}</span>
+      {right}
+    </div>
+  )
+
+  const KpiCard = ({ label, val, sub, accent, icon: Icon }) => (
+    <div style={{
+      background: C.card,
+      borderRadius: 16,
+      border: `1px solid ${C.border}`,
+      borderTop: `2px solid ${accent}`,
+      padding: '20px 20px 16px',
+      display: 'flex', flexDirection: 'column', gap: 4,
+      transition: 'border-color 0.2s, background 0.2s',
+    }}>
+      <div style={{ width:38, height:38, borderRadius:10, background:`${accent}18`, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:8 }}>
+        <Icon size={19} color={accent} />
+      </div>
+      <div style={{ fontSize:26, fontWeight:900, color:C.textPrimary, letterSpacing:'-0.02em', lineHeight:1 }}>{val}</div>
+      <div style={{ fontSize:11, color:C.textSec }}>{sub}</div>
+      <div style={{ fontSize:12, color:C.textMuted, fontWeight:600, marginTop:8, paddingTop:10, borderTop:`1px solid ${C.border}` }}>{label}</div>
+    </div>
+  )
+
+  const SearchBox = ({ value, onChange, placeholder='Search…' }) => (
+    <div style={{ display:'flex', alignItems:'center', gap:6, background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:'6px 10px' }}>
+      <Filter size={13} color={C.textMuted} />
+      <input
+        style={{ border:'none', outline:'none', background:'transparent', fontSize:12, color:C.textPrimary, width:140 }}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+      />
+    </div>
+  )
+
+  // Table styles
+  const Th = ({ children, center }) => (
+    <th style={{ padding:'10px 12px', textAlign:center?'center':'left', fontSize:10, fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.08em', whiteSpace:'nowrap', background:C.surface, borderBottom:`1px solid ${C.border}` }}>
+      {children}
+    </th>
+  )
+  const Td = ({ children, center, style={} }) => (
+    <td style={{ padding:'10px 12px', fontSize:13, color:C.textSec, textAlign:center?'center':'left', ...style }}>
+      {children}
+    </td>
+  )
+  const Tr = ({ children, highlight }) => (
+    <tr style={{ borderBottom:`1px solid ${C.border}`, background:highlight?'rgba(248,65,65,0.04)':'transparent' }}>
+      {children}
+    </tr>
+  )
+
+  const Pill = ({ children, bg, color }) => (
+    <span style={{ display:'inline-block', padding:'3px 9px', borderRadius:20, fontSize:11, fontWeight:700, background:bg, color }}>{children}</span>
+  )
+
+  const ratePill = (rate, high=80, mid=60) => {
+    if (rate>high) return <Pill bg='rgba(34,197,94,0.15)' color={C.accentBright}>{rate}%</Pill>
+    if (rate>mid)  return <Pill bg='rgba(251,191,36,0.15)' color={C.yellow}>{rate}%</Pill>
+    return              <Pill bg='rgba(248,113,113,0.15)' color={C.red}>{rate}%</Pill>
+  }
+
+  // Chart axis/grid defaults
+  const axisStyle = { fontSize:11, fill:C.textMuted }
+  const gridProps = { strokeDasharray:'3 3', stroke:'rgba(255,255,255,0.05)' }
+
+  /* ═══════════════════════════════
+     RENDER
+  ═══════════════════════════════ */
   return (
-    <div style={styles.root}>
+    <div style={{ minHeight:'100vh', background:C.bg, fontFamily:"'DM Sans', system-ui, sans-serif" }}>
+
       {/* ── HEADER ── */}
-      <header style={styles.header}>
-        <div style={styles.headerInner}>
-          <div>
-            <h1 style={styles.headerTitle}>CAUTIO COMMAND CENTER</h1>
-            <p style={styles.headerSub}>Real-time analytics from live Google Sheets</p>
+      <header style={{
+        background: C.surface,
+        borderBottom: `1px solid ${C.border}`,
+        padding: '0 32px',
+        position: 'sticky', top: 0, zIndex: 200,
+      }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', height:60, flexWrap:'wrap', gap:12 }}>
+
+          {/* Logo + Brand */}
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <img src="/cautio_shield.webp" alt="Cautio" style={{ width:34, height:34 }} />
+            <div>
+              <div style={{ color:C.textPrimary, fontSize:16, fontWeight:800, letterSpacing:'-0.01em', lineHeight:1.1 }}>Cautio</div>
+              <div style={{ color:C.textLabel, fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase' }}>Fleet Intelligence</div>
+            </div>
           </div>
-          <div style={styles.headerStats}>
+
+          {/* Live stats */}
+          <div style={{ display:'flex', gap:28, alignItems:'center' }}>
             {[
-              { label:'Alerts',      val: alertData.totalCount?.toLocaleString() },
-              { label:'Video Req',   val: historicalVideoData.totalRequests?.toLocaleString() },
-              { label:'Issues',      val: generalIssuesData.totalRaised?.toLocaleString() },
+              { label:'Alerts',    val:alertData.totalCount?.toLocaleString() },
+              { label:'Video Req', val:historicalVideoData.totalRequests?.toLocaleString() },
+              { label:'Issues',    val:generalIssuesData.totalRaised?.toLocaleString() },
             ].map(s=>(
-              <div key={s.label} style={styles.headerStat}>
-                <div style={styles.headerStatVal}>{s.val}</div>
-                <div style={styles.headerStatLbl}>{s.label}</div>
+              <div key={s.label} style={{ textAlign:'center' }}>
+                <div style={{ fontSize:18, fontWeight:800, color:C.textPrimary }}>{s.val}</div>
+                <div style={{ fontSize:10, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.08em' }}>{s.label}</div>
               </div>
             ))}
+            <div style={{ width:8, height:8, borderRadius:'50%', background:C.accent, boxShadow:`0 0 8px ${C.accent}` }} title="Live" />
           </div>
         </div>
       </header>
 
       {/* ── TABS ── */}
-      <nav style={styles.tabBar}>
-        <div style={styles.tabInner}>
-          {TABS.map((tab,i) => {
-            const active = activeTab === tab.id
+      <nav style={{ background:C.surface, borderBottom:`1px solid ${C.border}`, padding:'0 24px', position:'sticky', top:60, zIndex:100 }}>
+        <div style={{ display:'flex', gap:0, overflowX:'auto' }}>
+          {TABS.map(tab => {
+            const active = activeTab===tab.id
             const Icon = tab.icon
             return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                style={{
-                  ...styles.tab,
-                  ...(active ? styles.tabActive : {}),
-                  animationDelay: `${i*50}ms`,
-                }}
-              >
-                <Icon size={15} style={{ flexShrink:0 }} />
-                <span>{tab.label}</span>
-                {active && <div style={styles.tabDot} />}
+              <button key={tab.id} onClick={()=>setActiveTab(tab.id)} style={{
+                display:'inline-flex', alignItems:'center', gap:7,
+                padding:'13px 16px', fontSize:13, fontWeight:600,
+                color: active ? C.accentBright : C.textSec,
+                background: 'transparent', border: 'none',
+                borderBottom: active ? `2px solid ${C.accentBright}` : '2px solid transparent',
+                cursor:'pointer', whiteSpace:'nowrap', flexShrink:0,
+                transition:'color 0.15s, border-color 0.15s',
+              }}>
+                <Icon size={14} style={{ flexShrink:0 }} />
+                {tab.label}
               </button>
             )
           })}
         </div>
       </nav>
 
-      {/* ── PAGE CONTENT ── */}
-      <main style={styles.main}>
+      {/* ── MAIN ── */}
+      <main style={{ padding:'28px 24px', maxWidth:'100%', boxSizing:'border-box' }}>
 
-        {/* ════════════ OVERVIEW ════════════ */}
+        {/* ════ OVERVIEW ════ */}
         {activeTab==='overview' && (
-          <div style={styles.section}>
-            {/* KPI row */}
-            <div style={styles.kpiGrid}>
-              {[
-                { label:'Total Alerts',   val:alertData.totalCount?.toLocaleString(),          sub:`${alertData.uniqueClients} clients`,              accent:'#ef4444', icon:AlertTriangle },
-                { label:'Misalignments',  val:misalignmentData.totalRaised?.toLocaleString(),  sub:`${misalignmentData.rectificationRate}% fixed`,     accent:'#f97316', icon:Activity },
-                { label:'Video Requests', val:historicalVideoData.totalRequests?.toLocaleString(), sub:`${historicalVideoData.overallDeliveryRate}% delivered`, accent:'#8b5cf6', icon:Video },
-                { label:'General Issues', val:generalIssuesData.totalRaised?.toLocaleString(), sub:`${generalIssuesData.resolutionRate}% resolved`,   accent:'#10b981', icon:Settings },
-              ].map(k=>{
-                const Icon=k.icon
-                return (
-                  <div key={k.label} style={{...styles.kpiCard, borderTop:`3px solid ${k.accent}`}}>
-                    <div style={{...styles.kpiIcon, background:`${k.accent}18`}}>
-                      <Icon size={22} color={k.accent} />
-                    </div>
-                    <div style={styles.kpiVal}>{k.val}</div>
-                    <div style={styles.kpiSub}>{k.sub}</div>
-                    <div style={styles.kpiLabel}>{k.label}</div>
-                  </div>
-                )
-              })}
+          <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+
+            {/* Page title */}
+            <div>
+              <SectionLabel>Command Center · Overview</SectionLabel>
+              <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
+                Fleet Operations, <span style={{ color:C.accentBright, fontStyle:'italic' }}>At a Glance</span>
+              </h1>
             </div>
 
-            {/* Chart */}
-            <div style={styles.card}>
-              <div style={styles.cardHead}><span style={styles.cardTitle}>Monthly Trends — All Categories</span></div>
-              <ResponsiveContainer width="100%" height={380}>
+            {/* KPI row */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
+              {[
+                { label:'Total Alerts',   val:alertData.totalCount?.toLocaleString(),              sub:`${alertData.uniqueClients} clients`,                    accent:C.red,    icon:AlertTriangle },
+                { label:'Misalignments',  val:misalignmentData.totalRaised?.toLocaleString(),      sub:`${misalignmentData.rectificationRate}% rectified`,      accent:C.orange, icon:Activity },
+                { label:'Video Requests', val:historicalVideoData.totalRequests?.toLocaleString(), sub:`${historicalVideoData.overallDeliveryRate}% delivered`,  accent:C.purple, icon:Video },
+                { label:'General Issues', val:generalIssuesData.totalRaised?.toLocaleString(),     sub:`${generalIssuesData.resolutionRate}% resolved`,         accent:C.accent, icon:Settings },
+              ].map(k=><KpiCard key={k.label} {...k} />)}
+            </div>
+
+            {/* Combined chart */}
+            <Card>
+              <CardHead title="Monthly Trends — All Categories" />
+              <ResponsiveContainer width="100%" height={360}>
                 <ComposedChart data={combinedMonthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="month" tick={{fontSize:12,fill:'#94a3b8'}} axisLine={false} tickLine={false} />
-                  <YAxis yAxisId="left" tick={{fontSize:12,fill:'#94a3b8'}} axisLine={false} tickLine={false} />
-                  <YAxis yAxisId="right" orientation="right" tick={{fontSize:12,fill:'#94a3b8'}} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={styles.tooltip} />
-                  <Legend />
-                  <Bar yAxisId="left" dataKey="alerts" fill="#ef4444" name="Alerts" radius={[4,4,0,0]} />
-                  <Bar yAxisId="left" dataKey="misalignments" fill="#f97316" name="Misalignments" radius={[4,4,0,0]} />
-                  <Line yAxisId="right" type="monotone" dataKey="videos" stroke="#8b5cf6" strokeWidth={2.5} dot={false} name="Videos" />
-                  <Line yAxisId="right" type="monotone" dataKey="issues" stroke="#10b981" strokeWidth={2.5} dot={false} name="Issues" />
+                  <CartesianGrid {...gridProps} />
+                  <XAxis dataKey="month" tick={axisStyle} axisLine={false} tickLine={false} />
+                  <YAxis yAxisId="left" tick={axisStyle} axisLine={false} tickLine={false} />
+                  <YAxis yAxisId="right" orientation="right" tick={axisStyle} axisLine={false} tickLine={false} />
+                  <Tooltip content={<DarkTooltip />} />
+                  <Legend wrapperStyle={{ color:C.textSec, fontSize:12 }} />
+                  <Bar yAxisId="left" dataKey="alerts" fill={C.red} name="Alerts" radius={[4,4,0,0]} />
+                  <Bar yAxisId="left" dataKey="misalignments" fill={C.orange} name="Misalignments" radius={[4,4,0,0]} />
+                  <Line yAxisId="right" type="monotone" dataKey="videos" stroke={C.purple} strokeWidth={2.5} dot={false} name="Videos" />
+                  <Line yAxisId="right" type="monotone" dataKey="issues" stroke={C.accent} strokeWidth={2.5} dot={false} name="Issues" />
                 </ComposedChart>
               </ResponsiveContainer>
-            </div>
+            </Card>
 
             {/* Bottom 2-col */}
-            <div style={styles.twoCol}>
-              <div style={styles.card}>
-                <div style={styles.cardHead}><span style={styles.cardTitle}>Performance Summary</span></div>
-                <div style={{display:'flex',flexDirection:'column',gap:12}}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <Card>
+                <CardHead title="Performance Summary" />
+                <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
                   {[
-                    { label:'Video Delivery',   sub:`Avg: ${formatHours(historicalVideoData.avgDeliveryTime)}`,  val:`${historicalVideoData.overallDeliveryRate}%`, color:'#8b5cf6', bg:'#f5f3ff' },
-                    { label:'Issue Resolution', sub:`Avg: ${generalIssuesData.avgResolutionTime}`,               val:`${generalIssuesData.resolutionRate}%`,         color:'#10b981', bg:'#f0fdf4' },
-                    { label:'Misalignment',     sub:`Monthly avg: ${misalignmentData.avgRaisedPerMonth?.toFixed(1)}`, val:`${misalignmentData.rectificationRate}%`, color:'#f97316', bg:'#fff7ed' },
+                    { label:'Video Delivery',   sub:`Avg: ${formatHours(historicalVideoData.avgDeliveryTime)}`, val:`${historicalVideoData.overallDeliveryRate}%`,  color:C.purple },
+                    { label:'Issue Resolution', sub:`Avg: ${generalIssuesData.avgResolutionTime}`,              val:`${generalIssuesData.resolutionRate}%`,          color:C.accent },
+                    { label:'Misalignment Fix', sub:`Monthly avg: ${misalignmentData.avgRaisedPerMonth?.toFixed(1)}`, val:`${misalignmentData.rectificationRate}%`, color:C.orange },
                   ].map(p=>(
-                    <div key={p.label} style={{...styles.perfRow, background:p.bg}}>
+                    <div key={p.label} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 16px', borderRadius:10, background:C.surface, border:`1px solid ${C.border}` }}>
                       <div>
-                        <div style={styles.perfLabel}>{p.label}</div>
-                        <div style={styles.perfSub}>{p.sub}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:C.textPrimary }}>{p.label}</div>
+                        <div style={{ fontSize:11, color:C.textMuted, marginTop:2 }}>{p.sub}</div>
                       </div>
-                      <div style={{...styles.perfVal, color:p.color}}>{p.val}</div>
+                      <div style={{ fontSize:24, fontWeight:900, color:p.color }}>{p.val}</div>
                     </div>
                   ))}
                 </div>
-              </div>
+              </Card>
 
-              <div style={styles.card}>
-                <div style={styles.cardHead}><span style={styles.cardTitle}>Device Health</span></div>
-                <div style={{display:'flex',flexDirection:'column',gap:12}}>
-                  <div style={{...styles.perfRow,background:'#eff6ff'}}>
-                    <div style={{display:'flex',alignItems:'center',gap:10}}>
-                      <Cpu size={28} color="#3b82f6" />
+              <Card>
+                <CardHead title="Device Health" />
+                <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 16px', borderRadius:10, background:C.surface, border:`1px solid ${C.borderAccent}` }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                      <Cpu size={26} color={C.accent} />
                       <div>
-                        <div style={styles.perfLabel}>Total Deployed</div>
-                        <div style={styles.perfSub}>Active devices</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:C.textPrimary }}>Total Deployed</div>
+                        <div style={{ fontSize:11, color:C.textMuted }}>Active devices</div>
                       </div>
                     </div>
-                    <div style={{...styles.perfVal,color:'#3b82f6'}}>{deviceMovementData.deployedCount?.toLocaleString()}</div>
+                    <div style={{ fontSize:26, fontWeight:900, color:C.accent }}>{deviceMovementData.deployedCount?.toLocaleString()}</div>
                   </div>
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
                     {[
-                      { label:'Available', val:deviceMovementData.availableCount,   bg:'#fef3c7',color:'#92400e' },
-                      { label:'In Repair', val:deviceMovementData.underRepairCount, bg:'#ffedd5',color:'#9a3412' },
-                      { label:'Damaged',   val:deviceMovementData.damagedCount,     bg:'#fee2e2',color:'#991b1b' },
+                      { label:'Available', val:deviceMovementData.availableCount,    color:C.yellow },
+                      { label:'In Repair', val:deviceMovementData.underRepairCount,  color:C.orange },
+                      { label:'Damaged',   val:deviceMovementData.damagedCount,      color:C.red },
                     ].map(d=>(
-                      <div key={d.label} style={{background:d.bg,borderRadius:10,padding:'14px 10px',textAlign:'center'}}>
-                        <div style={{fontSize:24,fontWeight:800,color:d.color}}>{d.val}</div>
-                        <div style={{fontSize:11,color:d.color,fontWeight:600,marginTop:2}}>{d.label}</div>
+                      <div key={d.label} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'14px 10px', textAlign:'center' }}>
+                        <div style={{ fontSize:22, fontWeight:800, color:d.color }}>{d.val}</div>
+                        <div style={{ fontSize:11, color:C.textMuted, fontWeight:600, marginTop:4 }}>{d.label}</div>
                       </div>
                     ))}
                   </div>
                 </div>
-              </div>
+              </Card>
             </div>
           </div>
         )}
 
-        {/* ════════════ ALERTS ════════════ */}
+        {/* ════ ALERTS ════ */}
         {activeTab==='alerts' && (
-          <div style={styles.section}>
-            <div style={styles.kpiGrid}>
-              {[
-                { label:'Total Alerts',  val:alertData.totalCount?.toLocaleString(),                                       sub:'All alerts',     accent:'#ef4444', icon:AlertTriangle },
-                { label:'Monthly Avg',   val:alertData.avgPerMonth?.toFixed(1),                                            sub:'Per month',      accent:'#3b82f6', icon:TrendingUp },
-                { label:'Active Clients',val:alertData.uniqueClients,                                                      sub:'Unique clients', accent:'#10b981', icon:Users },
-                { label:'Latest Month',  val:alertData.monthlyData?.[alertData.monthlyData.length-1]?.total,               sub:alertData.monthlyData?.[alertData.monthlyData.length-1]?.month||'N/A', accent:'#8b5cf6', icon:Calendar },
-              ].map(k=>{
-                const Icon=k.icon
-                return(
-                  <div key={k.label} style={{...styles.kpiCard,borderTop:`3px solid ${k.accent}`}}>
-                    <div style={{...styles.kpiIcon,background:`${k.accent}18`}}><Icon size={22} color={k.accent}/></div>
-                    <div style={styles.kpiVal}>{k.val}</div>
-                    <div style={styles.kpiSub}>{k.sub}</div>
-                    <div style={styles.kpiLabel}>{k.label}</div>
-                  </div>
-                )
-              })}
+          <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+            <div>
+              <SectionLabel>Monitoring · Alerts</SectionLabel>
+              <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
+                L2 Alert <span style={{ color:C.accentBright, fontStyle:'italic' }}>Tracking</span>
+              </h1>
             </div>
-            <div style={styles.twoCol}>
-              <div style={styles.card}>
-                <div style={styles.cardHead}><span style={styles.cardTitle}>Monthly Trends</span></div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
+              {[
+                { label:'Total Alerts',  val:alertData.totalCount?.toLocaleString(),                               sub:'All time',       accent:C.red,    icon:AlertTriangle },
+                { label:'Monthly Avg',   val:alertData.avgPerMonth?.toFixed(1),                                    sub:'Per month',      accent:C.blue,   icon:TrendingUp },
+                { label:'Active Clients',val:alertData.uniqueClients,                                              sub:'Unique clients', accent:C.accent, icon:Users },
+                { label:'Latest Month',  val:alertData.monthlyData?.[alertData.monthlyData.length-1]?.total,       sub:alertData.monthlyData?.[alertData.monthlyData.length-1]?.month||'N/A', accent:C.purple, icon:Calendar },
+              ].map(k=><KpiCard key={k.label} {...k} />)}
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <Card>
+                <CardHead title="Monthly Trends" />
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={alertData.monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="month" tick={{fontSize:11,fill:'#94a3b8'}} axisLine={false} tickLine={false}/>
-                    <YAxis tick={{fontSize:11,fill:'#94a3b8'}} axisLine={false} tickLine={false}/>
-                    <Tooltip contentStyle={styles.tooltip}/>
-                    <Legend/>
-                    <Bar dataKey="total" fill="#ef4444" name="Alerts" radius={[4,4,0,0]}/>
-                    <Bar dataKey="clients" fill="#10b981" name="Clients" radius={[4,4,0,0]}/>
+                    <CartesianGrid {...gridProps} />
+                    <XAxis dataKey="month" tick={axisStyle} axisLine={false} tickLine={false} />
+                    <YAxis tick={axisStyle} axisLine={false} tickLine={false} />
+                    <Tooltip content={<DarkTooltip />} />
+                    <Legend wrapperStyle={{ color:C.textSec, fontSize:12 }} />
+                    <Bar dataKey="total" fill={C.red} name="Alerts" radius={[4,4,0,0]} />
+                    <Bar dataKey="clients" fill={C.accent} name="Clients" radius={[4,4,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
-              </div>
-              <div style={styles.card}>
-                <div style={styles.cardHead}>
-                  <span style={styles.cardTitle}>Client Distribution</span>
-                  <div style={styles.filterBox}>
-                    <Filter size={14} color="#94a3b8"/>
-                    <input style={styles.filterInput} placeholder="Search client…" value={alertsFilter} onChange={e=>setAlertsFilter(e.target.value)}/>
-                  </div>
-                </div>
-                <div style={styles.tableWrap}>
-                  <table style={styles.table}>
-                    <thead><tr style={styles.thead}>
-                      <th style={styles.th}>Client</th>
-                      <th style={{...styles.th,textAlign:'center'}}>Count</th>
-                      <th style={{...styles.th,textAlign:'center'}}>%</th>
-                    </tr></thead>
+              </Card>
+              <Card>
+                <CardHead title="Client Distribution" right={<SearchBox value={alertsFilter} onChange={e=>setAlertsFilter(e.target.value)} />} />
+                <div style={{ maxHeight:300, overflowY:'auto' }}>
+                  <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                    <thead><tr><Th>Client</Th><Th center>Count</Th><Th center>Share</Th></tr></thead>
                     <tbody>
                       {filterAlerts().map((c,i)=>(
-                        <tr key={i} style={styles.tr}>
-                          <td style={styles.td}>{c.client}</td>
-                          <td style={{...styles.td,textAlign:'center',fontWeight:700}}>{c.count}</td>
-                          <td style={{...styles.td,textAlign:'center'}}><span style={styles.badge}>{c.percentage}%</span></td>
-                        </tr>
+                        <Tr key={i}><Td>{c.client}</Td><Td center style={{ fontWeight:700, color:C.textPrimary }}>{c.count}</Td><Td center>{ratePill(c.percentage,30,15)}</Td></Tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </div>
+              </Card>
             </div>
           </div>
         )}
 
-        {/* ════════════ MISALIGNMENT ════════════ */}
+        {/* ════ MISALIGNMENT ════ */}
         {activeTab==='misalignment' && (
-          <div style={styles.section}>
-            <div style={{...styles.kpiGrid, gridTemplateColumns:'repeat(5,1fr)'}}>
-              {[
-                { label:'Total Raised', val:misalignmentData.totalRaised?.toLocaleString(), sub:'Raised',     accent:'#ef4444', icon:AlertTriangle },
-                { label:'Total Fixed',  val:misalignmentData.totalRectified?.toLocaleString(), sub:'Rectified', accent:'#10b981', icon:CheckCircle2 },
-                { label:'Fix Rate',     val:`${misalignmentData.rectificationRate||0}%`,     sub:'Success',    accent:'#3b82f6', icon:TrendingUp },
-                { label:'Monthly Avg',  val:misalignmentData.avgRaisedPerMonth?.toFixed(1),  sub:'Per month',  accent:'#f97316', icon:Calendar },
-                { label:'Clients',      val:misalignmentData.uniqueClients,                  sub:'Affected',   accent:'#8b5cf6', icon:Users },
-              ].map(k=>{ const Icon=k.icon; return(
-                <div key={k.label} style={{...styles.kpiCard,borderTop:`3px solid ${k.accent}`}}>
-                  <div style={{...styles.kpiIcon,background:`${k.accent}18`}}><Icon size={20} color={k.accent}/></div>
-                  <div style={styles.kpiVal}>{k.val}</div>
-                  <div style={styles.kpiSub}>{k.sub}</div>
-                  <div style={styles.kpiLabel}>{k.label}</div>
-                </div>
-              )})}
+          <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+            <div>
+              <SectionLabel>Operations · Misalignment</SectionLabel>
+              <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
+                Misalignment <span style={{ color:C.accentBright, fontStyle:'italic' }}>Analysis</span>
+              </h1>
             </div>
-            <div style={styles.twoCol}>
-              <div style={styles.card}>
-                <div style={styles.cardHead}><span style={styles.cardTitle}>Monthly Trends</span></div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:14 }}>
+              {[
+                { label:'Total Raised', val:misalignmentData.totalRaised?.toLocaleString(),      sub:'Raised',     accent:C.red,    icon:AlertTriangle },
+                { label:'Total Fixed',  val:misalignmentData.totalRectified?.toLocaleString(),   sub:'Rectified',  accent:C.accent, icon:CheckCircle2 },
+                { label:'Fix Rate',     val:`${misalignmentData.rectificationRate||0}%`,         sub:'Success',    accent:C.blue,   icon:TrendingUp },
+                { label:'Monthly Avg',  val:misalignmentData.avgRaisedPerMonth?.toFixed(1),      sub:'Per month',  accent:C.orange, icon:Calendar },
+                { label:'Clients',      val:misalignmentData.uniqueClients,                      sub:'Affected',   accent:C.purple, icon:Users },
+              ].map(k=><KpiCard key={k.label} {...k} />)}
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <Card>
+                <CardHead title="Monthly Trends" />
                 <ResponsiveContainer width="100%" height={280}>
                   <ComposedChart data={misalignmentData.monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9"/>
-                    <XAxis dataKey="month" tick={{fontSize:11,fill:'#94a3b8'}} axisLine={false} tickLine={false}/>
-                    <YAxis yAxisId="left" tick={{fontSize:11,fill:'#94a3b8'}} axisLine={false} tickLine={false}/>
-                    <YAxis yAxisId="right" orientation="right" tick={{fontSize:11,fill:'#94a3b8'}} axisLine={false} tickLine={false}/>
-                    <Tooltip contentStyle={styles.tooltip}/>
-                    <Legend/>
-                    <Bar yAxisId="left" dataKey="raised" fill="#ef4444" name="Raised" radius={[4,4,0,0]}/>
-                    <Bar yAxisId="left" dataKey="rectified" fill="#10b981" name="Fixed" radius={[4,4,0,0]}/>
-                    <Line yAxisId="right" type="monotone" dataKey="clients" stroke="#8b5cf6" strokeWidth={2.5} dot={false} name="Clients"/>
+                    <CartesianGrid {...gridProps} />
+                    <XAxis dataKey="month" tick={axisStyle} axisLine={false} tickLine={false} />
+                    <YAxis yAxisId="left" tick={axisStyle} axisLine={false} tickLine={false} />
+                    <YAxis yAxisId="right" orientation="right" tick={axisStyle} axisLine={false} tickLine={false} />
+                    <Tooltip content={<DarkTooltip />} />
+                    <Legend wrapperStyle={{ color:C.textSec, fontSize:12 }} />
+                    <Bar yAxisId="left" dataKey="raised" fill={C.red} name="Raised" radius={[4,4,0,0]} />
+                    <Bar yAxisId="left" dataKey="rectified" fill={C.accent} name="Fixed" radius={[4,4,0,0]} />
+                    <Line yAxisId="right" type="monotone" dataKey="clients" stroke={C.purple} strokeWidth={2.5} dot={false} name="Clients" />
                   </ComposedChart>
                 </ResponsiveContainer>
-              </div>
-              <div style={styles.card}>
-                <div style={styles.cardHead}>
-                  <span style={styles.cardTitle}>Client Performance</span>
-                  <div style={styles.filterBox}>
-                    <Filter size={14} color="#94a3b8"/>
-                    <input style={styles.filterInput} placeholder="Search…" value={misalignmentFilter} onChange={e=>setMisalignmentFilter(e.target.value)}/>
-                  </div>
-                </div>
-                <div style={styles.tableWrap}>
-                  <table style={styles.table}>
-                    <thead><tr style={styles.thead}>
-                      <th style={styles.th}>Client</th>
-                      <th style={{...styles.th,textAlign:'center'}}>Raised</th>
-                      <th style={{...styles.th,textAlign:'center'}}>Fixed</th>
-                      <th style={{...styles.th,textAlign:'center'}}>Rate</th>
-                      <th style={{...styles.th,textAlign:'center'}}>Share</th>
-                    </tr></thead>
+              </Card>
+              <Card>
+                <CardHead title="Client Performance" right={<SearchBox value={misalignmentFilter} onChange={e=>setMisalignmentFilter(e.target.value)} />} />
+                <div style={{ maxHeight:300, overflowY:'auto' }}>
+                  <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                    <thead><tr><Th>Client</Th><Th center>Raised</Th><Th center>Fixed</Th><Th center>Rate</Th><Th center>Share</Th></tr></thead>
                     <tbody>
                       {filterMisalign().map((c,i)=>(
-                        <tr key={i} style={styles.tr}>
-                          <td style={{...styles.td,fontSize:11}}>{c.client}</td>
-                          <td style={{...styles.td,textAlign:'center'}}>{c.raised}</td>
-                          <td style={{...styles.td,textAlign:'center'}}>{c.rectified}</td>
-                          <td style={{...styles.td,textAlign:'center'}}>
-                            <span style={{...styles.pill, background: c.rectificationRate>70?'#dcfce7':c.rectificationRate>40?'#fef9c3':'#fee2e2', color: c.rectificationRate>70?'#166534':c.rectificationRate>40?'#854d0e':'#991b1b'}}>{c.rectificationRate}%</span>
-                          </td>
-                          <td style={{...styles.td,textAlign:'center'}}>{c.percentage}%</td>
-                        </tr>
+                        <Tr key={i}>
+                          <Td style={{ fontSize:11 }}>{c.client}</Td>
+                          <Td center>{c.raised}</Td>
+                          <Td center>{c.rectified}</Td>
+                          <Td center>{ratePill(c.rectificationRate)}</Td>
+                          <Td center style={{ color:C.textMuted }}>{c.percentage}%</Td>
+                        </Tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </div>
+              </Card>
             </div>
           </div>
         )}
 
-        {/* ════════════ VIDEOS ════════════ */}
+        {/* ════ VIDEOS ════ */}
         {activeTab==='videos' && (
-          <div style={styles.section}>
-
-            {/* KPI row */}
-            <div style={{...styles.kpiGrid, gridTemplateColumns:'repeat(5,1fr)'}}>
-              {[
-                { label:'Requests',  val:historicalVideoData.totalRequests?.toLocaleString(),   sub:'Total',    accent:'#8b5cf6', icon:Video },
-                { label:'Delivered', val:historicalVideoData.totalDelivered?.toLocaleString(),  sub:`${historicalVideoData.overallDeliveryRate}%`, accent:'#10b981', icon:CheckCircle2 },
-                { label:'Avg Time',  val:formatHours(historicalVideoData.avgDeliveryTime),      sub:'Delivery', accent:'#3b82f6', icon:Clock },
-                { label:'Fastest',   val:formatHours(historicalVideoData.fastestDeliveryTime),  sub:'Best',     accent:'#059669', icon:TrendingUp },
-                { label:'Slowest',   val:formatHours(historicalVideoData.slowestDeliveryTime),  sub:'Worst',    accent:'#dc2626', icon:XCircle },
-              ].map(k=>{ const Icon=k.icon; return(
-                <div key={k.label} style={{...styles.kpiCard,borderTop:`3px solid ${k.accent}`}}>
-                  <div style={{...styles.kpiIcon,background:`${k.accent}18`}}><Icon size={20} color={k.accent}/></div>
-                  <div style={styles.kpiVal}>{k.val}</div>
-                  <div style={styles.kpiSub}>{k.sub}</div>
-                  <div style={styles.kpiLabel}>{k.label}</div>
-                </div>
-              )})}
+          <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+            <div>
+              <SectionLabel>Operations · Video Requests</SectionLabel>
+              <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
+                Video Delivery <span style={{ color:C.accentBright, fontStyle:'italic' }}>Performance</span>
+              </h1>
             </div>
-
-            {/* Charts */}
-            <div style={styles.twoCol}>
-              <div style={styles.card}>
-                <div style={styles.cardHead}><span style={styles.cardTitle}>Monthly Trends</span></div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:14 }}>
+              {[
+                { label:'Requests',  val:historicalVideoData.totalRequests?.toLocaleString(),   sub:'Total',     accent:C.purple, icon:Video },
+                { label:'Delivered', val:historicalVideoData.totalDelivered?.toLocaleString(),  sub:`${historicalVideoData.overallDeliveryRate}%`, accent:C.accent, icon:CheckCircle2 },
+                { label:'Avg Time',  val:formatHours(historicalVideoData.avgDeliveryTime),      sub:'Delivery',  accent:C.blue,   icon:Clock },
+                { label:'Fastest',   val:formatHours(historicalVideoData.fastestDeliveryTime),  sub:'Best',      accent:C.accentBright, icon:TrendingUp },
+                { label:'Slowest',   val:formatHours(historicalVideoData.slowestDeliveryTime),  sub:'Worst',     accent:C.red,    icon:XCircle },
+              ].map(k=><KpiCard key={k.label} {...k} />)}
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <Card>
+                <CardHead title="Monthly Trends" />
                 <ResponsiveContainer width="100%" height={280}>
                   <ComposedChart data={historicalVideoData.monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9"/>
-                    <XAxis dataKey="month" tick={{fontSize:11,fill:'#94a3b8'}} axisLine={false} tickLine={false}/>
-                    <YAxis yAxisId="left" tick={{fontSize:11,fill:'#94a3b8'}} axisLine={false} tickLine={false}/>
-                    <YAxis yAxisId="right" orientation="right" tick={{fontSize:11,fill:'#94a3b8'}} axisLine={false} tickLine={false}/>
-                    <Tooltip contentStyle={styles.tooltip}/>
-                    <Legend/>
-                    <Bar yAxisId="left" dataKey="requests" fill="#8b5cf6" name="Requests" radius={[4,4,0,0]}/>
-                    <Bar yAxisId="left" dataKey="delivered" fill="#10b981" name="Delivered" radius={[4,4,0,0]}/>
-                    <Line yAxisId="right" type="monotone" dataKey="avgDeliveryTime" stroke="#f59e0b" strokeWidth={2.5} dot={false} name="Avg(h)"/>
+                    <CartesianGrid {...gridProps} />
+                    <XAxis dataKey="month" tick={axisStyle} axisLine={false} tickLine={false} />
+                    <YAxis yAxisId="left" tick={axisStyle} axisLine={false} tickLine={false} />
+                    <YAxis yAxisId="right" orientation="right" tick={axisStyle} axisLine={false} tickLine={false} />
+                    <Tooltip content={<DarkTooltip />} />
+                    <Legend wrapperStyle={{ color:C.textSec, fontSize:12 }} />
+                    <Bar yAxisId="left" dataKey="requests" fill={C.purple} name="Requests" radius={[4,4,0,0]} />
+                    <Bar yAxisId="left" dataKey="delivered" fill={C.accent} name="Delivered" radius={[4,4,0,0]} />
+                    <Line yAxisId="right" type="monotone" dataKey="avgDeliveryTime" stroke={C.yellow} strokeWidth={2.5} dot={false} name="Avg(h)" />
                   </ComposedChart>
                 </ResponsiveContainer>
-              </div>
-              <div style={styles.card}>
-                <div style={styles.cardHead}>
-                  <span style={styles.cardTitle}>Client Performance</span>
-                  <div style={styles.filterBox}>
-                    <Filter size={14} color="#94a3b8"/>
-                    <input style={styles.filterInput} placeholder="Search…" value={videosFilter} onChange={e=>setVideosFilter(e.target.value)}/>
-                  </div>
-                </div>
-                <div style={styles.tableWrap}>
-                  <table style={styles.table}>
-                    <thead><tr style={styles.thead}>
-                      <th style={styles.th}>Client</th>
-                      <th style={{...styles.th,textAlign:'center'}}>Req</th>
-                      <th style={{...styles.th,textAlign:'center'}}>Del</th>
-                      <th style={{...styles.th,textAlign:'center'}}>Rate</th>
-                      <th style={{...styles.th,textAlign:'center'}}>Avg(h)</th>
-                    </tr></thead>
+              </Card>
+              <Card>
+                <CardHead title="Client Performance" right={<SearchBox value={videosFilter} onChange={e=>setVideosFilter(e.target.value)} />} />
+                <div style={{ maxHeight:300, overflowY:'auto' }}>
+                  <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                    <thead><tr><Th>Client</Th><Th center>Req</Th><Th center>Del</Th><Th center>Rate</Th><Th center>Avg(h)</Th></tr></thead>
                     <tbody>
                       {filterVideoCli().map((c,i)=>(
-                        <tr key={i} style={styles.tr}>
-                          <td style={{...styles.td,fontSize:11}}>{c.client}</td>
-                          <td style={{...styles.td,textAlign:'center'}}>{c.requests}</td>
-                          <td style={{...styles.td,textAlign:'center'}}>{c.delivered}</td>
-                          <td style={{...styles.td,textAlign:'center'}}>
-                            <span style={{...styles.pill, background:c.deliveryRate>80?'#dcfce7':c.deliveryRate>60?'#fef9c3':'#fee2e2', color:c.deliveryRate>80?'#166534':c.deliveryRate>60?'#854d0e':'#991b1b'}}>{c.deliveryRate}%</span>
-                          </td>
-                          <td style={{...styles.td,textAlign:'center'}}>{c.avgDeliveryTime}</td>
-                        </tr>
+                        <Tr key={i}>
+                          <Td style={{ fontSize:11 }}>{c.client}</Td>
+                          <Td center>{c.requests}</Td>
+                          <Td center>{c.delivered}</Td>
+                          <Td center>{ratePill(c.deliveryRate)}</Td>
+                          <Td center style={{ color:C.textMuted }}>{c.avgDeliveryTime}</Td>
+                        </Tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </div>
+              </Card>
             </div>
 
-            {/* ── BEAUTIFUL TOGGLE SECTION ── */}
-            <div style={styles.card}>
-              {/* Header with toggle */}
-              <div style={styles.videoTableHeader}>
+            {/* Video rows toggle table */}
+            <Card>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, flexWrap:'wrap', gap:14 }}>
                 <div>
-                  <h3 style={styles.cardTitle}>All Video Requests</h3>
-                  <p style={styles.videoSubtitle}>
-                    <span style={{color:'#10b981',fontWeight:700}}>{historicalVideoData.totalDelivered} delivered</span>
-                    <span style={{color:'#cbd5e1',margin:'0 8px'}}>·</span>
-                    <span style={{color:'#ef4444',fontWeight:700}}>{notDelivered} pending</span>
-                  </p>
+                  <div style={{ fontSize:14, fontWeight:700, color:C.textPrimary }}>All Video Requests</div>
+                  <div style={{ fontSize:12, color:C.textMuted, marginTop:3 }}>
+                    <span style={{ color:C.accentBright, fontWeight:700 }}>{historicalVideoData.totalDelivered} delivered</span>
+                    <span style={{ color:C.border, margin:'0 8px' }}>·</span>
+                    <span style={{ color:C.red, fontWeight:700 }}>{notDelivered} pending</span>
+                  </div>
                 </div>
-
-                {/* Toggle buttons */}
-                <div style={styles.toggleGroup}>
+                <div style={{ display:'flex', gap:8 }}>
                   {[
-                    { id:'all',           label:'All',           count: historicalVideoData.totalRequests,    emoji:'📋' },
-                    { id:'delivered',     label:'Delivered',     count: historicalVideoData.totalDelivered,   emoji:'✅' },
-                    { id:'not_delivered', label:'Not Delivered', count: notDelivered,                         emoji:'⏳' },
+                    { id:'all',           label:'All',           count:historicalVideoData.totalRequests,  emoji:'📋', color:C.blue   },
+                    { id:'delivered',     label:'Delivered',     count:historicalVideoData.totalDelivered, emoji:'✅', color:C.accent },
+                    { id:'not_delivered', label:'Not Delivered', count:notDelivered,                       emoji:'⏳', color:C.red    },
                   ].map(btn=>{
                     const active = videoViewMode===btn.id
-                    const accentMap = { all:'#3b82f6', delivered:'#10b981', not_delivered:'#ef4444' }
-                    const accent = accentMap[btn.id]
                     return (
-                      <button
-                        key={btn.id}
-                        onClick={()=>setVideoViewMode(btn.id)}
-                        style={{
-                          ...styles.toggleBtn,
-                          ...(active ? {
-                            background: accent,
-                            color: '#fff',
-                            boxShadow: `0 4px 14px ${accent}55`,
-                            transform: 'translateY(-1px)',
-                          } : {
-                            background: '#f8fafc',
-                            color: '#64748b',
-                            border: `1.5px solid #e2e8f0`,
-                          })
-                        }}
-                      >
-                        <span style={{fontSize:16}}>{btn.emoji}</span>
-                        <span style={{fontWeight:700}}>{btn.label}</span>
-                        <span style={{
-                          background: active ? 'rgba(255,255,255,0.25)' : '#e2e8f0',
-                          color: active ? '#fff' : '#64748b',
-                          borderRadius: 20,
-                          padding: '2px 8px',
-                          fontSize: 12,
-                          fontWeight: 800,
-                        }}>
-                          {btn.count}
-                        </span>
+                      <button key={btn.id} onClick={()=>setVideoViewMode(btn.id)} style={{
+                        display:'flex', alignItems:'center', gap:8, padding:'8px 14px',
+                        borderRadius:10, fontSize:13, fontWeight:700, border:'none', cursor:'pointer',
+                        background: active ? btn.color : C.surface,
+                        color: active ? '#fff' : C.textSec,
+                        boxShadow: active ? `0 4px 14px ${btn.color}44` : 'none',
+                        transition:'all 0.18s',
+                      }}>
+                        <span style={{ fontSize:16 }}>{btn.emoji}</span>
+                        <span style={{ fontWeight:700 }}>{btn.label}</span>
+                        <span style={{ background:'rgba(255,255,255,0.2)', borderRadius:20, padding:'1px 7px', fontSize:11 }}>{btn.count}</span>
                       </button>
                     )
                   })}
                 </div>
-
-                {/* Search */}
-                <div style={styles.filterBox}>
-                  <Filter size={14} color="#94a3b8"/>
-                  <input
-                    style={{...styles.filterInput, width:200}}
-                    placeholder="Search client, vehicle…"
-                    value={videoRowsFilter}
-                    onChange={e=>setVideoRowsFilter(e.target.value)}
-                  />
-                </div>
+                <SearchBox value={videoRowsFilter} onChange={e=>setVideoRowsFilter(e.target.value)} placeholder="Search client, vehicle…" />
               </div>
 
-              {/* Status bar - only show when mode selected */}
+              {/* Progress bar */}
               {videoViewMode && (
-                <div style={styles.statusBar}>
-                  <div style={{...styles.statusSegment, flex:historicalVideoData.totalDelivered, background:'#10b981'}} title={`Delivered: ${historicalVideoData.totalDelivered}`}/>
-                  <div style={{...styles.statusSegment, flex:notDelivered, background:'#ef4444'}} title={`Not Delivered: ${notDelivered}`}/>
+                <div style={{ display:'flex', height:3, borderRadius:3, overflow:'hidden', marginBottom:16, background:C.surface }}>
+                  <div style={{ flex:historicalVideoData.totalDelivered, background:C.accent }} />
+                  <div style={{ flex:notDelivered, background:C.red }} />
                 </div>
               )}
 
-              {/* Table */}
               {!videoViewMode ? (
-                <div style={{textAlign:'center',padding:'60px 0',color:'#94a3b8'}}>
-                  <div style={{fontSize:40,marginBottom:12}}>☝️</div>
-                  <div style={{fontSize:16,fontWeight:700,color:'#475569',marginBottom:6}}>Select a filter to view records</div>
-                  <div style={{fontSize:13}}>Click All, Delivered, or Not Delivered above</div>
+                <div style={{ textAlign:'center', padding:'48px 0', color:C.textMuted }}>
+                  <div style={{ fontSize:32, marginBottom:12 }}>☝️</div>
+                  <div style={{ fontSize:15, fontWeight:700, color:C.textSec, marginBottom:6 }}>Select a filter to view records</div>
+                  <div style={{ fontSize:13 }}>Click All, Delivered, or Pending above</div>
                 </div>
               ) : (
-              <div style={{overflowX:'auto'}}>
-                <div style={{maxHeight:520,overflowY:'auto'}}>
-                  <table style={{...styles.table,minWidth:1000}}>
-                    <thead>
-                      <tr style={styles.thead}>
-                        <th style={styles.th}>#</th>
-                        <th style={styles.th}>Status</th>
-                        <th style={styles.th}>Clients</th>
-                        <th style={styles.th}>Timestamp Issues Raised</th>
-                        <th style={styles.th}>Issue Details</th>
-                        <th style={styles.th}>Vehicle Number</th>
-                        <th style={styles.th}>Raised by</th>
-                        <th style={styles.th}>Date - Current Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filterVideoRows().map((row,i)=>(
-                        <tr key={i} style={{
-                          ...styles.tr,
-                          background: !row.isDelivered ? '#fff5f5' : 'white',
-                        }}>
-                          <td style={{...styles.td,color:'#94a3b8',fontSize:11}}>{i+1}</td>
-                          <td style={styles.td}>
-                            {row.isDelivered
-                              ? <span style={{...styles.pill,background:'#dcfce7',color:'#166534',display:'inline-flex',alignItems:'center',gap:4}}><CheckCircle2 size={11}/>Delivered</span>
-                              : <span style={{...styles.pill,background:'#fee2e2',color:'#991b1b',display:'inline-flex',alignItems:'center',gap:4}}><XCircle size={11}/>Pending</span>
-                            }
-                          </td>
-                          <td style={{...styles.td,fontWeight:600,fontSize:12}}>{row.client}</td>
-                          <td style={{...styles.td,fontSize:11,whiteSpace:'nowrap',color:'#64748b'}}>{row.timestampRaised}</td>
-                          <td style={{...styles.td,fontSize:11,maxWidth:200,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'#64748b'}} title={row.issueDetails}>{row.issueDetails}</td>
-                          <td style={{...styles.td,fontSize:11,fontFamily:'monospace',color:'#475569'}}>{row.vehicleNumber}</td>
-                          <td style={{...styles.td,fontSize:11,color:'#64748b'}}>{row.raisedBy}</td>
-                          <td style={{...styles.td,fontSize:11,whiteSpace:'nowrap',color:'#64748b'}}>{row.currentStatus}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {filterVideoRows().length===0 && (
-                    <div style={{textAlign:'center',padding:'48px 0',color:'#94a3b8'}}>No records found</div>
-                  )}
+                <div style={{ overflowX:'auto' }}>
+                  <div style={{ maxHeight:480, overflowY:'auto' }}>
+                    <table style={{ width:'100%', borderCollapse:'collapse', minWidth:1000 }}>
+                      <thead><tr>
+                        <Th>#</Th><Th>Status</Th><Th>Client</Th><Th>Timestamp Raised</Th>
+                        <Th>Issue Details</Th><Th>Vehicle</Th><Th>Raised By</Th><Th>Current Status</Th>
+                      </tr></thead>
+                      <tbody>
+                        {filterVideoRows().map((row,i)=>(
+                          <Tr key={i} highlight={!row.isDelivered}>
+                            <Td style={{ color:C.textMuted, fontSize:11 }}>{i+1}</Td>
+                            <Td>
+                              {row.isDelivered
+                                ? <Pill bg='rgba(34,197,94,0.15)' color={C.accentBright}>✓ Delivered</Pill>
+                                : <Pill bg='rgba(248,113,113,0.15)' color={C.red}>⏳ Pending</Pill>}
+                            </Td>
+                            <Td style={{ fontWeight:600, fontSize:12 }}>{row.client}</Td>
+                            <Td style={{ fontSize:11, whiteSpace:'nowrap' }}>{row.timestampRaised}</Td>
+                            <Td style={{ fontSize:11, maxWidth:180, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={row.issueDetails}>{row.issueDetails}</Td>
+                            <Td style={{ fontSize:11, fontFamily:'monospace' }}>{row.vehicleNumber}</Td>
+                            <Td style={{ fontSize:11 }}>{row.raisedBy}</Td>
+                            <Td style={{ fontSize:11, whiteSpace:'nowrap' }}>{row.currentStatus}</Td>
+                          </Tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {filterVideoRows().length===0 && (
+                      <div style={{ textAlign:'center', padding:'40px 0', color:C.textMuted }}>No records found</div>
+                    )}
+                  </div>
                 </div>
-              </div>
               )}
-            </div>
+            </Card>
           </div>
         )}
 
-        {/* ════════════ ISSUES ════════════ */}
+        {/* ════ ISSUES ════ */}
         {activeTab==='issues' && (
-          <div style={styles.section}>
-            <div style={{...styles.kpiGrid,gridTemplateColumns:'repeat(5,1fr)'}}>
-              {[
-                { label:'Raised',   val:generalIssuesData.totalRaised?.toLocaleString(),  sub:'Total',     accent:'#ef4444', icon:AlertTriangle },
-                { label:'Resolved', val:generalIssuesData.totalResolved?.toLocaleString(),sub:'Fixed',     accent:'#10b981', icon:CheckCircle2 },
-                { label:'Rate',     val:`${generalIssuesData.resolutionRate}%`,            sub:'Success',   accent:'#3b82f6', icon:Target },
-                { label:'Avg Time', val:generalIssuesData.avgResolutionTime||'0h',         sub:'Resolution',accent:'#8b5cf6', icon:Clock },
-                { label:'Median',   val:generalIssuesData.medianResolutionTime||'0h',      sub:'Typical',   accent:'#f97316', icon:TrendingUp },
-              ].map(k=>{ const Icon=k.icon; return(
-                <div key={k.label} style={{...styles.kpiCard,borderTop:`3px solid ${k.accent}`}}>
-                  <div style={{...styles.kpiIcon,background:`${k.accent}18`}}><Icon size={20} color={k.accent}/></div>
-                  <div style={styles.kpiVal}>{k.val}</div>
-                  <div style={styles.kpiSub}>{k.sub}</div>
-                  <div style={styles.kpiLabel}>{k.label}</div>
-                </div>
-              )})}
+          <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+            <div>
+              <SectionLabel>Support · General Issues</SectionLabel>
+              <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
+                Issue Resolution <span style={{ color:C.accentBright, fontStyle:'italic' }}>Tracker</span>
+              </h1>
             </div>
-            <div style={styles.twoCol}>
-              <div style={styles.card}>
-                <div style={styles.cardHead}><span style={styles.cardTitle}>Monthly Overview</span></div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:14 }}>
+              {[
+                { label:'Raised',   val:generalIssuesData.totalRaised?.toLocaleString(),  sub:'Total',      accent:C.red,    icon:AlertTriangle },
+                { label:'Resolved', val:generalIssuesData.totalResolved?.toLocaleString(),sub:'Fixed',      accent:C.accent, icon:CheckCircle2 },
+                { label:'Rate',     val:`${generalIssuesData.resolutionRate}%`,            sub:'Success',    accent:C.blue,   icon:Target },
+                { label:'Avg Time', val:generalIssuesData.avgResolutionTime||'0h',         sub:'Resolution', accent:C.purple, icon:Clock },
+                { label:'Median',   val:generalIssuesData.medianResolutionTime||'0h',      sub:'Typical',    accent:C.orange, icon:TrendingUp },
+              ].map(k=><KpiCard key={k.label} {...k} />)}
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <Card>
+                <CardHead title="Monthly Overview" />
                 <ResponsiveContainer width="100%" height={280}>
                   <ComposedChart data={generalIssuesData.monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9"/>
-                    <XAxis dataKey="month" tick={{fontSize:11,fill:'#94a3b8'}} axisLine={false} tickLine={false}/>
-                    <YAxis yAxisId="left" tick={{fontSize:11,fill:'#94a3b8'}} axisLine={false} tickLine={false}/>
-                    <YAxis yAxisId="right" orientation="right" tick={{fontSize:11,fill:'#94a3b8'}} axisLine={false} tickLine={false}/>
-                    <Tooltip contentStyle={styles.tooltip}/>
-                    <Legend/>
-                    <Bar yAxisId="left" dataKey="raised" fill="#ef4444" name="Raised" radius={[4,4,0,0]}/>
-                    <Bar yAxisId="left" dataKey="resolved" fill="#10b981" name="Resolved" radius={[4,4,0,0]}/>
-                    <Line yAxisId="right" type="monotone" dataKey="avgTimeHours" stroke="#8b5cf6" strokeWidth={2.5} dot={false} name="Avg(h)"/>
+                    <CartesianGrid {...gridProps} />
+                    <XAxis dataKey="month" tick={axisStyle} axisLine={false} tickLine={false} />
+                    <YAxis yAxisId="left" tick={axisStyle} axisLine={false} tickLine={false} />
+                    <YAxis yAxisId="right" orientation="right" tick={axisStyle} axisLine={false} tickLine={false} />
+                    <Tooltip content={<DarkTooltip />} />
+                    <Legend wrapperStyle={{ color:C.textSec, fontSize:12 }} />
+                    <Bar yAxisId="left" dataKey="raised" fill={C.red} name="Raised" radius={[4,4,0,0]} />
+                    <Bar yAxisId="left" dataKey="resolved" fill={C.accent} name="Resolved" radius={[4,4,0,0]} />
+                    <Line yAxisId="right" type="monotone" dataKey="avgTimeHours" stroke={C.purple} strokeWidth={2.5} dot={false} name="Avg(h)" />
                   </ComposedChart>
                 </ResponsiveContainer>
-              </div>
-              <div style={styles.card}>
-                <div style={styles.cardHead}>
-                  <span style={styles.cardTitle}>Client Performance</span>
-                  <div style={styles.filterBox}>
-                    <Filter size={14} color="#94a3b8"/>
-                    <input style={styles.filterInput} placeholder="Search…" value={issuesFilter} onChange={e=>setIssuesFilter(e.target.value)}/>
-                  </div>
-                </div>
-                <div style={styles.tableWrap}>
-                  <table style={styles.table}>
-                    <thead><tr style={styles.thead}>
-                      <th style={styles.th}>Client</th>
-                      <th style={{...styles.th,textAlign:'center'}}>Raised</th>
-                      <th style={{...styles.th,textAlign:'center'}}>Resolved</th>
-                      <th style={{...styles.th,textAlign:'center'}}>Rate</th>
-                      <th style={{...styles.th,textAlign:'center'}}>Time</th>
-                    </tr></thead>
+              </Card>
+              <Card>
+                <CardHead title="Client Performance" right={<SearchBox value={issuesFilter} onChange={e=>setIssuesFilter(e.target.value)} />} />
+                <div style={{ maxHeight:300, overflowY:'auto' }}>
+                  <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                    <thead><tr><Th>Client</Th><Th center>Raised</Th><Th center>Resolved</Th><Th center>Rate</Th><Th center>Time</Th></tr></thead>
                     <tbody>
                       {filterIssues().map((c,i)=>(
-                        <tr key={i} style={styles.tr}>
-                          <td style={{...styles.td,fontSize:11}}>{c.client}</td>
-                          <td style={{...styles.td,textAlign:'center'}}>{c.raised}</td>
-                          <td style={{...styles.td,textAlign:'center'}}>{c.resolved}</td>
-                          <td style={{...styles.td,textAlign:'center'}}>
-                            <span style={{...styles.pill,background:c.resolutionRate>80?'#dcfce7':c.resolutionRate>60?'#fef9c3':'#fee2e2',color:c.resolutionRate>80?'#166534':c.resolutionRate>60?'#854d0e':'#991b1b'}}>{c.resolutionRate}%</span>
-                          </td>
-                          <td style={{...styles.td,textAlign:'center',fontSize:11}}>{c.avgTime}</td>
-                        </tr>
+                        <Tr key={i}>
+                          <Td style={{ fontSize:11 }}>{c.client}</Td>
+                          <Td center>{c.raised}</Td>
+                          <Td center>{c.resolved}</Td>
+                          <Td center>{ratePill(c.resolutionRate)}</Td>
+                          <Td center style={{ fontSize:11 }}>{c.avgTime}</Td>
+                        </Tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </div>
+              </Card>
             </div>
-            <div style={styles.card}>
-              <div style={styles.cardHead}><span style={styles.cardTitle}>Monthly Analysis</span></div>
-              <div style={{overflowX:'auto'}}>
-                <table style={styles.table}>
-                  <thead><tr style={styles.thead}>
-                    <th style={styles.th}>Month</th>
-                    <th style={{...styles.th,textAlign:'center',color:'#ef4444'}}>Raised</th>
-                    <th style={{...styles.th,textAlign:'center',color:'#10b981'}}>Same Month</th>
-                    <th style={{...styles.th,textAlign:'center',color:'#8b5cf6'}}>Later</th>
-                    <th style={{...styles.th,textAlign:'center',color:'#3b82f6'}}>Carry Fwd</th>
-                    <th style={{...styles.th,textAlign:'center',color:'#f97316'}}>Pending</th>
-                    <th style={{...styles.th,textAlign:'center'}}>Rate%</th>
-                    <th style={{...styles.th,textAlign:'center',color:'#6366f1'}}>Avg Time</th>
+            <Card>
+              <CardHead title="Monthly Analysis" />
+              <div style={{ overflowX:'auto' }}>
+                <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                  <thead><tr>
+                    <Th>Month</Th><Th center>Raised</Th><Th center>Same Month</Th>
+                    <Th center>Later</Th><Th center>Carry Fwd</Th><Th center>Pending</Th>
+                    <Th center>Rate%</Th><Th center>Avg Time</Th>
                   </tr></thead>
                   <tbody>
                     {generalIssuesData.monthlyData?.map((m,i)=>(
-                      <tr key={i} style={styles.tr}>
-                        <td style={{...styles.td,fontWeight:600}}>
-                          {m.month}{m.isCurrentMonth&&<span style={{marginLeft:6,...styles.pill,background:'#dbeafe',color:'#1e40af'}}>NOW</span>}
-                        </td>
-                        <td style={{...styles.td,textAlign:'center'}}><span style={{...styles.pill,background:'#fee2e2',color:'#991b1b'}}>{m.raised}</span></td>
-                        <td style={{...styles.td,textAlign:'center'}}><span style={{...styles.pill,background:'#dcfce7',color:'#166534'}}>{m.resolvedSameMonth}</span></td>
-                        <td style={{...styles.td,textAlign:'center'}}>{m.resolvedLaterMonths>0?<span style={{...styles.pill,background:'#f3e8ff',color:'#6b21a8'}}>{m.resolvedLaterMonths}</span>:'-'}</td>
-                        <td style={{...styles.td,textAlign:'center'}}>{m.carryForwardIn>0?<span style={{...styles.pill,background:'#dbeafe',color:'#1e40af'}}>{m.carryForwardIn}</span>:'-'}</td>
-                        <td style={{...styles.td,textAlign:'center'}}>{m.stillPending>0?<span style={{...styles.pill,background:'#ffedd5',color:'#9a3412'}}>{m.stillPending}</span>:'-'}</td>
-                        <td style={{...styles.td,textAlign:'center'}}>
-                          {m.resolutionRate!==null
-                            ?<span style={{...styles.pill,background:m.resolutionRate>=80?'#dcfce7':m.resolutionRate>=60?'#fef9c3':'#fee2e2',color:m.resolutionRate>=80?'#166534':m.resolutionRate>=60?'#854d0e':'#991b1b'}}>{m.resolutionRate}%</span>
-                            :<span style={{color:'#94a3b8',fontSize:11}}>TBD</span>}
-                        </td>
-                        <td style={{...styles.td,textAlign:'center'}}>{m.avgTime!=='0h'?<span style={{...styles.pill,background:'#e0e7ff',color:'#3730a3'}}>{m.avgTime}</span>:'-'}</td>
-                      </tr>
+                      <Tr key={i}>
+                        <Td style={{ fontWeight:600 }}>
+                          {m.month}
+                          {m.isCurrentMonth && <Pill bg='rgba(34,197,94,0.15)' color={C.accentBright}> NOW</Pill>}
+                        </Td>
+                        <Td center><Pill bg='rgba(248,113,113,0.15)' color={C.red}>{m.raised}</Pill></Td>
+                        <Td center><Pill bg='rgba(34,197,94,0.15)' color={C.accentBright}>{m.resolvedSameMonth}</Pill></Td>
+                        <Td center>{m.resolvedLaterMonths>0?<Pill bg='rgba(167,139,250,0.15)' color={C.purple}>{m.resolvedLaterMonths}</Pill>:'-'}</Td>
+                        <Td center>{m.carryForwardIn>0?<Pill bg='rgba(96,165,250,0.15)' color={C.blue}>{m.carryForwardIn}</Pill>:'-'}</Td>
+                        <Td center>{m.stillPending>0?<Pill bg='rgba(251,146,60,0.15)' color={C.orange}>{m.stillPending}</Pill>:'-'}</Td>
+                        <Td center>{m.resolutionRate!==null ? ratePill(m.resolutionRate) : <span style={{ color:C.textMuted, fontSize:11 }}>TBD</span>}</Td>
+                        <Td center>{m.avgTime!=='0h'?<Pill bg='rgba(167,139,250,0.15)' color={C.purple}>{m.avgTime}</Pill>:'-'}</Td>
+                      </Tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </div>
+            </Card>
           </div>
         )}
 
-        {/* ════════════ DEVICES ════════════ */}
+        {/* ════ DEVICES ════ */}
         {activeTab==='devices' && (
-          <div style={styles.section}>
-            <div style={{...styles.kpiGrid,gridTemplateColumns:'repeat(5,1fr)'}}>
-              {[
-                { label:'Total',    val:deviceMovementData.totalDevices?.toLocaleString(),    sub:'All devices', accent:'#3b82f6', icon:Cpu },
-                { label:'Deployed', val:deviceMovementData.deployedCount?.toLocaleString(),   sub:`${deviceMovementData.deployedPercentage}%`,   accent:'#10b981', icon:CheckCircle2 },
-                { label:'Available',val:deviceMovementData.availableCount?.toLocaleString(),  sub:`${deviceMovementData.availablePercentage}%`,  accent:'#f59e0b', icon:Zap },
-                { label:'Repair',   val:deviceMovementData.underRepairCount?.toLocaleString(),sub:`${deviceMovementData.underRepairPercentage}%`,accent:'#f97316', icon:Settings },
-                { label:'Damaged',  val:deviceMovementData.damagedCount?.toLocaleString(),    sub:`${deviceMovementData.damagedPercentage}%`,    accent:'#ef4444', icon:XCircle },
-              ].map(k=>{ const Icon=k.icon; return(
-                <div key={k.label} style={{...styles.kpiCard,borderTop:`3px solid ${k.accent}`}}>
-                  <div style={{...styles.kpiIcon,background:`${k.accent}18`}}><Icon size={20} color={k.accent}/></div>
-                  <div style={styles.kpiVal}>{k.val}</div>
-                  <div style={styles.kpiSub}>{k.sub}</div>
-                  <div style={styles.kpiLabel}>{k.label}</div>
-                </div>
-              )})}
+          <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+            <div>
+              <SectionLabel>Hardware · Device Movement</SectionLabel>
+              <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
+                Device <span style={{ color:C.accentBright, fontStyle:'italic' }}>Registry</span>
+              </h1>
             </div>
-            <div style={styles.twoCol}>
-              <div style={styles.card}>
-                <div style={styles.cardHead}><span style={styles.cardTitle}>Status Distribution</span></div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:14 }}>
+              {[
+                { label:'Total',    val:deviceMovementData.totalDevices?.toLocaleString(),     sub:'All devices', accent:C.blue,   icon:Cpu },
+                { label:'Deployed', val:deviceMovementData.deployedCount?.toLocaleString(),    sub:`${deviceMovementData.deployedPercentage}%`,    accent:C.accent, icon:CheckCircle2 },
+                { label:'Available',val:deviceMovementData.availableCount?.toLocaleString(),   sub:`${deviceMovementData.availablePercentage}%`,   accent:C.yellow, icon:Zap },
+                { label:'Repair',   val:deviceMovementData.underRepairCount?.toLocaleString(), sub:`${deviceMovementData.underRepairPercentage}%`, accent:C.orange, icon:Settings },
+                { label:'Damaged',  val:deviceMovementData.damagedCount?.toLocaleString(),     sub:`${deviceMovementData.damagedPercentage}%`,     accent:C.red,    icon:XCircle },
+              ].map(k=><KpiCard key={k.label} {...k} />)}
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <Card>
+                <CardHead title="Status Distribution" />
                 <ResponsiveContainer width="100%" height={280}>
                   <PieChart>
                     <Pie data={[
-                      {name:'Deployed',value:deviceMovementData.deployedCount},
+                      {name:'Deployed', value:deviceMovementData.deployedCount},
                       {name:'Available',value:deviceMovementData.availableCount},
-                      {name:'Repair',value:deviceMovementData.underRepairCount},
-                      {name:'Damaged',value:deviceMovementData.damagedCount},
+                      {name:'Repair',   value:deviceMovementData.underRepairCount},
+                      {name:'Damaged',  value:deviceMovementData.damagedCount},
                     ]} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
-                      {['#10b981','#f59e0b','#f97316','#ef4444'].map((c,i)=><Cell key={i} fill={c}/>)}
+                      {[C.accent, C.yellow, C.orange, C.red].map((c,i)=><Cell key={i} fill={c} />)}
                     </Pie>
-                    <Tooltip contentStyle={styles.tooltip}/><Legend/>
+                    <Tooltip content={<DarkTooltip />} />
+                    <Legend wrapperStyle={{ color:C.textSec, fontSize:12 }} />
                   </PieChart>
                 </ResponsiveContainer>
-              </div>
-              <div style={styles.card}>
-                <div style={styles.cardHead}><span style={styles.cardTitle}>Monthly Deployments</span></div>
+              </Card>
+              <Card>
+                <CardHead title="Monthly Deployments" />
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={deviceMovementData.monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9"/>
-                    <XAxis dataKey="month" tick={{fontSize:11,fill:'#94a3b8'}} axisLine={false} tickLine={false}/>
-                    <YAxis tick={{fontSize:11,fill:'#94a3b8'}} axisLine={false} tickLine={false}/>
-                    <Tooltip contentStyle={styles.tooltip}/><Legend/>
-                    <Bar dataKey="deployed" fill="#10b981" name="Deployed" radius={[4,4,0,0]}/>
+                    <CartesianGrid {...gridProps} />
+                    <XAxis dataKey="month" tick={axisStyle} axisLine={false} tickLine={false} />
+                    <YAxis tick={axisStyle} axisLine={false} tickLine={false} />
+                    <Tooltip content={<DarkTooltip />} />
+                    <Legend wrapperStyle={{ color:C.textSec, fontSize:12 }} />
+                    <Bar dataKey="deployed" fill={C.accent} name="Deployed" radius={[4,4,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
-              </div>
+              </Card>
             </div>
-            <div style={styles.card}>
-              <div style={styles.cardHead}>
-                <span style={styles.cardTitle}>Device Registry</span>
-                <div style={styles.filterBox}>
-                  <Filter size={14} color="#94a3b8"/>
-                  <input style={styles.filterInput} placeholder="Search device, status…" value={devicesFilter} onChange={e=>setDevicesFilter(e.target.value)}/>
-                </div>
-              </div>
-              <div style={styles.tableWrap}>
-                <table style={styles.table}>
-                  <thead><tr style={styles.thead}>
-                    <th style={styles.th}>#</th>
-                    <th style={styles.th}>Device ID</th>
-                    <th style={{...styles.th,textAlign:'center'}}>Status</th>
-                    <th style={styles.th}>Vehicle</th>
-                    <th style={styles.th}>Install Date</th>
-                  </tr></thead>
+            <Card>
+              <CardHead title="Device Registry" right={<SearchBox value={devicesFilter} onChange={e=>setDevicesFilter(e.target.value)} placeholder="Search device, status…" />} />
+              <div style={{ maxHeight:380, overflowY:'auto' }}>
+                <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                  <thead><tr><Th>#</Th><Th>Device ID</Th><Th center>Status</Th><Th>Vehicle</Th><Th>Install Date</Th><Th>Return Comment</Th></tr></thead>
                   <tbody>
                     {filterDevices().map((d,i)=>(
-                      <tr key={i} style={styles.tr}>
-                        <td style={{...styles.td,color:'#94a3b8'}}>{i+1}</td>
-                        <td style={{...styles.td,fontSize:11,fontFamily:'monospace'}}>{d.device}</td>
-                        <td style={{...styles.td,textAlign:'center'}}>
-                          <span style={{...styles.pill,
-                            background:d.status==='Deployed'?'#dcfce7':d.status==='Under Repair'?'#ffedd5':d.status==='Device Damaged'?'#fee2e2':'#fef9c3',
-                            color:d.status==='Deployed'?'#166534':d.status==='Under Repair'?'#9a3412':d.status==='Device Damaged'?'#991b1b':'#854d0e',
-                          }}>{d.status}</span>
-                        </td>
-                        <td style={{...styles.td,fontSize:11}}>{d.vehicleNumber}</td>
-                        <td style={{...styles.td,fontSize:11}}>{d.installationDate}</td>
-                      </tr>
+                      <Tr key={i}>
+                        <Td style={{ color:C.textMuted }}>{i+1}</Td>
+                        <Td style={{ fontSize:11, fontFamily:'monospace', color:C.accentBright }}>{d.device}</Td>
+                        <Td center>
+                          <Pill
+                            bg={d.status==='Deployed'?'rgba(34,197,94,0.15)':d.status==='Under Repair'?'rgba(251,146,60,0.15)':d.status==='Device Damaged'?'rgba(248,113,113,0.15)':'rgba(251,191,36,0.15)'}
+                            color={d.status==='Deployed'?C.accentBright:d.status==='Under Repair'?C.orange:d.status==='Device Damaged'?C.red:C.yellow}
+                          >{d.status}</Pill>
+                        </Td>
+                        <Td style={{ fontSize:11 }}>{d.vehicleNumber}</Td>
+                        <Td style={{ fontSize:11 }}>{d.installationDate}</Td>
+                        <Td style={{ fontSize:11, color:C.textMuted, maxWidth:180, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={d.returnComment}>{d.returnComment}</Td>
+                      </Tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </div>
+            </Card>
           </div>
         )}
 
-        {/* ════════════ CITIES ════════════ */}
+        {/* ════ CITIES ════ */}
         {activeTab==='cities2' && (
-          <div style={styles.section}>
-            <div style={styles.kpiGrid}>
+          <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+            <div>
+              <SectionLabel>Network · Geographic Coverage</SectionLabel>
+              <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
+                India Device <span style={{ color:C.accentBright, fontStyle:'italic' }}>Network</span>
+              </h1>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
               {[
-                { label:'Total Installations', val:installationTrackerData?.totalInstallations?.toLocaleString()||'0', sub:'Devices installed', accent:'#3b82f6', icon:Cpu },
-                { label:'Cities Count',         val:installationTrackerData?.uniqueCities||'0',                        sub:'Locations covered', accent:'#10b981', icon:MapIcon },
-                { label:'Top City',             val:(installationTrackerData?.citiesBreakdown?.[0]?.city||'N/A').toUpperCase(), sub:`${installationTrackerData?.citiesBreakdown?.[0]?.count||0} devices`, accent:'#8b5cf6', icon:TrendingUp },
-              ].map(k=>{ const Icon=k.icon; return(
-                <div key={k.label} style={{...styles.kpiCard,borderTop:`3px solid ${k.accent}`}}>
-                  <div style={{...styles.kpiIcon,background:`${k.accent}18`}}><Icon size={20} color={k.accent}/></div>
-                  <div style={styles.kpiVal}>{k.val}</div>
-                  <div style={styles.kpiSub}>{k.sub}</div>
-                  <div style={styles.kpiLabel}>{k.label}</div>
-                </div>
-              )})}
+                { label:'Total Installations', val:installationTrackerData?.totalInstallations?.toLocaleString()||'0', sub:'Devices installed',  accent:C.blue,   icon:Cpu },
+                { label:'Cities Covered',       val:installationTrackerData?.uniqueCities||'0',                        sub:'Locations covered', accent:C.accent, icon:MapIcon },
+                { label:'Top City',             val:(installationTrackerData?.citiesBreakdown?.[0]?.city||'N/A').toUpperCase(), sub:`${installationTrackerData?.citiesBreakdown?.[0]?.count||0} devices`, accent:C.purple, icon:TrendingUp },
+              ].map(k=><KpiCard key={k.label} {...k} />)}
             </div>
-            <div style={{...styles.card,height:640,padding:0,overflow:'hidden'}}>
-              <div style={{padding:'20px 24px',borderBottom:'1px solid #f1f5f9',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12}}>
-                <span style={styles.cardTitle}>India Device Map</span>
-                <div style={{display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
-                  <span style={{fontSize:13,color:'#64748b'}}><b>{installationTrackerData?.totalInstallations||0}</b> devices · <b>{installationTrackerData?.uniqueCities||0}</b> cities</span>
-                  <div style={styles.filterBox}>
-                    <Filter size={14} color="#94a3b8"/>
-                    <input style={styles.filterInput} placeholder="Search city…" value={cities2Filter} onChange={e=>setCities2Filter(e.target.value)}/>
-                  </div>
+            <Card style={{ height:620, padding:0, overflow:'hidden' }}>
+              <div style={{ padding:'18px 24px', borderBottom:`1px solid ${C.border}`, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:12 }}>
+                <span style={{ fontSize:14, fontWeight:700, color:C.textPrimary }}>India Device Map</span>
+                <div style={{ display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
+                  <span style={{ fontSize:13, color:C.textMuted }}>
+                    <b style={{ color:C.textPrimary }}>{installationTrackerData?.totalInstallations||0}</b> devices · <b style={{ color:C.textPrimary }}>{installationTrackerData?.uniqueCities||0}</b> cities
+                  </span>
+                  <SearchBox value={cities2Filter} onChange={e=>setCities2Filter(e.target.value)} placeholder="Search city…" />
                 </div>
               </div>
-              <div style={{height:'calc(100% - 65px)'}}>
-                <IndiaMapLeaflet2 installationTrackerData={installationTrackerData}/>
+              <div style={{ height:'calc(100% - 65px)' }}>
+                <IndiaMapLeaflet2 installationTrackerData={installationTrackerData} />
               </div>
-            </div>
-            <div style={styles.card}>
-              <div style={styles.cardHead}><span style={styles.cardTitle}>Cities Table</span></div>
-              <div style={styles.tableWrap}>
-                <table style={styles.table}>
-                  <thead><tr style={styles.thead}>
-                    <th style={styles.th}>#</th>
-                    <th style={styles.th}>City</th>
-                    <th style={{...styles.th,textAlign:'center'}}>Devices</th>
-                    <th style={{...styles.th,textAlign:'center'}}>Share</th>
-                  </tr></thead>
+            </Card>
+            <Card>
+              <CardHead title="Cities Table" />
+              <div style={{ maxHeight:380, overflowY:'auto' }}>
+                <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                  <thead><tr><Th>#</Th><Th>City</Th><Th center>Devices</Th><Th center>Share</Th></tr></thead>
                   <tbody>
                     {filterCities2().map((c,i)=>(
-                      <tr key={i} style={styles.tr}>
-                        <td style={{...styles.td,color:'#94a3b8'}}>{i+1}</td>
-                        <td style={{...styles.td,fontWeight:600,textTransform:'capitalize'}}>{c.city}</td>
-                        <td style={{...styles.td,textAlign:'center'}}>
-                          <span style={{...styles.pill,background:c.count>10?'#dcfce7':c.count>5?'#fef9c3':'#dbeafe',color:c.count>10?'#166534':c.count>5?'#854d0e':'#1e40af',fontWeight:700}}>{c.count}</span>
-                        </td>
-                        <td style={{...styles.td,textAlign:'center'}}>{c.percentage}%</td>
-                      </tr>
+                      <Tr key={i}>
+                        <Td style={{ color:C.textMuted }}>{i+1}</Td>
+                        <Td style={{ fontWeight:600, textTransform:'capitalize', color:C.textPrimary }}>{c.city}</Td>
+                        <Td center>
+                          <Pill
+                            bg={c.count>10?'rgba(34,197,94,0.15)':c.count>5?'rgba(251,191,36,0.15)':'rgba(96,165,250,0.15)'}
+                            color={c.count>10?C.accentBright:c.count>5?C.yellow:C.blue}
+                          >{c.count}</Pill>
+                        </Td>
+                        <Td center style={{ color:C.textMuted }}>{c.percentage}%</Td>
+                      </Tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </div>
+            </Card>
           </div>
         )}
 
       </main>
     </div>
   )
-}
-
-/* ═══════════════════════════════════════
-   STYLES
-═══════════════════════════════════════ */
-const styles = {
-  root: {
-    minHeight: '100vh',
-    width: '100%',
-    background: '#f8fafc',
-    fontFamily: "'DM Sans', 'Segoe UI', system-ui, sans-serif",
-  },
-
-  /* Loading */
-  loadWrap: { minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#f8fafc', gap:16 },
-  loadSpinner: { width:48, height:48, border:'4px solid #e2e8f0', borderTop:'4px solid #6366f1', borderRadius:'50%', animation:'spin 0.8s linear infinite' },
-  loadText: { color:'#64748b', fontSize:16, fontWeight:500 },
-
-  /* Header */
-  header: {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    padding: '20px 32px',
-    width: '100%',
-  },
-  headerInner: { display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:20 },
-  headerBadge: { display:'inline-block', background:'rgba(255,255,255,0.2)', color:'#fff', fontSize:10, fontWeight:800, letterSpacing:'0.12em', padding:'4px 10px', borderRadius:20, marginBottom:8 },
-  headerTitle: { color:'#fff', fontSize:22, fontWeight:800, letterSpacing:'-0.01em', margin:0 },
-  headerSub:   { color:'rgba(255,255,255,0.75)', fontSize:12, marginTop:4 },
-  headerStats: { display:'flex', gap:32 },
-  headerStat:  { textAlign:'center' },
-  headerStatVal:{ color:'#fff', fontSize:24, fontWeight:800 },
-  headerStatLbl:{ color:'rgba(255,255,255,0.7)', fontSize:10, marginTop:2, textTransform:'uppercase', letterSpacing:'0.08em' },
-
-  /* Tab bar */
-  tabBar: {
-    background: '#fff',
-    borderBottom: '1px solid #e2e8f0',
-    padding: '0 16px',
-    position: 'sticky',
-    top: 0,
-    zIndex: 100,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-  },
-  tabInner: { display:'flex', gap:0, overflowX:'auto', width:'fit-content' },
-  tab: {
-    display: 'inline-flex', alignItems: 'center', gap: 6,
-    padding: '13px 16px',
-    fontSize: 13, fontWeight: 600,
-    color: '#64748b',
-    background: 'transparent',
-    border: 'none',
-    borderBottom: '2px solid transparent',
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-    transition: 'all 0.15s ease',
-    position: 'relative',
-    flexShrink: 0,
-  },
-  tabActive: {
-    color: '#4f46e5',
-    borderBottom: '2px solid #4f46e5',
-  },
-  tabDot: { width:4, height:4, borderRadius:'50%', background:'#4f46e5', position:'absolute', bottom:4, left:'50%', transform:'translateX(-50%)' },
-
-  /* Main */
-  main: { padding: '28px 24px', width:'100%', maxWidth:'100%', boxSizing:'border-box' },
-  section: { display:'flex', flexDirection:'column', gap:20 },
-
-  /* KPI grid */
-  kpiGrid: { display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16 },
-  kpiCard: {
-    background:'#fff', borderRadius:14, padding:'20px 20px 16px',
-    boxShadow:'0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)',
-    display:'flex', flexDirection:'column', gap:4,
-    transition:'box-shadow 0.2s ease, transform 0.2s ease',
-    cursor:'default',
-  },
-  kpiIcon: { width:42, height:42, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:8 },
-  kpiVal:  { fontSize:28, fontWeight:900, color:'#0f172a', letterSpacing:'-0.02em', lineHeight:1 },
-  kpiSub:  { fontSize:12, color:'#94a3b8', fontWeight:500 },
-  kpiLabel:{ fontSize:13, color:'#475569', fontWeight:700, marginTop:10, paddingTop:10, borderTop:'1px solid #f1f5f9' },
-
-  /* Card */
-  card: { background:'#fff', borderRadius:14, padding:'20px 24px', boxShadow:'0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)' },
-  cardHead: { display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, flexWrap:'wrap', gap:10 },
-  cardTitle: { fontSize:15, fontWeight:800, color:'#1e293b' },
-
-  /* Two col */
-  twoCol: { display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 },
-
-  /* Table */
-  tableWrap: { maxHeight:320, overflowY:'auto' },
-  table: { width:'100%', borderCollapse:'collapse' },
-  thead: { background:'#f8fafc', position:'sticky', top:0 },
-  th: { padding:'10px 12px', textAlign:'left', fontSize:11, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.06em', whiteSpace:'nowrap' },
-  tr: { borderBottom:'1px solid #f1f5f9', transition:'background 0.1s ease' },
-  td: { padding:'10px 12px', fontSize:13, color:'#334155' },
-
-  /* Pills & badges */
-  pill: { display:'inline-block', padding:'3px 8px', borderRadius:20, fontSize:11, fontWeight:700 },
-  badge: { display:'inline-block', background:'#f1f5f9', color:'#475569', padding:'2px 8px', borderRadius:20, fontSize:11, fontWeight:600 },
-
-  /* Filter */
-  filterBox: { display:'flex', alignItems:'center', gap:6, background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:8, padding:'6px 10px' },
-  filterInput: { border:'none', outline:'none', background:'transparent', fontSize:12, color:'#475569', width:140 },
-
-  /* Performance rows */
-  perfRow: { display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 16px', borderRadius:10 },
-  perfLabel: { fontSize:14, fontWeight:700, color:'#334155' },
-  perfSub: { fontSize:11, color:'#94a3b8', marginTop:2 },
-  perfVal: { fontSize:26, fontWeight:900 },
-
-  /* Tooltip */
-  tooltip: { background:'#1e293b', border:'none', borderRadius:10, color:'#fff', fontSize:12, padding:'8px 12px' },
-
-  /* Video table header */
-  videoTableHeader: { display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, flexWrap:'wrap', gap:14 },
-  videoSubtitle: { fontSize:13, color:'#94a3b8', marginTop:4 },
-
-  /* Toggle */
-  toggleGroup: { display:'flex', gap:8, alignItems:'center' },
-  toggleBtn: {
-    display:'flex', alignItems:'center', gap:8,
-    padding:'9px 16px', borderRadius:10,
-    fontSize:13, fontWeight:600,
-    border:'none', cursor:'pointer',
-    transition:'all 0.18s cubic-bezier(0.4,0,0.2,1)',
-    outline:'none',
-  },
-
-  /* Status bar */
-  statusBar: { display:'flex', height:4, borderRadius:4, overflow:'hidden', marginBottom:16, background:'#f1f5f9' },
-  statusSegment: { height:'100%', transition:'flex 0.4s ease' },
 }
