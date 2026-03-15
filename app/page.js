@@ -181,7 +181,7 @@ export default function Dashboard() {
   )
 
   const Card = ({ children, style={} }) => (
-    <div style={{ background:C.card, borderRadius:16, border:`1px solid ${C.border}`, padding:'22px 24px', ...style }}>
+    <div style={{ background:C.card, borderRadius:16, border:`1px solid rgba(255,255,255,0.06)`, padding:'22px 24px', ...style }}>
       {children}
     </div>
   )
@@ -197,11 +197,10 @@ export default function Dashboard() {
     <div style={{
       background: C.card,
       borderRadius: 16,
-      border: `1px solid ${C.border}`,
+      border: `1px solid rgba(255,255,255,0.06)`,
       borderTop: `2px solid ${accent}`,
       padding: '20px 20px 16px',
       display: 'flex', flexDirection: 'column', gap: 4,
-      transition: 'border-color 0.2s, background 0.2s',
     }}>
       <div style={{ width:38, height:38, borderRadius:10, background:`${accent}18`, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:8 }}>
         <Icon size={19} color={accent} />
@@ -213,7 +212,7 @@ export default function Dashboard() {
   )
 
   const SearchBox = ({ value, onChange, placeholder='Search…' }) => (
-    <div style={{ display:'flex', alignItems:'center', gap:6, background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:'6px 10px' }}>
+    <div style={{ display:'flex', alignItems:'center', gap:6, background:C.surface, border:`1px solid rgba(255,255,255,0.08)`, borderRadius:8, padding:'6px 10px' }}>
       <Filter size={13} color={C.textMuted} />
       <input
         style={{ border:'none', outline:'none', background:'transparent', fontSize:12, color:C.textPrimary, width:140 }}
@@ -224,9 +223,8 @@ export default function Dashboard() {
     </div>
   )
 
-  // Table styles
   const Th = ({ children, center }) => (
-    <th style={{ padding:'10px 12px', textAlign:center?'center':'left', fontSize:10, fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.08em', whiteSpace:'nowrap', background:C.surface, borderBottom:`1px solid ${C.border}` }}>
+    <th style={{ padding:'10px 12px', textAlign:center?'center':'left', fontSize:10, fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.08em', whiteSpace:'nowrap', background:'#0a1a0d', borderBottom:`1px solid rgba(255,255,255,0.06)` }}>
       {children}
     </th>
   )
@@ -236,7 +234,7 @@ export default function Dashboard() {
     </td>
   )
   const Tr = ({ children, highlight }) => (
-    <tr style={{ borderBottom:`1px solid ${C.border}`, background:highlight?'rgba(248,65,65,0.04)':'transparent' }}>
+    <tr style={{ borderBottom:`1px solid rgba(255,255,255,0.04)`, background:highlight?'rgba(248,65,65,0.04)':'transparent' }}>
       {children}
     </tr>
   )
