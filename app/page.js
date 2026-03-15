@@ -160,10 +160,10 @@ export default function Dashboard() {
   /* ── LOADING ── */
   if (loading||!alertData||!misalignmentData||!historicalVideoData||!generalIssuesData||!deviceMovementData) {
     return (
-      <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:C.bg, gap:20 }}>
-        <img src="/cautio_shield.webp" alt="Cautio" style={{ width:56, height:56, opacity:0.9 }} />
+      <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:C.bg, gap:24 }}>
+        <img src="/cautio_shield.webp" alt="Cautio" style={{ width:96, height:96, objectFit:'contain', filter:'drop-shadow(0 0 24px rgba(34,197,94,0.4))' }} />
         <div className="loading-spinner-clean" />
-        <p style={{ color:C.textSec, fontSize:15, fontWeight:500, letterSpacing:'0.05em' }}>Loading Fleet Intelligence…</p>
+        <p style={{ color:C.textSec, fontSize:15, fontWeight:500, letterSpacing:'0.08em', fontFamily:"'DM Sans', sans-serif" }}>Loading Fleet Intelligence...</p>
       </div>
     )
   }
@@ -268,14 +268,37 @@ export default function Dashboard() {
         padding: '0 32px',
         position: 'sticky', top: 0, zIndex: 200,
       }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', height:60, flexWrap:'wrap', gap:12 }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', height:70, flexWrap:'wrap', gap:12 }}>
 
-          {/* Logo + Brand */}
-          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <img src="/cautio_shield.webp" alt="Cautio" style={{ width:34, height:34 }} />
+          {/* Logo + Brand — exact match to cautio-infants screenshot */}
+          <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+            <img
+              src="/cautio_shield.webp"
+              alt="Cautio"
+              style={{
+                width: 52, height: 52,
+                objectFit: 'contain',
+                filter: 'drop-shadow(0 2px 8px rgba(34,197,94,0.3))',
+              }}
+            />
             <div>
-              <div style={{ color:C.textPrimary, fontSize:16, fontWeight:800, letterSpacing:'-0.01em', lineHeight:1.1 }}>Cautio</div>
-              <div style={{ color:C.textLabel, fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase' }}>Fleet Intelligence</div>
+              <div style={{
+                color: '#ffffff',
+                fontSize: 22,
+                fontWeight: 900,
+                letterSpacing: '-0.01em',
+                lineHeight: 1.1,
+                fontFamily: "'DM Sans', sans-serif",
+              }}>Cautio</div>
+              <div style={{
+                color: '#22c55e',
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                fontFamily: "'DM Sans', sans-serif",
+                marginTop: 1,
+              }}>Fleet Intelligence</div>
             </div>
           </div>
 
@@ -291,13 +314,17 @@ export default function Dashboard() {
                 <div style={{ fontSize:10, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.08em' }}>{s.label}</div>
               </div>
             ))}
-            <div style={{ width:8, height:8, borderRadius:'50%', background:C.accent, boxShadow:`0 0 8px ${C.accent}` }} title="Live" />
+            {/* Live indicator */}
+            <div style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(34,197,94,0.1)', border:'1px solid rgba(34,197,94,0.25)', borderRadius:20, padding:'4px 10px' }}>
+              <div style={{ width:6, height:6, borderRadius:'50%', background:C.accent, boxShadow:`0 0 6px ${C.accent}`, animation:'pulse 2s infinite' }} />
+              <span style={{ fontSize:10, fontWeight:700, color:C.accent, letterSpacing:'0.08em' }}>LIVE</span>
+            </div>
           </div>
         </div>
       </header>
 
       {/* ── TABS ── */}
-      <nav style={{ background:C.surface, borderBottom:`1px solid ${C.border}`, padding:'0 24px', position:'sticky', top:60, zIndex:100 }}>
+      <nav style={{ background:C.surface, borderBottom:`1px solid ${C.border}`, padding:'0 24px', position:'sticky', top:70, zIndex:100 }}>
         <div style={{ display:'flex', gap:0, overflowX:'auto' }}>
           {TABS.map(tab => {
             const active = activeTab===tab.id
@@ -329,7 +356,7 @@ export default function Dashboard() {
 
             {/* Page title */}
             <div>
-              <SectionLabel>Command Center · Overview</SectionLabel>
+              <SectionLabel>Cautio · Command Center</SectionLabel>
               <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
                 Fleet Operations, <span style={{ color:C.accentBright, fontStyle:'italic' }}>At a Glance</span>
               </h1>
@@ -420,9 +447,9 @@ export default function Dashboard() {
         {activeTab==='alerts' && (
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
-              <SectionLabel>Monitoring · Alerts</SectionLabel>
+              <SectionLabel>Cautio AI · Alert Tracking</SectionLabel>
               <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
-                L2 Alert <span style={{ color:C.accentBright, fontStyle:'italic' }}>Tracking</span>
+                Driver Behaviour <span style={{ color:C.accentBright, fontStyle:'italic' }}>Alerts</span>
               </h1>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
@@ -469,9 +496,9 @@ export default function Dashboard() {
         {activeTab==='misalignment' && (
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
-              <SectionLabel>Operations · Misalignment</SectionLabel>
+              <SectionLabel>Cautio · Camera Misalignment</SectionLabel>
               <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
-                Misalignment <span style={{ color:C.accentBright, fontStyle:'italic' }}>Analysis</span>
+                Camera Misalignment <span style={{ color:C.accentBright, fontStyle:'italic' }}>Tracker</span>
               </h1>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:14 }}>
@@ -527,7 +554,7 @@ export default function Dashboard() {
         {activeTab==='videos' && (
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
-              <SectionLabel>Operations · Video Requests</SectionLabel>
+              <SectionLabel>Cautio · Video on Request</SectionLabel>
               <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
                 Video Delivery <span style={{ color:C.accentBright, fontStyle:'italic' }}>Performance</span>
               </h1>
@@ -671,7 +698,7 @@ export default function Dashboard() {
         {activeTab==='issues' && (
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
-              <SectionLabel>Support · General Issues</SectionLabel>
+              <SectionLabel>Cautio · Client Support</SectionLabel>
               <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
                 Issue Resolution <span style={{ color:C.accentBright, fontStyle:'italic' }}>Tracker</span>
               </h1>
@@ -758,9 +785,9 @@ export default function Dashboard() {
         {activeTab==='devices' && (
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
-              <SectionLabel>Hardware · Device Movement</SectionLabel>
+              <SectionLabel>Cautio · Dashcam Fleet</SectionLabel>
               <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
-                Device <span style={{ color:C.accentBright, fontStyle:'italic' }}>Registry</span>
+                Device <span style={{ color:C.accentBright, fontStyle:'italic' }}>Movement</span>
               </h1>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:14 }}>
@@ -836,7 +863,7 @@ export default function Dashboard() {
         {activeTab==='cities2' && (
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
-              <SectionLabel>Network · Geographic Coverage</SectionLabel>
+              <SectionLabel>Cautio · Pan India Network</SectionLabel>
               <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
                 India Device <span style={{ color:C.accentBright, fontStyle:'italic' }}>Network</span>
               </h1>
