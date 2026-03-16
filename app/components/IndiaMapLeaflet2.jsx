@@ -324,20 +324,19 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
         ))}
       </MapContainer>
 
-      {/* ── Stats Overlay — top left ── */}
+      {/* ── Stats Overlay — top left — FULLY INLINE STYLED ── */}
       <div style={{ position:'absolute', top:16, left:16, zIndex:10000, display:'flex', flexDirection:'column', gap:8 }}>
 
-        {/* Cities */}
-        <div className="map-card">
+        {/* Cities card */}
+        <div style={{ background:'rgba(9,20,11,0.97)', backdropFilter:'blur(16px)', WebkitBackdropFilter:'blur(16px)', borderRadius:14, padding:'12px 16px', border:'1px solid rgba(34,197,94,0.25)', boxShadow:'0 8px 32px rgba(0,0,0,0.6)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <div className="map-icon" style={{ background:'linear-gradient(135deg,#3b82f6,#2563eb)' }}>
-              <MapPin size={18} color="white" />
+            <div style={{ width:38, height:38, borderRadius:10, background:'linear-gradient(135deg,#3b82f6,#2563eb)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <MapPin size={17} color="white" />
             </div>
             <div>
-              <div className="map-label">Pan India · Cities</div>
+              <div style={{ color:'rgba(74,222,128,0.85)', fontSize:9, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.13em', marginBottom:3 }}>Pan India · Cities</div>
               <div
-                className="map-value-light"
-                style={{ filter:'blur(7px)', transition:'filter 0.3s', cursor:'pointer' }}
+                style={{ color:'#ffffff', fontSize:20, fontWeight:900, letterSpacing:'-0.01em', filter:'blur(7px)', transition:'filter 0.3s', cursor:'pointer' }}
                 onMouseEnter={e => e.currentTarget.style.filter='blur(0px)'}
                 onMouseLeave={e => e.currentTarget.style.filter='blur(7px)'}
               >{totalCities}</div>
@@ -345,17 +344,16 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
           </div>
         </div>
 
-        {/* Devices */}
-        <div className="map-card">
+        {/* Devices card */}
+        <div style={{ background:'rgba(9,20,11,0.97)', backdropFilter:'blur(16px)', WebkitBackdropFilter:'blur(16px)', borderRadius:14, padding:'12px 16px', border:'1px solid rgba(34,197,94,0.25)', boxShadow:'0 8px 32px rgba(0,0,0,0.6)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <div className="map-icon" style={{ background:'linear-gradient(135deg,#8b5cf6,#7c3aed)' }}>
-              <Activity size={18} color="white" />
+            <div style={{ width:38, height:38, borderRadius:10, background:'linear-gradient(135deg,#8b5cf6,#7c3aed)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <Activity size={17} color="white" />
             </div>
             <div>
-              <div className="map-label">Deployed · Devices</div>
+              <div style={{ color:'rgba(74,222,128,0.85)', fontSize:9, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.13em', marginBottom:3 }}>Deployed · Devices</div>
               <div
-                className="map-value-light"
-                style={{ filter:'blur(7px)', transition:'filter 0.3s', cursor:'pointer' }}
+                style={{ color:'#ffffff', fontSize:20, fontWeight:900, letterSpacing:'-0.01em', filter:'blur(7px)', transition:'filter 0.3s', cursor:'pointer' }}
                 onMouseEnter={e => e.currentTarget.style.filter='blur(0px)'}
                 onMouseLeave={e => e.currentTarget.style.filter='blur(7px)'}
               >{totalDevices.toLocaleString()}</div>
@@ -363,31 +361,37 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
           </div>
         </div>
 
-        {/* Coverage */}
-        <div className="map-card">
+        {/* Coverage card */}
+        <div style={{ background:'rgba(9,20,11,0.97)', backdropFilter:'blur(16px)', WebkitBackdropFilter:'blur(16px)', borderRadius:14, padding:'12px 16px', border:'1px solid rgba(34,197,94,0.25)', boxShadow:'0 8px 32px rgba(0,0,0,0.6)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <div className="map-icon" style={{ background:'linear-gradient(135deg,#22c55e,#16a34a)' }}>
-              <TrendingUp size={18} color="white" />
+            <div style={{ width:38, height:38, borderRadius:10, background:'linear-gradient(135deg,#22c55e,#16a34a)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <TrendingUp size={17} color="white" />
             </div>
             <div>
-              <div className="map-label">Coverage</div>
-              <div className="map-value">Pan India</div>
+              <div style={{ color:'rgba(74,222,128,0.85)', fontSize:9, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.13em', marginBottom:3 }}>Coverage</div>
+              <div style={{ color:'#ffffff', fontSize:20, fontWeight:900, letterSpacing:'-0.01em' }}>Pan India</div>
             </div>
           </div>
         </div>
+
       </div>
 
       {/* ── Expand button — top right ── */}
-      <button onClick={toggleFullscreen} className="map-button" style={{ position:'absolute', top:16, right:16, zIndex:10000 }}>
-        <Maximize2 size={16} />
+      <button
+        onClick={toggleFullscreen}
+        style={{ position:'absolute', top:16, right:16, zIndex:10000, background:'rgba(9,20,11,0.97)', backdropFilter:'blur(12px)', border:'1px solid rgba(34,197,94,0.25)', color:'#ffffff', padding:'10px 18px', borderRadius:10, fontWeight:700, fontSize:13, display:'flex', alignItems:'center', gap:8, cursor:'pointer', boxShadow:'0 4px 20px rgba(0,0,0,0.5)' }}
+        onMouseEnter={e=>{e.currentTarget.style.background='rgba(34,197,94,0.15)'; e.currentTarget.style.borderColor='#22c55e'; e.currentTarget.style.color='#4ade80'}}
+        onMouseLeave={e=>{e.currentTarget.style.background='rgba(9,20,11,0.97)'; e.currentTarget.style.borderColor='rgba(34,197,94,0.25)'; e.currentTarget.style.color='#ffffff'}}
+      >
+        <Maximize2 size={15} />
         Expand Map
       </button>
 
-      {/* ── Legend — bottom right ── */}
+      {/* ── Legend — bottom right — FULLY INLINE ── */}
       <div style={{ position:'absolute', bottom:20, right:20, zIndex:10000 }}>
-        <div className="map-card map-legend">
-          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12, paddingBottom:10, borderBottom:'1px solid rgba(34,197,94,0.15)' }}>
-            <Zap size={16} color="#4ade80" />
+        <div style={{ background:'rgba(9,20,11,0.97)', backdropFilter:'blur(16px)', WebkitBackdropFilter:'blur(16px)', borderRadius:14, padding:'16px 18px', border:'1px solid rgba(34,197,94,0.25)', boxShadow:'0 8px 32px rgba(0,0,0,0.6)', minWidth:180 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12, paddingBottom:10, borderBottom:'1px solid rgba(34,197,94,0.15)' }}>
+            <Zap size={15} color="#4ade80" />
             <span style={{ color:'white', fontWeight:700, fontSize:13 }}>Device Density</span>
           </div>
           {[
@@ -397,9 +401,9 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
             { color:'#eab308', label:'50-100' },
             { color:'#22c55e', label:'1-50' },
           ].map((item, i) => (
-            <div key={i} className="legend-row">
-              <div className="legend-dot" style={{ background:item.color, boxShadow:`0 0 8px ${item.color}55` }} />
-              <span className="legend-text">{item.label}</span>
+            <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'5px 6px', borderRadius:7 }}>
+              <div style={{ width:13, height:13, borderRadius:'50%', background:item.color, boxShadow:`0 0 8px ${item.color}55`, border:'2px solid rgba(255,255,255,0.2)', flexShrink:0 }} />
+              <span style={{ color:'rgba(255,255,255,0.78)', fontSize:12, fontWeight:600 }}>{item.label}</span>
             </div>
           ))}
         </div>
