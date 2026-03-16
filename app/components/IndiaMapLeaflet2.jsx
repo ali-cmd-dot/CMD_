@@ -295,32 +295,20 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
         zoomControl={true}
         attributionControl={false}
       >
-        {/* BRIGHT colorful map tile - original OpenStreetMap */}
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; OpenStreetMap contributors'
           maxZoom={19}
         />
-
         {cityData.map((city, index) => (
           <CircleMarker
             key={index}
             center={[city.lat, city.lng]}
             radius={getMarkerSize(city.count)}
-            pathOptions={{
-              fillColor: getMarkerColor(city.count),
-              fillOpacity: 0.9,
-              color: '#ffffff',
-              weight: 2.5,
-            }}
+            pathOptions={{ fillColor: getMarkerColor(city.count), fillOpacity: 0.9, color: '#ffffff', weight: 2.5 }}
           >
             <Tooltip permanent direction="center" className="count-tooltip" opacity={1}>
-              <span style={{
-                fontWeight: 900,
-                color: 'white',
-                fontSize: city.count > 200 ? '13px' : city.count > 100 ? '12px' : '10px',
-                textShadow: '0 2px 6px rgba(0,0,0,0.95)',
-              }}>
+              <span style={{ fontWeight:900, color:'white', fontSize: city.count>200?'13px':city.count>100?'12px':'10px', textShadow:'0 2px 6px rgba(0,0,0,0.95)' }}>
                 {city.count}
               </span>
             </Tooltip>
@@ -336,21 +324,10 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
         ))}
       </MapContainer>
 
-      {/* ── Cautio Brand + Stats Overlay — top left ── */}
-      <div style={{ position: isFullscreen ? 'fixed' : 'absolute', top: isFullscreen ? 24 : 16, left: isFullscreen ? 24 : 16, zIndex:10000, display:'flex', flexDirection:'column', gap:10 }}>
+      {/* ── Stats Overlay — top left ── */}
+      <div style={{ position:'absolute', top:16, left:16, zIndex:10000, display:'flex', flexDirection:'column', gap:8 }}>
 
-        {/* Cautio brand card */}
-        <div className="map-card" style={{ padding:'12px 16px' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <img src="/cautio_shield.webp" alt="Cautio" style={{ width:38, height:38, objectFit:'contain', filter:'drop-shadow(0 0 10px rgba(34,197,94,0.45))' }} />
-            <div>
-              <div style={{ color:'#ffffff', fontSize:16, fontWeight:900, letterSpacing:'-0.01em', lineHeight:1.1 }}>Cautio</div>
-              <div style={{ color:'#22c55e', fontSize:9, fontWeight:800, letterSpacing:'0.18em', textTransform:'uppercase', marginTop:2 }}>Fleet Intelligence</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Pan India Cities */}
+        {/* Cities */}
         <div className="map-card">
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
             <div className="map-icon" style={{ background:'linear-gradient(135deg,#3b82f6,#2563eb)' }}>
@@ -368,7 +345,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
           </div>
         </div>
 
-        {/* Deployed Devices */}
+        {/* Devices */}
         <div className="map-card">
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
             <div className="map-icon" style={{ background:'linear-gradient(135deg,#8b5cf6,#7c3aed)' }}>
@@ -398,15 +375,20 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
             </div>
           </div>
         </div>
-
       </div>
 
+      {/* ── Expand button — top right ── */}
+      <button onClick={toggleFullscreen} className="map-button" style={{ position:'absolute', top:16, right:16, zIndex:10000 }}>
+        <Maximize2 size={16} />
+        Expand Map
+      </button>
+
       {/* ── Legend — bottom right ── */}
-      <div style={{ position: isFullscreen ? 'fixed' : 'absolute', bottom: isFullscreen ? 32 : 20, right: isFullscreen ? 32 : 20, zIndex:10000 }}>
+      <div style={{ position:'absolute', bottom:20, right:20, zIndex:10000 }}>
         <div className="map-card map-legend">
-          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14, paddingBottom:12, borderBottom:'1px solid rgba(34,197,94,0.15)' }}>
-            <Zap size={18} color="#4ade80" />
-            <span style={{ color:'white', fontWeight:700, fontSize:14 }}>Device Density</span>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12, paddingBottom:10, borderBottom:'1px solid rgba(34,197,94,0.15)' }}>
+            <Zap size={16} color="#4ade80" />
+            <span style={{ color:'white', fontWeight:700, fontSize:13 }}>Device Density</span>
           </div>
           {[
             { color:'#ef4444', label:'500+ devices' },
@@ -416,7 +398,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
             { color:'#22c55e', label:'1-50' },
           ].map((item, i) => (
             <div key={i} className="legend-row">
-              <div className="legend-dot" style={{ background:item.color, boxShadow:`0 0 10px ${item.color}66` }} />
+              <div className="legend-dot" style={{ background:item.color, boxShadow:`0 0 8px ${item.color}55` }} />
               <span className="legend-text">{item.label}</span>
             </div>
           ))}
@@ -427,18 +409,45 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
 
   if (isFullscreen) {
     return (
-      <div style={{ position:'fixed', inset:0, width:'100vw', height:'100vh', zIndex:999999, background:'#060e08' }}>
-        <MapView />
-        <button onClick={toggleFullscreen} className="map-button-close" style={{ position:'fixed', top:24, right:24, zIndex:1000000 }}>
-          <Minimize2 size={18} />
-          Exit Fullscreen
-        </button>
+      <div style={{ position:'fixed', inset:0, width:'100vw', height:'100vh', zIndex:999999, background:'#f0f9ff', display:'flex', flexDirection:'column' }}>
+        {/* Cautio header strip inside fullscreen */}
+        <div style={{
+          background:'#0a1a0d',
+          borderBottom:'1px solid rgba(34,197,94,0.2)',
+          padding:'0 24px',
+          height:56,
+          display:'flex', alignItems:'center', justifyContent:'space-between',
+          flexShrink:0,
+          zIndex:1000000,
+        }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <img src="/cautio_shield.webp" alt="Cautio" style={{ width:34, height:34, objectFit:'contain', filter:'drop-shadow(0 0 8px rgba(34,197,94,0.4))' }} />
+            <div>
+              <div style={{ color:'#fff', fontSize:16, fontWeight:900, lineHeight:1.1 }}>Cautio</div>
+              <div style={{ color:'#22c55e', fontSize:9, fontWeight:800, letterSpacing:'0.16em', textTransform:'uppercase' }}>Fleet Intelligence</div>
+            </div>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+            <span style={{ color:'rgba(255,255,255,0.5)', fontSize:12 }}>
+              <b style={{ color:'white' }}>{totalDevices.toLocaleString()}</b> devices · <b style={{ color:'white' }}>{totalCities}</b> cities
+            </span>
+            <button onClick={toggleFullscreen} className="map-button-close" style={{ padding:'8px 16px' }}>
+              <Minimize2 size={16} />
+              Exit Fullscreen
+            </button>
+          </div>
+        </div>
+
+        {/* Map fills remaining height */}
+        <div style={{ flex:1, position:'relative' }}>
+          <MapView />
+        </div>
       </div>
     )
   }
 
   return (
-    <div style={{ position:'relative', width:'100%', height:'100%', borderRadius:0, overflow:'hidden', background:'#f0f9ff' }}>
+    <div style={{ position:'relative', width:'100%', height:'100%', background:'#f0f9ff' }}>
       <MapView />
     </div>
   )
