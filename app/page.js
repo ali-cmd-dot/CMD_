@@ -867,30 +867,44 @@ export default function Dashboard() {
                 { label:'Top City',             val:(installationTrackerData?.citiesBreakdown?.[0]?.city||'N/A').toUpperCase(), sub:`${installationTrackerData?.citiesBreakdown?.[0]?.count||0} devices`, accent:C.purple, icon:TrendingUp },
               ].map(k=><KpiCard key={k.label} {...k} />)}
             </div>
-            <Card style={{ height:640, padding:0, overflow:'hidden' }}>
-              {/* Cautio header strip */}
+            <Card style={{ height:680, padding:0, overflow:'hidden' }}>
+              {/* Cautio header strip — bigger with meaningful text */}
               <div style={{
                 background:'#0a1a0d',
                 borderBottom:'1px solid rgba(34,197,94,0.2)',
-                padding:'0 20px',
-                height:58,
-                display:'flex', alignItems:'center', justifyContent:'space-between', gap:12
+                padding:'0 24px',
+                height:80,
+                display:'flex', alignItems:'center', justifyContent:'space-between', gap:16,
+                flexShrink:0,
               }}>
-                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <img src="/cautio_shield.webp" alt="Cautio" style={{ width:30, height:30, objectFit:'contain', filter:'drop-shadow(0 0 6px rgba(34,197,94,0.4))' }} />
+                {/* Left — logo + title like video tab style */}
+                <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+                  <img src="/cautio_shield.webp" alt="Cautio" style={{ width:40, height:40, objectFit:'contain', filter:'drop-shadow(0 0 10px rgba(34,197,94,0.45))' }} />
                   <div>
-                    <div style={{ color:'#fff', fontSize:14, fontWeight:900, lineHeight:1.1 }}>Cautio</div>
-                    <div style={{ color:'#22c55e', fontSize:8, fontWeight:800, letterSpacing:'0.15em', textTransform:'uppercase' }}>Fleet Intelligence</div>
+                    <div style={{ color:'rgba(74,222,128,0.8)', fontSize:11, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:4 }}>Cautio · Pan India Network</div>
+                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                      <span style={{ color:'#ffffff', fontSize:20, fontWeight:900, letterSpacing:'-0.02em' }}>India Device Map,</span>
+                      <span style={{ color:'#4ade80', fontSize:20, fontWeight:900, fontStyle:'italic', letterSpacing:'-0.02em' }}>At a Glance</span>
+                    </div>
                   </div>
                 </div>
-                <div style={{ display:'flex', alignItems:'center', gap:14, flexWrap:'wrap' }}>
-                  <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)' }}>
-                    <b style={{ color:'white' }}>{installationTrackerData?.totalInstallations||0}</b> devices · <b style={{ color:'white' }}>{installationTrackerData?.uniqueCities||0}</b> cities
-                  </span>
+
+                {/* Right — stats + search */}
+                <div style={{ display:'flex', alignItems:'center', gap:16, flexShrink:0 }}>
+                  <div style={{ textAlign:'right' }}>
+                    <div style={{ color:'white', fontSize:15, fontWeight:800, letterSpacing:'-0.01em' }}>
+                      {installationTrackerData?.totalInstallations?.toLocaleString()||0}
+                      <span style={{ color:'rgba(255,255,255,0.4)', fontSize:11, fontWeight:400, marginLeft:4 }}>devices</span>
+                      <span style={{ color:'rgba(255,255,255,0.2)', margin:'0 6px' }}>·</span>
+                      {installationTrackerData?.uniqueCities||0}
+                      <span style={{ color:'rgba(255,255,255,0.4)', fontSize:11, fontWeight:400, marginLeft:4 }}>cities</span>
+                    </div>
+                    <div style={{ color:'rgba(74,222,128,0.6)', fontSize:9, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', marginTop:2 }}>Real-time · Live Data</div>
+                  </div>
                   <SearchBox value={cities2Filter} onChange={e=>setCities2Filter(e.target.value)} placeholder="Search city…" />
                 </div>
               </div>
-              <div style={{ height:'calc(100% - 58px)' }}>
+              <div style={{ height:'calc(100% - 80px)' }}>
                 <IndiaMapLeaflet2 installationTrackerData={installationTrackerData} />
               </div>
             </Card>
