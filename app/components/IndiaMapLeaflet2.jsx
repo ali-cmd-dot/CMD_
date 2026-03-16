@@ -430,24 +430,14 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
             <div>
               <div style={{ color:'rgba(74,222,128,0.8)', fontSize:11, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:4 }}>Cautio · Pan India Network</div>
               <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                <span style={{ color:'#ffffff', fontSize:20, fontWeight:900, letterSpacing:'-0.02em' }}>India Device Map,</span>
+                <span style={{ color:'#ffffff', fontSize:20, fontWeight:900, letterSpacing:'-0.02em' }}>Cautio Fleet Network,</span>
                 <span style={{ color:'#4ade80', fontSize:20, fontWeight:900, fontStyle:'italic', letterSpacing:'-0.02em' }}>Safer Roads</span>
               </div>
             </div>
           </div>
 
-          {/* Right — stats + exit */}
+          {/* Right — exit button only */}
           <div style={{ display:'flex', alignItems:'center', gap:20 }}>
-            <div style={{ textAlign:'right' }}>
-              <div style={{ color:'white', fontSize:15, fontWeight:800 }}>
-                {totalDevices.toLocaleString()}
-                <span style={{ color:'rgba(255,255,255,0.4)', fontSize:11, fontWeight:400, marginLeft:4 }}>devices</span>
-                <span style={{ color:'rgba(255,255,255,0.2)', margin:'0 8px' }}>·</span>
-                {totalCities}
-                <span style={{ color:'rgba(255,255,255,0.4)', fontSize:11, fontWeight:400, marginLeft:4 }}>cities</span>
-              </div>
-              <div style={{ color:'rgba(74,222,128,0.6)', fontSize:9, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', marginTop:2 }}>Real-time · Live Data</div>
-            </div>
             <button
               onClick={toggleFullscreen}
               style={{ background:'rgba(248,65,65,0.12)', border:'1px solid rgba(248,65,65,0.35)', color:'#fca5a5', padding:'10px 20px', borderRadius:10, fontWeight:700, fontSize:13, display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}
