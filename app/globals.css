@@ -14,13 +14,13 @@ html, body {
   margin: 0 !important;
   padding: 0 !important;
   overflow-x: hidden !important;
-  background: #060e08;
+  background: #f8fafc;
 }
 
 body {
   font-family: 'DM Sans', system-ui, sans-serif;
-  color: #ffffff;
-  background: #060e08;
+  color: #0f172a;
+  background: #f8fafc;
 }
 
 /* ── Animations ── */
@@ -55,7 +55,7 @@ body {
 ═══════════════════════════════════ */
 .leaflet-container {
   font-family: 'DM Sans', sans-serif !important;
-  background: #060e08 !important;
+  background: #f0f9ff !important;
 }
 .leaflet-control-zoom { display: none !important; }
 .leaflet-control-attribution { display: none !important; }
