@@ -431,7 +431,7 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
               <div style={{ color:'rgba(74,222,128,0.8)', fontSize:11, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:4 }}>Cautio · Pan India Network</div>
               <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                 <span style={{ color:'#ffffff', fontSize:20, fontWeight:900, letterSpacing:'-0.02em' }}>India Device Map,</span>
-                <span style={{ color:'#4ade80', fontSize:20, fontWeight:900, fontStyle:'italic', letterSpacing:'-0.02em' }}>At a Glance</span>
+                <span style={{ color:'#4ade80', fontSize:20, fontWeight:900, fontStyle:'italic', letterSpacing:'-0.02em' }}>Safer Roads</span>
               </div>
             </div>
           </div>
