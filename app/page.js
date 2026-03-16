@@ -883,24 +883,14 @@ export default function Dashboard() {
                   <div>
                     <div style={{ color:'rgba(74,222,128,0.8)', fontSize:11, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:4 }}>Cautio · Pan India Network</div>
                     <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                      <span style={{ color:'#ffffff', fontSize:20, fontWeight:900, letterSpacing:'-0.02em' }}>India Device Map,</span>
+                      <span style={{ color:'#ffffff', fontSize:20, fontWeight:900, letterSpacing:'-0.02em' }}>Cautio Fleet Network,</span>
                       <span style={{ color:'#4ade80', fontSize:20, fontWeight:900, fontStyle:'italic', letterSpacing:'-0.02em' }}>Safer Roads</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Right — stats + search */}
+                {/* Right — search only */}
                 <div style={{ display:'flex', alignItems:'center', gap:16, flexShrink:0 }}>
-                  <div style={{ textAlign:'right' }}>
-                    <div style={{ color:'white', fontSize:15, fontWeight:800, letterSpacing:'-0.01em' }}>
-                      {installationTrackerData?.totalInstallations?.toLocaleString()||0}
-                      <span style={{ color:'rgba(255,255,255,0.4)', fontSize:11, fontWeight:400, marginLeft:4 }}>devices</span>
-                      <span style={{ color:'rgba(255,255,255,0.2)', margin:'0 6px' }}>·</span>
-                      {installationTrackerData?.uniqueCities||0}
-                      <span style={{ color:'rgba(255,255,255,0.4)', fontSize:11, fontWeight:400, marginLeft:4 }}>cities</span>
-                    </div>
-                    <div style={{ color:'rgba(74,222,128,0.6)', fontSize:9, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', marginTop:2 }}>Real-time · Live Data</div>
-                  </div>
                   <SearchBox value={cities2Filter} onChange={e=>setCities2Filter(e.target.value)} placeholder="Search city…" />
                 </div>
               </div>
