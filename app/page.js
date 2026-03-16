@@ -264,68 +264,59 @@ export default function Dashboard() {
 
       {/* ── HEADER ── */}
       <header style={{
-        background: C.surface,
-        borderBottom: `1px solid ${C.border}`,
+        background: '#0a1a0d',
+        borderBottom: '1px solid rgba(34,197,94,0.15)',
         padding: '0 32px',
         position: 'sticky', top: 0, zIndex: 200,
       }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', height:70, flexWrap:'wrap', gap:12 }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', height:80, flexWrap:'wrap', gap:12 }}>
 
-          {/* Logo + Brand — exact match to cautio-infants screenshot */}
+          {/* Left — Logo + Brand + Tagline */}
           <div style={{ display:'flex', alignItems:'center', gap:16 }}>
             <img
               src="/cautio_shield.webp"
               alt="Cautio"
-              style={{
-                width: 52, height: 52,
-                objectFit: 'contain',
-                filter: 'drop-shadow(0 2px 8px rgba(34,197,94,0.3))',
-              }}
+              style={{ width:54, height:54, objectFit:'contain', filter:'drop-shadow(0 0 12px rgba(34,197,94,0.45))' }}
             />
             <div>
-              <div style={{
-                color: '#ffffff',
-                fontSize: 22,
-                fontWeight: 900,
-                letterSpacing: '-0.01em',
-                lineHeight: 1.1,
-                fontFamily: "'DM Sans', sans-serif",
-              }}>Cautio</div>
-              <div style={{
-                color: '#22c55e',
-                fontSize: 11,
-                fontWeight: 800,
-                letterSpacing: '0.18em',
-                textTransform: 'uppercase',
-                fontFamily: "'DM Sans', sans-serif",
-                marginTop: 1,
-              }}>Fleet Intelligence</div>
+              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                <span style={{ color:'#ffffff', fontSize:24, fontWeight:900, letterSpacing:'-0.02em', lineHeight:1 }}>Cautio</span>
+                <span style={{ background:'rgba(34,197,94,0.15)', border:'1px solid rgba(34,197,94,0.3)', color:'#4ade80', fontSize:9, fontWeight:800, letterSpacing:'0.14em', textTransform:'uppercase', padding:'3px 8px', borderRadius:20 }}>LIVE</span>
+              </div>
+              <div style={{ color:'#22c55e', fontSize:11, fontWeight:800, letterSpacing:'0.18em', textTransform:'uppercase', marginTop:3 }}>Fleet Intelligence · Command Center</div>
             </div>
           </div>
 
-          {/* Live stats */}
-          <div style={{ display:'flex', gap:28, alignItems:'center' }}>
+          {/* Center — Meaningful summary */}
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
+            <div style={{ color:'rgba(74,222,128,0.7)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase' }}>Real-time Fleet Analytics</div>
+            <div style={{ color:'rgba(255,255,255,0.35)', fontSize:11 }}>AI-powered dashcams · Bharat's safest fleets</div>
+          </div>
+
+          {/* Right — Live stats */}
+          <div style={{ display:'flex', gap:20, alignItems:'center' }}>
             {[
-              { label:'Alerts',    val:alertData.totalCount?.toLocaleString() },
-              { label:'Video Req', val:historicalVideoData.totalRequests?.toLocaleString() },
-              { label:'Issues',    val:generalIssuesData.totalRaised?.toLocaleString() },
+              { label:'AI Alerts',   val:alertData.totalCount?.toLocaleString(),              color:'#f87171' },
+              { label:'Video Req',   val:historicalVideoData.totalRequests?.toLocaleString(),  color:'#a78bfa' },
+              { label:'Issues',      val:generalIssuesData.totalRaised?.toLocaleString(),      color:'#4ade80' },
+              { label:'Devices',     val:deviceMovementData.deployedCount?.toLocaleString(),   color:'#60a5fa' },
             ].map(s=>(
-              <div key={s.label} style={{ textAlign:'center' }}>
-                <div style={{ fontSize:18, fontWeight:800, color:'#0f172a' }}>{s.val}</div>
-                <div style={{ fontSize:10, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.08em' }}>{s.label}</div>
+              <div key={s.label} style={{ textAlign:'center', padding:'8px 14px', background:'rgba(255,255,255,0.04)', borderRadius:10, border:'1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ fontSize:20, fontWeight:900, color:s.color, letterSpacing:'-0.02em', lineHeight:1 }}>{s.val}</div>
+                <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'0.1em', marginTop:3 }}>{s.label}</div>
               </div>
             ))}
-            {/* Live indicator */}
-            <div style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(34,197,94,0.1)', border:'1px solid rgba(34,197,94,0.25)', borderRadius:20, padding:'4px 10px' }}>
-              <div style={{ width:6, height:6, borderRadius:'50%', background:C.accent, boxShadow:`0 0 6px ${C.accent}`, animation:'pulse 2s infinite' }} />
-              <span style={{ fontSize:10, fontWeight:700, color:C.accent, letterSpacing:'0.08em' }}>LIVE</span>
+            {/* Live dot */}
+            <div style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.2)', borderRadius:20, padding:'6px 12px' }}>
+              <div style={{ width:7, height:7, borderRadius:'50%', background:'#22c55e', boxShadow:'0 0 8px #22c55e', animation:'pulse 2s infinite' }} />
+              <span style={{ fontSize:10, fontWeight:800, color:'#22c55e', letterSpacing:'0.1em' }}>LIVE DATA</span>
             </div>
           </div>
         </div>
       </header>
 
       {/* ── TABS ── */}
-      <nav style={{ background:C.surface, borderBottom:`1px solid ${C.border}`, padding:'0 24px', position:'sticky', top:70, zIndex:100 }}>
+      <nav style={{ background:C.surface, borderBottom:`1px solid ${C.border}`, padding:'0 24px', position:'sticky', top:80, zIndex:100 }}>
         <div style={{ display:'flex', gap:0, overflowX:'auto' }}>
           {TABS.map(tab => {
             const active = activeTab===tab.id
