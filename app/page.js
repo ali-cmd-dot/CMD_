@@ -877,14 +877,14 @@ export default function Dashboard() {
                 display:'flex', alignItems:'center', justifyContent:'space-between', gap:16,
                 flexShrink:0,
               }}>
-                {/* Left — logo + title like video tab style */}
+                {/* Left — logo + title */}
                 <div style={{ display:'flex', alignItems:'center', gap:14 }}>
                   <img src="/cautio_shield.webp" alt="Cautio" style={{ width:40, height:40, objectFit:'contain', filter:'drop-shadow(0 0 10px rgba(34,197,94,0.45))' }} />
                   <div>
                     <div style={{ color:'rgba(74,222,128,0.8)', fontSize:11, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:4 }}>Cautio · Pan India Network</div>
                     <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                       <span style={{ color:'#ffffff', fontSize:20, fontWeight:900, letterSpacing:'-0.02em' }}>India Device Map,</span>
-                      <span style={{ color:'#4ade80', fontSize:20, fontWeight:900, fontStyle:'italic', letterSpacing:'-0.02em' }}>At a Glance</span>
+                      <span style={{ color:'#4ade80', fontSize:20, fontWeight:900, fontStyle:'italic', letterSpacing:'-0.02em' }}>Safer Roads</span>
                     </div>
                   </div>
                 </div>
