@@ -336,42 +336,57 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
         ))}
       </MapContainer>
 
-      {/* ── Stats Overlay — top left ── */}
-      <div style={{ position: isFullscreen ? 'fixed' : 'absolute', top: isFullscreen ? 32 : 20, left: isFullscreen ? 32 : 20, zIndex:10000, display:'flex', flexDirection:'column', gap:10 }}>
+      {/* ── Cautio Brand + Stats Overlay — top left ── */}
+      <div style={{ position: isFullscreen ? 'fixed' : 'absolute', top: isFullscreen ? 24 : 16, left: isFullscreen ? 24 : 16, zIndex:10000, display:'flex', flexDirection:'column', gap:10 }}>
+
+        {/* Cautio brand card */}
+        <div className="map-card" style={{ padding:'12px 16px' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <img src="/cautio_shield.webp" alt="Cautio" style={{ width:38, height:38, objectFit:'contain', filter:'drop-shadow(0 0 10px rgba(34,197,94,0.45))' }} />
+            <div>
+              <div style={{ color:'#ffffff', fontSize:16, fontWeight:900, letterSpacing:'-0.01em', lineHeight:1.1 }}>Cautio</div>
+              <div style={{ color:'#22c55e', fontSize:9, fontWeight:800, letterSpacing:'0.18em', textTransform:'uppercase', marginTop:2 }}>Fleet Intelligence</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Pan India Cities */}
         <div className="map-card">
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
             <div className="map-icon" style={{ background:'linear-gradient(135deg,#3b82f6,#2563eb)' }}>
               <MapPin size={18} color="white" />
             </div>
             <div>
-              <div className="map-label">Total Cities</div>
+              <div className="map-label">Pan India · Cities</div>
               <div
                 className="map-value-light"
-                style={{ filter:'blur(7px)', transition:'filter 0.3s' }}
-                onMouseEnter={e=>e.target.style.filter='blur(0px)'}
-                onMouseLeave={e=>e.target.style.filter='blur(7px)'}
+                style={{ filter:'blur(7px)', transition:'filter 0.3s', cursor:'pointer' }}
+                onMouseEnter={e => e.currentTarget.style.filter='blur(0px)'}
+                onMouseLeave={e => e.currentTarget.style.filter='blur(7px)'}
               >{totalCities}</div>
             </div>
           </div>
         </div>
 
+        {/* Deployed Devices */}
         <div className="map-card">
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
             <div className="map-icon" style={{ background:'linear-gradient(135deg,#8b5cf6,#7c3aed)' }}>
               <Activity size={18} color="white" />
             </div>
             <div>
-              <div className="map-label">Total Devices</div>
+              <div className="map-label">Deployed · Devices</div>
               <div
                 className="map-value-light"
-                style={{ filter:'blur(7px)', transition:'filter 0.3s' }}
-                onMouseEnter={e=>e.target.style.filter='blur(0px)'}
-                onMouseLeave={e=>e.target.style.filter='blur(7px)'}
+                style={{ filter:'blur(7px)', transition:'filter 0.3s', cursor:'pointer' }}
+                onMouseEnter={e => e.currentTarget.style.filter='blur(0px)'}
+                onMouseLeave={e => e.currentTarget.style.filter='blur(7px)'}
               >{totalDevices.toLocaleString()}</div>
             </div>
           </div>
         </div>
 
+        {/* Coverage */}
         <div className="map-card">
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
             <div className="map-icon" style={{ background:'linear-gradient(135deg,#22c55e,#16a34a)' }}>
@@ -383,12 +398,13 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
             </div>
           </div>
         </div>
+
       </div>
 
       {/* ── Legend — bottom right ── */}
       <div style={{ position: isFullscreen ? 'fixed' : 'absolute', bottom: isFullscreen ? 32 : 20, right: isFullscreen ? 32 : 20, zIndex:10000 }}>
         <div className="map-card map-legend">
-          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14, paddingBottom:12, borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14, paddingBottom:12, borderBottom:'1px solid rgba(34,197,94,0.15)' }}>
             <Zap size={18} color="#4ade80" />
             <span style={{ color:'white', fontWeight:700, fontSize:14 }}>Device Density</span>
           </div>
@@ -422,12 +438,8 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
   }
 
   return (
-    <div style={{ position:'relative', width:'100%', height:'100%', borderRadius:16, overflow:'hidden', background:'#f0f9ff' }}>
+    <div style={{ position:'relative', width:'100%', height:'100%', borderRadius:0, overflow:'hidden', background:'#f0f9ff' }}>
       <MapView />
-      <button onClick={toggleFullscreen} className="map-button" style={{ position:'absolute', top:16, right:16, zIndex:1000 }}>
-        <Maximize2 size={16} />
-        Expand Map
-      </button>
     </div>
   )
 }
