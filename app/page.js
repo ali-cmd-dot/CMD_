@@ -293,20 +293,8 @@ export default function Dashboard() {
             <div style={{ color:'rgba(255,255,255,0.35)', fontSize:11 }}>AI-powered dashcams · Bharat's safest fleets</div>
           </div>
 
-          {/* Right — Live stats */}
-          <div style={{ display:'flex', gap:20, alignItems:'center' }}>
-            {[
-              { label:'AI Alerts',   val:alertData.totalCount?.toLocaleString(),              color:'#f87171' },
-              { label:'Video Req',   val:historicalVideoData.totalRequests?.toLocaleString(),  color:'#a78bfa' },
-              { label:'Issues',      val:generalIssuesData.totalRaised?.toLocaleString(),      color:'#4ade80' },
-              { label:'Devices',     val:deviceMovementData.deployedCount?.toLocaleString(),   color:'#60a5fa' },
-            ].map(s=>(
-              <div key={s.label} style={{ textAlign:'center', padding:'8px 14px', background:'rgba(255,255,255,0.04)', borderRadius:10, border:'1px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ fontSize:20, fontWeight:900, color:s.color, letterSpacing:'-0.02em', lineHeight:1 }}>{s.val}</div>
-                <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'0.1em', marginTop:3 }}>{s.label}</div>
-              </div>
-            ))}
-            {/* Live dot */}
+          {/* Right — Live indicator only */}
+          <div style={{ display:'flex', alignItems:'center' }}>
             <div style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.2)', borderRadius:20, padding:'6px 12px' }}>
               <div style={{ width:7, height:7, borderRadius:'50%', background:'#22c55e', boxShadow:'0 0 8px #22c55e', animation:'pulse 2s infinite' }} />
               <span style={{ fontSize:10, fontWeight:800, color:'#22c55e', letterSpacing:'0.1em' }}>LIVE DATA</span>
