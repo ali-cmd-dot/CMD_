@@ -163,7 +163,7 @@ export default function Dashboard() {
       <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:C.bg, gap:24 }}>
         <img src="/cautio_shield.webp" alt="Cautio" style={{ width:96, height:96, objectFit:'contain', filter:'drop-shadow(0 0 24px rgba(34,197,94,0.4))' }} />
         <div className="loading-spinner-clean" />
-        <p style={{ color:C.textSec, fontSize:15, fontWeight:500, letterSpacing:'0.08em', fontFamily:"'DM Sans', sans-serif" }}>Loading Fleet Intelligence...</p>
+        <p style={{ color:'#64748b', fontSize:15, fontWeight:500, letterSpacing:'0.08em', fontFamily:"'DM Sans', sans-serif" }}>Loading Fleet Intelligence...</p>
       </div>
     )
   }
@@ -180,42 +180,44 @@ export default function Dashboard() {
     </p>
   )
 
+  // ── Light/white card styles for charts & dashboard ──
   const Card = ({ children, style={} }) => (
-    <div style={{ background:C.card, borderRadius:16, border:`1px solid rgba(255,255,255,0.06)`, padding:'22px 24px', ...style }}>
+    <div style={{ background:'#ffffff', borderRadius:14, border:'1px solid #e2e8f0', padding:'22px 24px', boxShadow:'0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)', ...style }}>
       {children}
     </div>
   )
 
   const CardHead = ({ title, right }) => (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18, flexWrap:'wrap', gap:10 }}>
-      <span style={{ fontSize:14, fontWeight:700, color:C.textPrimary, letterSpacing:'-0.01em' }}>{title}</span>
+      <span style={{ fontSize:15, fontWeight:800, color:'#1e293b', letterSpacing:'-0.01em' }}>{title}</span>
       {right}
     </div>
   )
 
   const KpiCard = ({ label, val, sub, accent, icon: Icon }) => (
     <div style={{
-      background: C.card,
-      borderRadius: 16,
-      border: `1px solid rgba(255,255,255,0.06)`,
-      borderTop: `2px solid ${accent}`,
+      background: '#ffffff',
+      borderRadius: 14,
+      border: '1px solid #e2e8f0',
+      borderTop: `3px solid ${accent}`,
       padding: '20px 20px 16px',
       display: 'flex', flexDirection: 'column', gap: 4,
+      boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04)',
     }}>
-      <div style={{ width:38, height:38, borderRadius:10, background:`${accent}18`, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:8 }}>
-        <Icon size={19} color={accent} />
+      <div style={{ width:40, height:40, borderRadius:10, background:`${accent}18`, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:8 }}>
+        <Icon size={20} color={accent} />
       </div>
-      <div style={{ fontSize:26, fontWeight:900, color:C.textPrimary, letterSpacing:'-0.02em', lineHeight:1 }}>{val}</div>
-      <div style={{ fontSize:11, color:C.textSec }}>{sub}</div>
-      <div style={{ fontSize:12, color:C.textMuted, fontWeight:600, marginTop:8, paddingTop:10, borderTop:`1px solid ${C.border}` }}>{label}</div>
+      <div style={{ fontSize:28, fontWeight:900, color:'#0f172a', letterSpacing:'-0.02em', lineHeight:1 }}>{val}</div>
+      <div style={{ fontSize:11, color:'#94a3b8' }}>{sub}</div>
+      <div style={{ fontSize:13, color:'#475569', fontWeight:700, marginTop:10, paddingTop:10, borderTop:'1px solid #f1f5f9' }}>{label}</div>
     </div>
   )
 
   const SearchBox = ({ value, onChange, placeholder='Search…' }) => (
-    <div style={{ display:'flex', alignItems:'center', gap:6, background:C.surface, border:`1px solid rgba(255,255,255,0.08)`, borderRadius:8, padding:'6px 10px' }}>
-      <Filter size={13} color={C.textMuted} />
+    <div style={{ display:'flex', alignItems:'center', gap:6, background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:8, padding:'6px 10px' }}>
+      <Filter size={13} color='#94a3b8' />
       <input
-        style={{ border:'none', outline:'none', background:'transparent', fontSize:12, color:C.textPrimary, width:140 }}
+        style={{ border:'none', outline:'none', background:'transparent', fontSize:12, color:'#334155', width:140 }}
         placeholder={placeholder}
         value={value}
         onChange={onChange}
@@ -224,17 +226,17 @@ export default function Dashboard() {
   )
 
   const Th = ({ children, center }) => (
-    <th style={{ padding:'10px 12px', textAlign:center?'center':'left', fontSize:10, fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.08em', whiteSpace:'nowrap', background:'#0a1a0d', borderBottom:`1px solid rgba(255,255,255,0.06)` }}>
+    <th style={{ padding:'10px 12px', textAlign:center?'center':'left', fontSize:10, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.08em', whiteSpace:'nowrap', background:'#f8fafc', borderBottom:'1px solid #f1f5f9' }}>
       {children}
     </th>
   )
   const Td = ({ children, center, style={} }) => (
-    <td style={{ padding:'10px 12px', fontSize:13, color:C.textSec, textAlign:center?'center':'left', ...style }}>
+    <td style={{ padding:'10px 12px', fontSize:13, color:'#334155', textAlign:center?'center':'left', ...style }}>
       {children}
     </td>
   )
   const Tr = ({ children, highlight }) => (
-    <tr style={{ borderBottom:`1px solid rgba(255,255,255,0.04)`, background:highlight?'rgba(248,65,65,0.04)':'transparent' }}>
+    <tr style={{ borderBottom:'1px solid #f1f5f9', background:highlight?'#fff5f5':'white' }}>
       {children}
     </tr>
   )
@@ -244,20 +246,21 @@ export default function Dashboard() {
   )
 
   const ratePill = (rate, high=80, mid=60) => {
-    if (rate>high) return <Pill bg='rgba(34,197,94,0.15)' color={C.accentBright}>{rate}%</Pill>
-    if (rate>mid)  return <Pill bg='rgba(251,191,36,0.15)' color={C.yellow}>{rate}%</Pill>
-    return              <Pill bg='rgba(248,113,113,0.15)' color={C.red}>{rate}%</Pill>
+    if (rate>high) return <Pill bg='#dcfce7' color='#166534'>{rate}%</Pill>
+    if (rate>mid)  return <Pill bg='#fef9c3' color='#854d0e'>{rate}%</Pill>
+    return              <Pill bg='#fee2e2' color='#991b1b'>{rate}%</Pill>
   }
 
-  // Chart axis/grid defaults
-  const axisStyle = { fontSize:11, fill:C.textMuted }
-  const gridProps = { strokeDasharray:'3 3', stroke:'rgba(255,255,255,0.05)' }
+  // Chart axis/grid — dark text for white cards
+  const axisStyle = { fontSize:11, fill:'#94a3b8' }
+  const gridProps = { strokeDasharray:'3 3', stroke:'#f1f5f9' }
+  const tooltipStyle = { background:'#1e293b', border:'none', borderRadius:10, color:'#fff', fontSize:12, padding:'8px 12px' }
 
   /* ═══════════════════════════════
      RENDER
   ═══════════════════════════════ */
   return (
-    <div style={{ minHeight:'100vh', background:C.bg, fontFamily:"'DM Sans', system-ui, sans-serif" }}>
+    <div style={{ minHeight:'100vh', background:'#f8fafc', fontFamily:"'DM Sans', system-ui, sans-serif" }}>
 
       {/* ── HEADER ── */}
       <header style={{
@@ -308,8 +311,8 @@ export default function Dashboard() {
               { label:'Issues',    val:generalIssuesData.totalRaised?.toLocaleString() },
             ].map(s=>(
               <div key={s.label} style={{ textAlign:'center' }}>
-                <div style={{ fontSize:18, fontWeight:800, color:C.textPrimary }}>{s.val}</div>
-                <div style={{ fontSize:10, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.08em' }}>{s.label}</div>
+                <div style={{ fontSize:18, fontWeight:800, color:'#0f172a' }}>{s.val}</div>
+                <div style={{ fontSize:10, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.08em' }}>{s.label}</div>
               </div>
             ))}
             {/* Live indicator */}
@@ -331,7 +334,7 @@ export default function Dashboard() {
               <button key={tab.id} onClick={()=>setActiveTab(tab.id)} style={{
                 display:'inline-flex', alignItems:'center', gap:7,
                 padding:'13px 16px', fontSize:13, fontWeight:600,
-                color: active ? C.accentBright : C.textSec,
+                color: active ? C.accentBright : 'rgba(255,255,255,0.55)',
                 background: 'transparent', border: 'none',
                 borderBottom: active ? `2px solid ${C.accentBright}` : '2px solid transparent',
                 cursor:'pointer', whiteSpace:'nowrap', flexShrink:0,
@@ -355,7 +358,7 @@ export default function Dashboard() {
             {/* Page title */}
             <div>
               <SectionLabel>Cautio · Command Center</SectionLabel>
-              <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
+              <h1 style={{ fontSize:28, fontWeight:900, color:'#0f172a', margin:0, letterSpacing:'-0.02em' }}>
                 Fleet Operations, <span style={{ color:C.accentBright, fontStyle:'italic' }}>At a Glance</span>
               </h1>
             </div>
@@ -379,8 +382,8 @@ export default function Dashboard() {
                   <XAxis dataKey="month" tick={axisStyle} axisLine={false} tickLine={false} />
                   <YAxis yAxisId="left" tick={axisStyle} axisLine={false} tickLine={false} />
                   <YAxis yAxisId="right" orientation="right" tick={axisStyle} axisLine={false} tickLine={false} />
-                  <Tooltip content={<DarkTooltip />} />
-                  <Legend wrapperStyle={{ color:C.textSec, fontSize:12 }} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Legend wrapperStyle={{ color:'#475569', fontSize:12 }} />
                   <Bar yAxisId="left" dataKey="alerts" fill={C.red} name="Alerts" radius={[4,4,0,0]} />
                   <Bar yAxisId="left" dataKey="misalignments" fill={C.orange} name="Misalignments" radius={[4,4,0,0]} />
                   <Line yAxisId="right" type="monotone" dataKey="videos" stroke={C.purple} strokeWidth={2.5} dot={false} name="Videos" />
@@ -399,10 +402,10 @@ export default function Dashboard() {
                     { label:'Issue Resolution', sub:`Avg: ${generalIssuesData.avgResolutionTime}`,              val:`${generalIssuesData.resolutionRate}%`,          color:C.accent },
                     { label:'Misalignment Fix', sub:`Monthly avg: ${misalignmentData.avgRaisedPerMonth?.toFixed(1)}`, val:`${misalignmentData.rectificationRate}%`, color:C.orange },
                   ].map(p=>(
-                    <div key={p.label} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 16px', borderRadius:10, background:C.surface, border:`1px solid ${C.border}` }}>
+                    <div key={p.label} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 16px', borderRadius:10, background:'#f8fafc', border:'1px solid #e2e8f0' }}>
                       <div>
-                        <div style={{ fontSize:13, fontWeight:700, color:C.textPrimary }}>{p.label}</div>
-                        <div style={{ fontSize:11, color:C.textMuted, marginTop:2 }}>{p.sub}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:'#0f172a' }}>{p.label}</div>
+                        <div style={{ fontSize:11, color:'#94a3b8', marginTop:2 }}>{p.sub}</div>
                       </div>
                       <div style={{ fontSize:24, fontWeight:900, color:p.color }}>{p.val}</div>
                     </div>
@@ -413,12 +416,12 @@ export default function Dashboard() {
               <Card>
                 <CardHead title="Device Health" />
                 <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 16px', borderRadius:10, background:C.surface, border:`1px solid ${C.borderAccent}` }}>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 16px', borderRadius:10, background:'#f0fdf4', border:'1px solid #bbf7d0' }}>
                     <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                       <Cpu size={26} color={C.accent} />
                       <div>
-                        <div style={{ fontSize:13, fontWeight:700, color:C.textPrimary }}>Total Deployed</div>
-                        <div style={{ fontSize:11, color:C.textMuted }}>Active devices</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:'#0f172a' }}>Total Deployed</div>
+                        <div style={{ fontSize:11, color:'#94a3b8' }}>Active devices</div>
                       </div>
                     </div>
                     <div style={{ fontSize:26, fontWeight:900, color:C.accent }}>{deviceMovementData.deployedCount?.toLocaleString()}</div>
@@ -429,9 +432,9 @@ export default function Dashboard() {
                       { label:'In Repair', val:deviceMovementData.underRepairCount,  color:C.orange },
                       { label:'Damaged',   val:deviceMovementData.damagedCount,      color:C.red },
                     ].map(d=>(
-                      <div key={d.label} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'14px 10px', textAlign:'center' }}>
+                      <div key={d.label} style={{ background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:10, padding:'14px 10px', textAlign:'center' }}>
                         <div style={{ fontSize:22, fontWeight:800, color:d.color }}>{d.val}</div>
-                        <div style={{ fontSize:11, color:C.textMuted, fontWeight:600, marginTop:4 }}>{d.label}</div>
+                        <div style={{ fontSize:11, color:'#94a3b8', fontWeight:600, marginTop:4 }}>{d.label}</div>
                       </div>
                     ))}
                   </div>
@@ -446,7 +449,7 @@ export default function Dashboard() {
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
               <SectionLabel>Cautio AI · Alert Tracking</SectionLabel>
-              <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
+              <h1 style={{ fontSize:28, fontWeight:900, color:'#0f172a', margin:0, letterSpacing:'-0.02em' }}>
                 Driver Behaviour <span style={{ color:C.accentBright, fontStyle:'italic' }}>Alerts</span>
               </h1>
             </div>
@@ -466,8 +469,8 @@ export default function Dashboard() {
                     <CartesianGrid {...gridProps} />
                     <XAxis dataKey="month" tick={axisStyle} axisLine={false} tickLine={false} />
                     <YAxis tick={axisStyle} axisLine={false} tickLine={false} />
-                    <Tooltip content={<DarkTooltip />} />
-                    <Legend wrapperStyle={{ color:C.textSec, fontSize:12 }} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Legend wrapperStyle={{ color:'#475569', fontSize:12 }} />
                     <Bar dataKey="total" fill={C.red} name="Alerts" radius={[4,4,0,0]} />
                     <Bar dataKey="clients" fill={C.accent} name="Clients" radius={[4,4,0,0]} />
                   </BarChart>
@@ -480,7 +483,7 @@ export default function Dashboard() {
                     <thead><tr><Th>Client</Th><Th center>Count</Th><Th center>Share</Th></tr></thead>
                     <tbody>
                       {filterAlerts().map((c,i)=>(
-                        <Tr key={i}><Td>{c.client}</Td><Td center style={{ fontWeight:700, color:C.textPrimary }}>{c.count}</Td><Td center>{ratePill(c.percentage,30,15)}</Td></Tr>
+                        <Tr key={i}><Td>{c.client}</Td><Td center style={{ fontWeight:700, color:'#0f172a' }}>{c.count}</Td><Td center>{ratePill(c.percentage,30,15)}</Td></Tr>
                       ))}
                     </tbody>
                   </table>
@@ -495,7 +498,7 @@ export default function Dashboard() {
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
               <SectionLabel>Cautio · Camera Misalignment</SectionLabel>
-              <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
+              <h1 style={{ fontSize:28, fontWeight:900, color:'#0f172a', margin:0, letterSpacing:'-0.02em' }}>
                 Camera Misalignment <span style={{ color:C.accentBright, fontStyle:'italic' }}>Tracker</span>
               </h1>
             </div>
@@ -517,8 +520,8 @@ export default function Dashboard() {
                     <XAxis dataKey="month" tick={axisStyle} axisLine={false} tickLine={false} />
                     <YAxis yAxisId="left" tick={axisStyle} axisLine={false} tickLine={false} />
                     <YAxis yAxisId="right" orientation="right" tick={axisStyle} axisLine={false} tickLine={false} />
-                    <Tooltip content={<DarkTooltip />} />
-                    <Legend wrapperStyle={{ color:C.textSec, fontSize:12 }} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Legend wrapperStyle={{ color:'#475569', fontSize:12 }} />
                     <Bar yAxisId="left" dataKey="raised" fill={C.red} name="Raised" radius={[4,4,0,0]} />
                     <Bar yAxisId="left" dataKey="rectified" fill={C.accent} name="Fixed" radius={[4,4,0,0]} />
                     <Line yAxisId="right" type="monotone" dataKey="clients" stroke={C.purple} strokeWidth={2.5} dot={false} name="Clients" />
@@ -537,7 +540,7 @@ export default function Dashboard() {
                           <Td center>{c.raised}</Td>
                           <Td center>{c.rectified}</Td>
                           <Td center>{ratePill(c.rectificationRate)}</Td>
-                          <Td center style={{ color:C.textMuted }}>{c.percentage}%</Td>
+                          <Td center style={{ color:'#94a3b8' }}>{c.percentage}%</Td>
                         </Tr>
                       ))}
                     </tbody>
@@ -553,7 +556,7 @@ export default function Dashboard() {
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
               <SectionLabel>Cautio · Video on Request</SectionLabel>
-              <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
+              <h1 style={{ fontSize:28, fontWeight:900, color:'#0f172a', margin:0, letterSpacing:'-0.02em' }}>
                 Video Delivery <span style={{ color:C.accentBright, fontStyle:'italic' }}>Performance</span>
               </h1>
             </div>
@@ -575,8 +578,8 @@ export default function Dashboard() {
                     <XAxis dataKey="month" tick={axisStyle} axisLine={false} tickLine={false} />
                     <YAxis yAxisId="left" tick={axisStyle} axisLine={false} tickLine={false} />
                     <YAxis yAxisId="right" orientation="right" tick={axisStyle} axisLine={false} tickLine={false} />
-                    <Tooltip content={<DarkTooltip />} />
-                    <Legend wrapperStyle={{ color:C.textSec, fontSize:12 }} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Legend wrapperStyle={{ color:'#475569', fontSize:12 }} />
                     <Bar yAxisId="left" dataKey="requests" fill={C.purple} name="Requests" radius={[4,4,0,0]} />
                     <Bar yAxisId="left" dataKey="delivered" fill={C.accent} name="Delivered" radius={[4,4,0,0]} />
                     <Line yAxisId="right" type="monotone" dataKey="avgDeliveryTime" stroke={C.yellow} strokeWidth={2.5} dot={false} name="Avg(h)" />
@@ -595,7 +598,7 @@ export default function Dashboard() {
                           <Td center>{c.requests}</Td>
                           <Td center>{c.delivered}</Td>
                           <Td center>{ratePill(c.deliveryRate)}</Td>
-                          <Td center style={{ color:C.textMuted }}>{c.avgDeliveryTime}</Td>
+                          <Td center style={{ color:'#94a3b8' }}>{c.avgDeliveryTime}</Td>
                         </Tr>
                       ))}
                     </tbody>
@@ -608,10 +611,10 @@ export default function Dashboard() {
             <Card>
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, flexWrap:'wrap', gap:14 }}>
                 <div>
-                  <div style={{ fontSize:14, fontWeight:700, color:C.textPrimary }}>All Video Requests</div>
-                  <div style={{ fontSize:12, color:C.textMuted, marginTop:3 }}>
+                  <div style={{ fontSize:14, fontWeight:700, color:'#0f172a' }}>All Video Requests</div>
+                  <div style={{ fontSize:12, color:'#94a3b8', marginTop:3 }}>
                     <span style={{ color:C.accentBright, fontWeight:700 }}>{historicalVideoData.totalDelivered} delivered</span>
-                    <span style={{ color:C.border, margin:'0 8px' }}>·</span>
+                    <span style={{ color:'#cbd5e1', margin:'0 8px' }}>·</span>
                     <span style={{ color:C.red, fontWeight:700 }}>{notDelivered} pending</span>
                   </div>
                 </div>
@@ -626,8 +629,8 @@ export default function Dashboard() {
                       <button key={btn.id} onClick={()=>setVideoViewMode(btn.id)} style={{
                         display:'flex', alignItems:'center', gap:8, padding:'8px 14px',
                         borderRadius:10, fontSize:13, fontWeight:700, border:'none', cursor:'pointer',
-                        background: active ? btn.color : C.surface,
-                        color: active ? '#fff' : C.textSec,
+                        background: active ? btn.color : '#f8fafc',
+                        color: active ? '#fff' : '#64748b',
                         boxShadow: active ? `0 4px 14px ${btn.color}44` : 'none',
                         transition:'all 0.18s',
                       }}>
@@ -643,16 +646,16 @@ export default function Dashboard() {
 
               {/* Progress bar */}
               {videoViewMode && (
-                <div style={{ display:'flex', height:3, borderRadius:3, overflow:'hidden', marginBottom:16, background:C.surface }}>
+                <div style={{ display:'flex', height:3, borderRadius:3, overflow:'hidden', marginBottom:16, background:'#f1f5f9' }}>
                   <div style={{ flex:historicalVideoData.totalDelivered, background:C.accent }} />
                   <div style={{ flex:notDelivered, background:C.red }} />
                 </div>
               )}
 
               {!videoViewMode ? (
-                <div style={{ textAlign:'center', padding:'48px 0', color:C.textMuted }}>
+                <div style={{ textAlign:'center', padding:'48px 0', color:'#94a3b8' }}>
                   <div style={{ fontSize:32, marginBottom:12 }}>☝️</div>
-                  <div style={{ fontSize:15, fontWeight:700, color:C.textSec, marginBottom:6 }}>Select a filter to view records</div>
+                  <div style={{ fontSize:15, fontWeight:700, color:'#64748b', marginBottom:6 }}>Select a filter to view records</div>
                   <div style={{ fontSize:13 }}>Click All, Delivered, or Pending above</div>
                 </div>
               ) : (
@@ -666,11 +669,11 @@ export default function Dashboard() {
                       <tbody>
                         {filterVideoRows().map((row,i)=>(
                           <Tr key={i} highlight={!row.isDelivered}>
-                            <Td style={{ color:C.textMuted, fontSize:11 }}>{i+1}</Td>
+                            <Td style={{ color:'#94a3b8', fontSize:11 }}>{i+1}</Td>
                             <Td>
                               {row.isDelivered
-                                ? <Pill bg='rgba(34,197,94,0.15)' color={C.accentBright}>✓ Delivered</Pill>
-                                : <Pill bg='rgba(248,113,113,0.15)' color={C.red}>⏳ Pending</Pill>}
+                                ? <Pill bg='#dcfce7' color='#166534'>✓ Delivered</Pill>
+                                : <Pill bg='#fee2e2' color='#991b1b'>⏳ Pending</Pill>}
                             </Td>
                             <Td style={{ fontWeight:600, fontSize:12 }}>{row.client}</Td>
                             <Td style={{ fontSize:11, whiteSpace:'nowrap' }}>{row.timestampRaised}</Td>
@@ -683,7 +686,7 @@ export default function Dashboard() {
                       </tbody>
                     </table>
                     {filterVideoRows().length===0 && (
-                      <div style={{ textAlign:'center', padding:'40px 0', color:C.textMuted }}>No records found</div>
+                      <div style={{ textAlign:'center', padding:'40px 0', color:'#94a3b8' }}>No records found</div>
                     )}
                   </div>
                 </div>
@@ -697,7 +700,7 @@ export default function Dashboard() {
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
               <SectionLabel>Cautio · Client Support</SectionLabel>
-              <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
+              <h1 style={{ fontSize:28, fontWeight:900, color:'#0f172a', margin:0, letterSpacing:'-0.02em' }}>
                 Issue Resolution <span style={{ color:C.accentBright, fontStyle:'italic' }}>Tracker</span>
               </h1>
             </div>
@@ -719,8 +722,8 @@ export default function Dashboard() {
                     <XAxis dataKey="month" tick={axisStyle} axisLine={false} tickLine={false} />
                     <YAxis yAxisId="left" tick={axisStyle} axisLine={false} tickLine={false} />
                     <YAxis yAxisId="right" orientation="right" tick={axisStyle} axisLine={false} tickLine={false} />
-                    <Tooltip content={<DarkTooltip />} />
-                    <Legend wrapperStyle={{ color:C.textSec, fontSize:12 }} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Legend wrapperStyle={{ color:'#475569', fontSize:12 }} />
                     <Bar yAxisId="left" dataKey="raised" fill={C.red} name="Raised" radius={[4,4,0,0]} />
                     <Bar yAxisId="left" dataKey="resolved" fill={C.accent} name="Resolved" radius={[4,4,0,0]} />
                     <Line yAxisId="right" type="monotone" dataKey="avgTimeHours" stroke={C.purple} strokeWidth={2.5} dot={false} name="Avg(h)" />
@@ -761,15 +764,15 @@ export default function Dashboard() {
                       <Tr key={i}>
                         <Td style={{ fontWeight:600 }}>
                           {m.month}
-                          {m.isCurrentMonth && <Pill bg='rgba(34,197,94,0.15)' color={C.accentBright}> NOW</Pill>}
+                          {m.isCurrentMonth && <Pill bg='#dcfce7' color='#166534'> NOW</Pill>}
                         </Td>
-                        <Td center><Pill bg='rgba(248,113,113,0.15)' color={C.red}>{m.raised}</Pill></Td>
-                        <Td center><Pill bg='rgba(34,197,94,0.15)' color={C.accentBright}>{m.resolvedSameMonth}</Pill></Td>
-                        <Td center>{m.resolvedLaterMonths>0?<Pill bg='rgba(167,139,250,0.15)' color={C.purple}>{m.resolvedLaterMonths}</Pill>:'-'}</Td>
-                        <Td center>{m.carryForwardIn>0?<Pill bg='rgba(96,165,250,0.15)' color={C.blue}>{m.carryForwardIn}</Pill>:'-'}</Td>
-                        <Td center>{m.stillPending>0?<Pill bg='rgba(251,146,60,0.15)' color={C.orange}>{m.stillPending}</Pill>:'-'}</Td>
-                        <Td center>{m.resolutionRate!==null ? ratePill(m.resolutionRate) : <span style={{ color:C.textMuted, fontSize:11 }}>TBD</span>}</Td>
-                        <Td center>{m.avgTime!=='0h'?<Pill bg='rgba(167,139,250,0.15)' color={C.purple}>{m.avgTime}</Pill>:'-'}</Td>
+                        <Td center><Pill bg='#fee2e2' color='#991b1b'>{m.raised}</Pill></Td>
+                        <Td center><Pill bg='#dcfce7' color='#166534'>{m.resolvedSameMonth}</Pill></Td>
+                        <Td center>{m.resolvedLaterMonths>0?<Pill bg='#f3e8ff' color='#6b21a8'>{m.resolvedLaterMonths}</Pill>:'-'}</Td>
+                        <Td center>{m.carryForwardIn>0?<Pill bg='#dbeafe' color='#1e40af'>{m.carryForwardIn}</Pill>:'-'}</Td>
+                        <Td center>{m.stillPending>0?<Pill bg='#ffedd5' color='#9a3412'>{m.stillPending}</Pill>:'-'}</Td>
+                        <Td center>{m.resolutionRate!==null ? ratePill(m.resolutionRate) : <span style={{ color:'#94a3b8', fontSize:11 }}>TBD</span>}</Td>
+                        <Td center>{m.avgTime!=='0h'?<Pill bg='#f3e8ff' color='#6b21a8'>{m.avgTime}</Pill>:'-'}</Td>
                       </Tr>
                     ))}
                   </tbody>
@@ -784,7 +787,7 @@ export default function Dashboard() {
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
               <SectionLabel>Cautio · Dashcam Fleet</SectionLabel>
-              <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
+              <h1 style={{ fontSize:28, fontWeight:900, color:'#0f172a', margin:0, letterSpacing:'-0.02em' }}>
                 Device <span style={{ color:C.accentBright, fontStyle:'italic' }}>Movement</span>
               </h1>
             </div>
@@ -810,8 +813,8 @@ export default function Dashboard() {
                     ]} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
                       {[C.accent, C.yellow, C.orange, C.red].map((c,i)=><Cell key={i} fill={c} />)}
                     </Pie>
-                    <Tooltip content={<DarkTooltip />} />
-                    <Legend wrapperStyle={{ color:C.textSec, fontSize:12 }} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Legend wrapperStyle={{ color:'#475569', fontSize:12 }} />
                   </PieChart>
                 </ResponsiveContainer>
               </Card>
@@ -822,8 +825,8 @@ export default function Dashboard() {
                     <CartesianGrid {...gridProps} />
                     <XAxis dataKey="month" tick={axisStyle} axisLine={false} tickLine={false} />
                     <YAxis tick={axisStyle} axisLine={false} tickLine={false} />
-                    <Tooltip content={<DarkTooltip />} />
-                    <Legend wrapperStyle={{ color:C.textSec, fontSize:12 }} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Legend wrapperStyle={{ color:'#475569', fontSize:12 }} />
                     <Bar dataKey="deployed" fill={C.accent} name="Deployed" radius={[4,4,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -837,17 +840,17 @@ export default function Dashboard() {
                   <tbody>
                     {filterDevices().map((d,i)=>(
                       <Tr key={i}>
-                        <Td style={{ color:C.textMuted }}>{i+1}</Td>
+                        <Td style={{ color:'#94a3b8' }}>{i+1}</Td>
                         <Td style={{ fontSize:11, fontFamily:'monospace', color:C.accentBright }}>{d.device}</Td>
                         <Td center>
                           <Pill
-                            bg={d.status==='Deployed'?'rgba(34,197,94,0.15)':d.status==='Under Repair'?'rgba(251,146,60,0.15)':d.status==='Device Damaged'?'rgba(248,113,113,0.15)':'rgba(251,191,36,0.15)'}
-                            color={d.status==='Deployed'?C.accentBright:d.status==='Under Repair'?C.orange:d.status==='Device Damaged'?C.red:C.yellow}
+                            bg={d.status==='Deployed'?'#dcfce7':d.status==='Under Repair'?'#ffedd5':d.status==='Device Damaged'?'#fee2e2':'#fef9c3'}
+                            color={d.status==='Deployed'?'#166534':d.status==='Under Repair'?'#9a3412':d.status==='Device Damaged'?'#991b1b':'#854d0e'}
                           >{d.status}</Pill>
                         </Td>
                         <Td style={{ fontSize:11 }}>{d.vehicleNumber}</Td>
                         <Td style={{ fontSize:11 }}>{d.installationDate}</Td>
-                        <Td style={{ fontSize:11, color:C.textMuted, maxWidth:180, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={d.returnComment}>{d.returnComment}</Td>
+                        <Td style={{ fontSize:11, color:'#94a3b8', maxWidth:180, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={d.returnComment}>{d.returnComment}</Td>
                       </Tr>
                     ))}
                   </tbody>
@@ -862,7 +865,7 @@ export default function Dashboard() {
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
               <SectionLabel>Cautio · Pan India Network</SectionLabel>
-              <h1 style={{ fontSize:28, fontWeight:900, color:C.textPrimary, margin:0, letterSpacing:'-0.02em' }}>
+              <h1 style={{ fontSize:28, fontWeight:900, color:'#0f172a', margin:0, letterSpacing:'-0.02em' }}>
                 India Device <span style={{ color:C.accentBright, fontStyle:'italic' }}>Network</span>
               </h1>
             </div>
@@ -874,11 +877,11 @@ export default function Dashboard() {
               ].map(k=><KpiCard key={k.label} {...k} />)}
             </div>
             <Card style={{ height:620, padding:0, overflow:'hidden' }}>
-              <div style={{ padding:'18px 24px', borderBottom:`1px solid ${C.border}`, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:12 }}>
-                <span style={{ fontSize:14, fontWeight:700, color:C.textPrimary }}>India Device Map</span>
+              <div style={{ padding:'18px 24px', borderBottom:'1px solid #f1f5f9', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:12 }}>
+                <span style={{ fontSize:14, fontWeight:700, color:'#0f172a' }}>India Device Map</span>
                 <div style={{ display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
-                  <span style={{ fontSize:13, color:C.textMuted }}>
-                    <b style={{ color:C.textPrimary }}>{installationTrackerData?.totalInstallations||0}</b> devices · <b style={{ color:C.textPrimary }}>{installationTrackerData?.uniqueCities||0}</b> cities
+                  <span style={{ fontSize:13, color:'#94a3b8' }}>
+                    <b style={{ color:'#0f172a' }}>{installationTrackerData?.totalInstallations||0}</b> devices · <b style={{ color:'#0f172a' }}>{installationTrackerData?.uniqueCities||0}</b> cities
                   </span>
                   <SearchBox value={cities2Filter} onChange={e=>setCities2Filter(e.target.value)} placeholder="Search city…" />
                 </div>
@@ -895,15 +898,15 @@ export default function Dashboard() {
                   <tbody>
                     {filterCities2().map((c,i)=>(
                       <Tr key={i}>
-                        <Td style={{ color:C.textMuted }}>{i+1}</Td>
-                        <Td style={{ fontWeight:600, textTransform:'capitalize', color:C.textPrimary }}>{c.city}</Td>
+                        <Td style={{ color:'#94a3b8' }}>{i+1}</Td>
+                        <Td style={{ fontWeight:600, textTransform:'capitalize', color:'#0f172a' }}>{c.city}</Td>
                         <Td center>
                           <Pill
-                            bg={c.count>10?'rgba(34,197,94,0.15)':c.count>5?'rgba(251,191,36,0.15)':'rgba(96,165,250,0.15)'}
-                            color={c.count>10?C.accentBright:c.count>5?C.yellow:C.blue}
+                            bg={c.count>10?'#dcfce7':c.count>5?'#fef9c3':'#dbeafe'}
+                            color={c.count>10?'#166534':c.count>5?'#854d0e':'#1e40af'}
                           >{c.count}</Pill>
                         </Td>
-                        <Td center style={{ color:C.textMuted }}>{c.percentage}%</Td>
+                        <Td center style={{ color:'#94a3b8' }}>{c.percentage}%</Td>
                       </Tr>
                     ))}
                   </tbody>
