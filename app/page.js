@@ -175,7 +175,7 @@ export default function Dashboard() {
      SHARED MINI-COMPONENTS
   ═══════════════════════════════ */
   const SectionLabel = ({ children }) => (
-    <p style={{ color:C.textLabel, fontSize:11, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:6 }}>
+    <p style={{ color:'rgba(74,222,128,0.8)', fontSize:11, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:6, margin:'0 0 6px 0' }}>
       {children}
     </p>
   )
@@ -260,7 +260,7 @@ export default function Dashboard() {
      RENDER
   ═══════════════════════════════ */
   return (
-    <div style={{ minHeight:'100vh', background:'#f8fafc', fontFamily:"'DM Sans', system-ui, sans-serif" }}>
+    <div style={{ minHeight:'100vh', background:'#060e08', fontFamily:"'DM Sans', system-ui, sans-serif" }}>
 
       {/* ── HEADER ── */}
       <header style={{
@@ -358,7 +358,7 @@ export default function Dashboard() {
             {/* Page title */}
             <div>
               <SectionLabel>Cautio · Command Center</SectionLabel>
-              <h1 style={{ fontSize:28, fontWeight:900, color:'#0f172a', margin:0, letterSpacing:'-0.02em' }}>
+              <h1 style={{ fontSize:28, fontWeight:900, color:'#ffffff', margin:0, letterSpacing:'-0.02em' }}>
                 Fleet Operations, <span style={{ color:C.accentBright, fontStyle:'italic' }}>At a Glance</span>
               </h1>
             </div>
@@ -449,7 +449,7 @@ export default function Dashboard() {
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
               <SectionLabel>Cautio AI · Alert Tracking</SectionLabel>
-              <h1 style={{ fontSize:28, fontWeight:900, color:'#0f172a', margin:0, letterSpacing:'-0.02em' }}>
+              <h1 style={{ fontSize:28, fontWeight:900, color:'#ffffff', margin:0, letterSpacing:'-0.02em' }}>
                 Driver Behaviour <span style={{ color:C.accentBright, fontStyle:'italic' }}>Alerts</span>
               </h1>
             </div>
@@ -498,7 +498,7 @@ export default function Dashboard() {
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
               <SectionLabel>Cautio · Camera Misalignment</SectionLabel>
-              <h1 style={{ fontSize:28, fontWeight:900, color:'#0f172a', margin:0, letterSpacing:'-0.02em' }}>
+              <h1 style={{ fontSize:28, fontWeight:900, color:'#ffffff', margin:0, letterSpacing:'-0.02em' }}>
                 Camera Misalignment <span style={{ color:C.accentBright, fontStyle:'italic' }}>Tracker</span>
               </h1>
             </div>
@@ -556,7 +556,7 @@ export default function Dashboard() {
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
               <SectionLabel>Cautio · Video on Request</SectionLabel>
-              <h1 style={{ fontSize:28, fontWeight:900, color:'#0f172a', margin:0, letterSpacing:'-0.02em' }}>
+              <h1 style={{ fontSize:28, fontWeight:900, color:'#ffffff', margin:0, letterSpacing:'-0.02em' }}>
                 Video Delivery <span style={{ color:C.accentBright, fontStyle:'italic' }}>Performance</span>
               </h1>
             </div>
@@ -700,7 +700,7 @@ export default function Dashboard() {
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
               <SectionLabel>Cautio · Client Support</SectionLabel>
-              <h1 style={{ fontSize:28, fontWeight:900, color:'#0f172a', margin:0, letterSpacing:'-0.02em' }}>
+              <h1 style={{ fontSize:28, fontWeight:900, color:'#ffffff', margin:0, letterSpacing:'-0.02em' }}>
                 Issue Resolution <span style={{ color:C.accentBright, fontStyle:'italic' }}>Tracker</span>
               </h1>
             </div>
@@ -787,7 +787,7 @@ export default function Dashboard() {
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
               <SectionLabel>Cautio · Dashcam Fleet</SectionLabel>
-              <h1 style={{ fontSize:28, fontWeight:900, color:'#0f172a', margin:0, letterSpacing:'-0.02em' }}>
+              <h1 style={{ fontSize:28, fontWeight:900, color:'#ffffff', margin:0, letterSpacing:'-0.02em' }}>
                 Device <span style={{ color:C.accentBright, fontStyle:'italic' }}>Movement</span>
               </h1>
             </div>
@@ -865,7 +865,7 @@ export default function Dashboard() {
           <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
             <div>
               <SectionLabel>Cautio · Pan India Network</SectionLabel>
-              <h1 style={{ fontSize:28, fontWeight:900, color:'#0f172a', margin:0, letterSpacing:'-0.02em' }}>
+              <h1 style={{ fontSize:28, fontWeight:900, color:'#ffffff', margin:0, letterSpacing:'-0.02em' }}>
                 India Device <span style={{ color:C.accentBright, fontStyle:'italic' }}>Network</span>
               </h1>
             </div>
