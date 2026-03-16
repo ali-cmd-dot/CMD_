@@ -414,28 +414,44 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
   if (isFullscreen) {
     return (
       <div style={{ position:'fixed', inset:0, width:'100vw', height:'100vh', zIndex:999999, background:'#f0f9ff', display:'flex', flexDirection:'column' }}>
-        {/* Cautio header strip inside fullscreen */}
+        {/* Cautio header strip — fullscreen, bigger with meaningful text */}
         <div style={{
           background:'#0a1a0d',
           borderBottom:'1px solid rgba(34,197,94,0.2)',
-          padding:'0 24px',
-          height:56,
+          padding:'0 28px',
+          height:76,
           display:'flex', alignItems:'center', justifyContent:'space-between',
           flexShrink:0,
           zIndex:1000000,
         }}>
-          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <img src="/cautio_shield.webp" alt="Cautio" style={{ width:34, height:34, objectFit:'contain', filter:'drop-shadow(0 0 8px rgba(34,197,94,0.4))' }} />
+          {/* Left — logo + heading */}
+          <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+            <img src="/cautio_shield.webp" alt="Cautio" style={{ width:42, height:42, objectFit:'contain', filter:'drop-shadow(0 0 12px rgba(34,197,94,0.5))' }} />
             <div>
-              <div style={{ color:'#fff', fontSize:16, fontWeight:900, lineHeight:1.1 }}>Cautio</div>
-              <div style={{ color:'#22c55e', fontSize:9, fontWeight:800, letterSpacing:'0.16em', textTransform:'uppercase' }}>Fleet Intelligence</div>
+              <div style={{ color:'rgba(74,222,128,0.8)', fontSize:11, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:4 }}>Cautio · Pan India Network</div>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <span style={{ color:'#ffffff', fontSize:20, fontWeight:900, letterSpacing:'-0.02em' }}>India Device Map,</span>
+                <span style={{ color:'#4ade80', fontSize:20, fontWeight:900, fontStyle:'italic', letterSpacing:'-0.02em' }}>At a Glance</span>
+              </div>
             </div>
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-            <span style={{ color:'rgba(255,255,255,0.5)', fontSize:12 }}>
-              <b style={{ color:'white' }}>{totalDevices.toLocaleString()}</b> devices · <b style={{ color:'white' }}>{totalCities}</b> cities
-            </span>
-            <button onClick={toggleFullscreen} className="map-button-close" style={{ padding:'8px 16px' }}>
+
+          {/* Right — stats + exit */}
+          <div style={{ display:'flex', alignItems:'center', gap:20 }}>
+            <div style={{ textAlign:'right' }}>
+              <div style={{ color:'white', fontSize:15, fontWeight:800 }}>
+                {totalDevices.toLocaleString()}
+                <span style={{ color:'rgba(255,255,255,0.4)', fontSize:11, fontWeight:400, marginLeft:4 }}>devices</span>
+                <span style={{ color:'rgba(255,255,255,0.2)', margin:'0 8px' }}>·</span>
+                {totalCities}
+                <span style={{ color:'rgba(255,255,255,0.4)', fontSize:11, fontWeight:400, marginLeft:4 }}>cities</span>
+              </div>
+              <div style={{ color:'rgba(74,222,128,0.6)', fontSize:9, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', marginTop:2 }}>Real-time · Live Data</div>
+            </div>
+            <button
+              onClick={toggleFullscreen}
+              style={{ background:'rgba(248,65,65,0.12)', border:'1px solid rgba(248,65,65,0.35)', color:'#fca5a5', padding:'10px 20px', borderRadius:10, fontWeight:700, fontSize:13, display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}
+            >
               <Minimize2 size={16} />
               Exit Fullscreen
             </button>
