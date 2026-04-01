@@ -231,6 +231,8 @@ export default function IndiaMapLeaflet({ installationTrackerData }) {
     'jalna': { lat: 19.8347, lng: 75.8800, label: 'Jalna' },
     'satara': { lat: 17.6805, lng: 74.0183, label: 'Satara' },
     'ahmednagar': { lat: 19.0948, lng: 74.7480, label: 'Ahmednagar' },
+    'hattigarh': { lat: 26.4009673, lng: 92.86918, label: 'Hattigarh' },
+    
   }
 
   const normalizeCityName = (name) => {
